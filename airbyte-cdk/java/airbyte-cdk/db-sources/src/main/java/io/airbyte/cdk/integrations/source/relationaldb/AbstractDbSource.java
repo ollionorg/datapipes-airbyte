@@ -360,6 +360,14 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
                                                                    final Instant emittedAt) {
     final String streamName = airbyteStream.getStream().getName();
     final String namespace = airbyteStream.getStream().getNamespace();
+    String whereClause = "";
+    String customSQL = "";
+    if (airbyteStream.getStream().getAdditionalProperties().containsKey("where_clause")) {
+      whereClause = (String) airbyteStream.getStream().getAdditionalProperties().get("where_clause");
+    }
+    if (airbyteStream.getStream().getAdditionalProperties().containsKey("customSQL")) {
+      customSQL = (String) airbyteStream.getStream().getAdditionalProperties().get("customSQL");
+    }
     final AirbyteStreamNameNamespacePair pair = new AirbyteStreamNameNamespacePair(streamName,
         namespace);
     final Set<String> selectedFieldsInCatalog = CatalogHelpers.getTopLevelFieldNames(airbyteStream);
@@ -384,12 +392,15 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
             selectedDatabaseFields,
             table,
             cursorInfo.get(),
-            emittedAt);
+            emittedAt,
+            whereClause,
+            customSQL);
       } else {
         // if no cursor is present then this is the first read for is the same as doing a full refresh read.
         estimateFullRefreshSyncSize(database, airbyteStream);
         airbyteMessageIterator = getFullRefreshStream(database, streamName, namespace,
-            selectedDatabaseFields, table, emittedAt, SyncMode.INCREMENTAL, Optional.of(cursorField));
+            selectedDatabaseFields, table, emittedAt, SyncMode.INCREMENTAL,
+            Optional.of(cursorField), whereClause, customSQL);
       }
 
       final JsonSchemaPrimitive cursorType = IncrementalUtils.getCursorType(airbyteStream,
@@ -409,7 +420,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
     } else if (airbyteStream.getSyncMode() == SyncMode.FULL_REFRESH) {
       estimateFullRefreshSyncSize(database, airbyteStream);
       iterator = getFullRefreshStream(database, streamName, namespace, selectedDatabaseFields,
-          table, emittedAt, SyncMode.FULL_REFRESH, Optional.empty());
+          table, emittedAt, SyncMode.FULL_REFRESH, Optional.empty(), whereClause, customSQL);
     } else if (airbyteStream.getSyncMode() == null) {
       throw new IllegalArgumentException(
           String.format("%s requires a source sync mode", this.getClass()));
@@ -441,11 +452,13 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
    * @return AirbyteMessage Iterator that
    */
   private AutoCloseableIterator<AirbyteMessage> getIncrementalStream(final Database database,
-                                                                     final ConfiguredAirbyteStream airbyteStream,
-                                                                     final List<String> selectedDatabaseFields,
-                                                                     final TableInfo<CommonField<DataType>> table,
-                                                                     final CursorInfo cursorInfo,
-                                                                     final Instant emittedAt) {
+      final ConfiguredAirbyteStream airbyteStream,
+      final List<String> selectedDatabaseFields,
+      final TableInfo<CommonField<DataType>> table,
+      final CursorInfo cursorInfo,
+      final Instant emittedAt,
+      final String whereClause,
+      final String customSQL) {
     final String streamName = airbyteStream.getStream().getName();
     final String namespace = airbyteStream.getStream().getNamespace();
     final String cursorField = IncrementalUtils.getCursorField(airbyteStream);
@@ -465,7 +478,9 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
         table.getNameSpace(),
         table.getName(),
         cursorInfo,
-        cursorType);
+        cursorType,
+        whereClause,
+        customSQL);
 
     return getMessageIterator(queryIterator, streamName, namespace, emittedAt.toEpochMilli());
   }
@@ -484,16 +499,18 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
    * @return AirbyteMessageIterator with all records for a database source
    */
   private AutoCloseableIterator<AirbyteMessage> getFullRefreshStream(final Database database,
-                                                                     final String streamName,
-                                                                     final String namespace,
-                                                                     final List<String> selectedDatabaseFields,
-                                                                     final TableInfo<CommonField<DataType>> table,
-                                                                     final Instant emittedAt,
-                                                                     final SyncMode syncMode,
-                                                                     final Optional<String> cursorField) {
+      final String streamName,
+      final String namespace,
+      final List<String> selectedDatabaseFields,
+      final TableInfo<CommonField<DataType>> table,
+      final Instant emittedAt,
+      final SyncMode syncMode,
+      final Optional<String> cursorField,
+      final String whereClause,
+      final String customSQL) {
     final AutoCloseableIterator<JsonNode> queryStream =
         queryTableFullRefresh(database, selectedDatabaseFields, table.getNameSpace(),
-            table.getName(), syncMode, cursorField);
+            table.getName(), syncMode, cursorField, whereClause, customSQL);
     return getMessageIterator(queryStream, streamName, namespace, emittedAt.toEpochMilli());
   }
 
@@ -640,14 +657,17 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
    * @param schemaName table namespace
    * @param tableName target table
    * @param syncMode The sync mode that this full refresh stream should be associated with.
+   * @param whereClause Where clause for Row-Level filter.
    * @return iterator with read data
    */
   protected abstract AutoCloseableIterator<JsonNode> queryTableFullRefresh(final Database database,
-                                                                           final List<String> columnNames,
-                                                                           final String schemaName,
-                                                                           final String tableName,
-                                                                           final SyncMode syncMode,
-                                                                           final Optional<String> cursorField);
+      final List<String> columnNames,
+      final String schemaName,
+      final String tableName,
+      final SyncMode syncMode,
+      final Optional<String> cursorField,
+      final String whereClause,
+      final String customSQL);
 
   /**
    * Read incremental data from a table. Incremental read should return only records where cursor
@@ -658,11 +678,13 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
    * @return iterator with read data
    */
   protected abstract AutoCloseableIterator<JsonNode> queryTableIncremental(Database database,
-                                                                           List<String> columnNames,
-                                                                           String schemaName,
-                                                                           String tableName,
-                                                                           CursorInfo cursorInfo,
-                                                                           DataType cursorFieldType);
+      List<String> columnNames,
+      String schemaName,
+      String tableName,
+      CursorInfo cursorInfo,
+      DataType cursorFieldType,
+      String whereClause,
+      String customSQL);
 
   /**
    * When larger than 0, the incremental iterator will emit intermediate state for every N records.

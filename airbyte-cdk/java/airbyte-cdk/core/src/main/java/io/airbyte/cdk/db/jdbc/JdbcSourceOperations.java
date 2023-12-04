@@ -152,4 +152,13 @@ public class JdbcSourceOperations extends AbstractJdbcCompatibleSourceOperations
     };
   }
 
+  @Override
+  protected boolean isColumnDataNull(ResultSet resultSet, int colIndex) throws SQLException {
+    final int columnTypeInt = resultSet.getMetaData().getColumnType(colIndex);
+    final JDBCType columnType = safeGetJdbcType(columnTypeInt);
+    if (columnType == JDBCType.LONGVARCHAR || columnType == JDBCType.LONGVARBINARY) {
+      return false;
+    }
+    return super.isColumnDataNull(resultSet, colIndex);
+  }
 }

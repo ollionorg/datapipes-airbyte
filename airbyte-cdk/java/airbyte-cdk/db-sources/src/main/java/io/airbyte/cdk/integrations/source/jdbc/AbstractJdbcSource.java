@@ -106,27 +106,55 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
 
   @Override
   protected AutoCloseableIterator<JsonNode> queryTableFullRefresh(final JdbcDatabase database,
-                                                                  final List<String> columnNames,
-                                                                  final String schemaName,
-                                                                  final String tableName,
-                                                                  final SyncMode syncMode,
-                                                                  final Optional<String> cursorField) {
+      final List<String> columnNames,
+      final String schemaName,
+      final String tableName,
+      final SyncMode syncMode,
+      final Optional<String> cursorField,
+      final String whereClause,
+      final String customSQL) {
     LOGGER.info("Queueing query for table: {}", tableName);
     // This corresponds to the initial sync for in INCREMENTAL_MODE, where the ordering of the records
     // matters
     // as intermediate state messages are emitted (if the connector emits intermediate state).
     if (syncMode.equals(SyncMode.INCREMENTAL) && getStateEmissionFrequency() > 0) {
       final String quotedCursorField = enquoteIdentifier(cursorField.get(), getQuoteString());
-      return queryTable(database, String.format("SELECT %s FROM %s ORDER BY %s ASC",
-          enquoteIdentifierList(columnNames, getQuoteString()),
-          getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), quotedCursorField),
-          tableName, schemaName);
+      String query = "";
+      if (!whereClause.equals("")) {
+        query = String.format("SELECT %s FROM %s where %s ORDER BY %s ASC",
+            enquoteIdentifierList(columnNames, getQuoteString()),
+            getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()),
+            whereClause,
+            quotedCursorField);
+      } else if (customSQL != null && !customSQL.equals("")) {
+        query = String.format("SELECT * FROM (%s) ORDER BY %s ASC", customSQL, quotedCursorField);
+      } else {
+        query = String.format("SELECT %s FROM %s ORDER BY %s ASC",
+            enquoteIdentifierList(columnNames, getQuoteString()),
+            getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()),
+            quotedCursorField);
+      }
+
+      return queryTable(database, query, tableName, schemaName);
     } else {
       // If we are in FULL_REFRESH mode, state messages are never emitted, so we don't care about ordering
       // of the records.
-      return queryTable(database, String.format("SELECT %s FROM %s",
-          enquoteIdentifierList(columnNames, getQuoteString()),
-          getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString())), tableName, schemaName);
+      String query = "";
+      if (!whereClause.equals("")) {
+        query = String.format("SELECT %s FROM %s where %s",
+            enquoteIdentifierList(columnNames, getQuoteString()),
+            getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()),
+            whereClause
+        );
+      } else if (customSQL != null && !customSQL.equals("")) {
+        query = customSQL;
+      } else {
+        query = String.format("SELECT %s FROM %s",
+            enquoteIdentifierList(columnNames, getQuoteString()),
+            getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString())
+        );
+      }
+      return queryTable(database, query, tableName, schemaName);
     }
   }
 
@@ -328,7 +356,9 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
                                                                final String schemaName,
                                                                final String tableName,
                                                                final CursorInfo cursorInfo,
-                                                               final Datatype cursorFieldType) {
+                                                               final Datatype cursorFieldType,
+                                                               final String whereClause,
+                                                               final String customSQL) {
     LOGGER.info("Queueing query for table: {}", tableName);
     final io.airbyte.protocol.models.AirbyteStreamNameNamespacePair airbyteStream =
         AirbyteStreamUtils.convertFromNameAndNamespace(tableName, schemaName);
@@ -355,19 +385,27 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
               }
 
               final String wrappedColumnNames = getWrappedColumnNames(database, connection, columnNames, schemaName, tableName);
-              final StringBuilder sql = new StringBuilder(String.format("SELECT %s FROM %s WHERE %s %s ?",
-                  wrappedColumnNames,
-                  fullTableName,
-                  quotedCursorField,
-                  operator));
-              // if the connector emits intermediate states, the incremental query must be sorted by the cursor
-              // field
+              StringBuilder sql = new StringBuilder();
+              if (customSQL!= null && !customSQL.equals("")) {
+                sql = new StringBuilder(String.format("SELECT * FROM (%s) WHERE %s %s ?", customSQL, quotedCursorField, operator));
+              } else {
+                sql = new StringBuilder(String.format("SELECT %s FROM %s WHERE %s %s ?",
+                    wrappedColumnNames,
+                    fullTableName,
+                    quotedCursorField,
+                    operator));
+                // if the connector emits intermediate states, the incremental query must be sorted by the cursor
+                // field
+                if (!whereClause.equals("")) {
+                  sql.append(String.format(" AND %s", whereClause));
+                }
+              }
               if (getStateEmissionFrequency() > 0) {
                 sql.append(String.format(" ORDER BY %s ASC", quotedCursorField));
               }
 
               final PreparedStatement preparedStatement = connection.prepareStatement(sql.toString());
-              LOGGER.info("Executing query for table {}: {}", tableName, preparedStatement);
+              LOGGER.info("Executing query for table {}: {}", tableName, sql);
               sourceOperations.setCursorField(preparedStatement, 1, cursorFieldType, cursorInfo.getCursor());
               return preparedStatement;
             },
