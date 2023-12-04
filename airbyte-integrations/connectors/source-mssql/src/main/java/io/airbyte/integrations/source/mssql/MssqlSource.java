@@ -169,25 +169,41 @@ public class MssqlSource extends AbstractJdbcSource<JDBCType> implements Source 
                                                                final String schemaName,
                                                                final String tableName,
                                                                final SyncMode syncMode,
-                                                               final Optional<String> cursorField) {
+                                                               final Optional<String> cursorField,
+                                                               final String whereClause,
+                                                               final String customSQL) {
     LOGGER.info("Queueing query for table: {}", tableName);
     // This corresponds to the initial sync for in INCREMENTAL_MODE. The ordering of the records matters
     // as intermediate state messages are emitted.
     if (syncMode.equals(SyncMode.INCREMENTAL)) {
       final String quotedCursorField = enquoteIdentifier(cursorField.get(), getQuoteString());
       final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
-      final String preparedSqlQuery =
+      String preparedSqlQuery =
           String.format("SELECT %s FROM %s ORDER BY %s ASC", newIdentifiers,
               getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), quotedCursorField);
+      if (!whereClause.equals("")){
+        preparedSqlQuery = String.format("SELECT %s FROM %s WHERE %s ORDER BY %s ASC", newIdentifiers,
+            getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), whereClause, quotedCursorField);
+      }
+      else if (customSQL != null && !customSQL.equals("")) {
+        preparedSqlQuery = String.format("SELECT * FROM (%s) sc ORDER BY %s ASC", customSQL, quotedCursorField);
+      }
       LOGGER.info("Prepared SQL query for TableFullRefresh is: " + preparedSqlQuery);
       return queryTable(database, preparedSqlQuery, tableName, schemaName);
     } else {
       // If we are in FULL_REFRESH mode, state messages are never emitted, so we don't care about ordering
       // of the records.
-      final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
-      final String preparedSqlQuery =
-          String.format("SELECT %s FROM %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()));
-
+      String preparedSqlQuery = "";
+      if (!whereClause.equals("")){
+        final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
+        preparedSqlQuery = String.format("SELECT %s FROM %s WHERE %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), whereClause);
+      }
+      else if (customSQL != null && !customSQL.equals("")) {
+        preparedSqlQuery = customSQL;
+      } else {
+        final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
+        preparedSqlQuery = String.format("SELECT %s FROM %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()));
+      }
       LOGGER.info("Prepared SQL query for TableFullRefresh is: " + preparedSqlQuery);
       return queryTable(database, preparedSqlQuery, tableName, schemaName);
     }

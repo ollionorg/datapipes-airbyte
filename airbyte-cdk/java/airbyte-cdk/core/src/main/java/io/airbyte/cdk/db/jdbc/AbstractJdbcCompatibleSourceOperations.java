@@ -51,8 +51,7 @@ public abstract class AbstractJdbcCompatibleSourceOperations<Datatype> implement
       // attempt to access the column. this allows us to know if it is null before we do type-specific
       // parsing. if it is null, we can move on. while awkward, this seems to be the agreed upon way of
       // checking for null values with jdbc.
-      queryContext.getObject(i);
-      if (queryContext.wasNull()) {
+      if (isColumnDataNull(queryContext, i)) {
         continue;
       }
 
@@ -61,6 +60,11 @@ public abstract class AbstractJdbcCompatibleSourceOperations<Datatype> implement
     }
 
     return jsonNode;
+  }
+
+  protected boolean isColumnDataNull(ResultSet queryContext, int index) throws SQLException {
+    queryContext.getObject(index);
+    return queryContext.wasNull();
   }
 
   protected void putArray(final ObjectNode node, final String columnName, final ResultSet resultSet, final int index) throws SQLException {
