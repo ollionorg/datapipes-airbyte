@@ -313,8 +313,11 @@ class Client:
     def load_nested_json_schema(self, fp) -> dict:
         # Use Genson Library to take JSON objects and generate schemas that describe them,
         builder = SchemaBuilder()
-        for o in self.read():
-            builder.add_object(o)
+        if self._reader_format == "jsonl":
+            for o in self.read():
+                builder.add_object(o)
+        else:
+            builder.add_object(json.load(fp))
 
         result = builder.to_schema()
         if "items" in result:
@@ -449,6 +452,8 @@ class Client:
     def read(self, fields: Iterable = None) -> Iterable[dict]:
         """Read data from the stream"""
         with self.reader.open() as fp:
+            if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
+                fp = Pgp(**self.encryption_options).decrypt(fp)
             try:
                 file_path = ""
                 if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":

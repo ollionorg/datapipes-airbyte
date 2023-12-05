@@ -22,6 +22,8 @@ from airbyte_cdk.models import (
     Type,
 )
 from airbyte_cdk.utils import AirbyteTracedException
+
+from source_file.client import ConfigurationError
 from airbyte_protocol.models.airbyte_protocol import Type as MessageType
 from source_file.source import SourceFile
 
