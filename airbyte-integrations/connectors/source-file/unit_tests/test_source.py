@@ -5,6 +5,7 @@
 import json
 import logging
 from copy import deepcopy
+from unittest.mock import PropertyMock
 
 import jsonschema
 import pytest
@@ -21,6 +22,8 @@ from airbyte_cdk.models import (
     Type,
 )
 from airbyte_cdk.utils import AirbyteTracedException
+
+from source_file.client import ConfigurationError
 from airbyte_protocol.models.airbyte_protocol import Type as MessageType
 from source_file.source import SourceFile
 
@@ -43,7 +46,7 @@ def test_csv_with_utf16_encoding(absolute_path, test_files):
     config_local_csv_utf16 = {
         "dataset_name": "AAA",
         "format": "csv",
-        "reader_options": '{"encoding":"utf_16", "parse_dates": ["header5"]}',
+        "reader_options": '{"encoding":"utf_16", "parse_dates": [\"header5\"]}',
         "url": f"{absolute_path}/{test_files}/test_utf16.csv",
         "provider": {"storage": "local"},
     }
@@ -51,12 +54,13 @@ def test_csv_with_utf16_encoding(absolute_path, test_files):
         "$schema": "http://json-schema.org/draft-07/schema#",
         "properties": {
             "header1": {"type": ["string", "null"]},
-            "header2": {"type": ["number", "null"]},
+            "header2": {"type": ["integer", "null"]},
             "header3": {"type": ["number", "null"]},
             "header4": {"type": ["boolean", "null"]},
             "header5": {"type": ["string", "null"], "format": "date-time"},
         },
         "type": "object",
+        "row_count": 0
     }
 
     catalog = SourceFile().discover(logger=logger, config=config_local_csv_utf16)
@@ -149,6 +153,11 @@ def test_discover(source, config, client):
     schemas = [stream["json_schema"] for stream in catalog["catalog"]["streams"]]
     for schema in schemas:
         jsonschema.Draft7Validator.check_schema(schema)
+
+    type(client).streams = PropertyMock(side_effect=Exception)
+
+    with pytest.raises(Exception):
+        source.discover(logger=logger, config=config)
 
 
 def test_check_wrong_reader_options(source, config):
