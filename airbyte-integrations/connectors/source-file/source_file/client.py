@@ -308,11 +308,8 @@ class Client:
     def load_nested_json_schema(self, fp) -> dict:
         # Use Genson Library to take JSON objects and generate schemas that describe them,
         builder = SchemaBuilder()
-        if self._reader_format == "jsonl":
-            for o in self.read():
-                builder.add_object(o)
-        else:
-            builder.add_object(json.load(fp))
+        for o in self.read():
+            builder.add_object(o)
 
         result = builder.to_schema()
         if "items" in result:
@@ -333,6 +330,8 @@ class Client:
             result = json.load(fp)
             if not isinstance(result, list):
                 result = [result]
+        # for json and jsonl
+        result = [{**d, 'file_location': self._url} for d in result]
         return result
 
     def load_yaml(self, fp):
@@ -461,7 +460,8 @@ class Client:
                     #     fp = self._cache_stream(fp)
                     for batch in self.load_dataframes(fp):
                         df = batch.to_pandas() if self._reader_format == "parquet" else batch
-
+                        # for parquet files
+                        df['file_location'] = self._url
                         df_cols = list(df.columns)
                         columns = [x for x in df_cols if x in fields] if fields else df.columns
                         df.replace({np.nan: None}, inplace=True)
@@ -520,6 +520,7 @@ class Client:
                     fields[col]["format"] = "date-time"
 
         stream = {}
+        fields['file_location'] = {'type': 'string'}
         for field in fields:
             stream[field] = {"type": [fields[field]["type"] if fields[field]["type"] else "string", "null"]}
             if "format" in fields[field]:
