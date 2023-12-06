@@ -504,7 +504,7 @@ class BulkSalesforceStream(SalesforceStream):
 
         return self.encoding
 
-    def download_data(self, url: str, chunk_size: int = 1024) -> tuple[str, str, dict]:
+    def download_data(self, url: str, chunk_size: int = 1024*1024*10) -> tuple[str, str, dict]:
         """
         Retrieves binary data result from successfully `executed_job`, using chunks, to avoid local memory limitations.
         @ url: string - the url of the `executed_job`
@@ -520,13 +520,14 @@ class BulkSalesforceStream(SalesforceStream):
             response_encoding = self.get_response_encoding(response_headers)
             for chunk in response.iter_content(chunk_size=chunk_size):
                 data_file.write(self.filter_null_bytes(chunk))
+        self.logger.info(f"Created File...")
         # check the file exists
         if os.path.isfile(tmp_file):
             return tmp_file, response_encoding, response_headers
         else:
             raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
 
-    def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 100) -> Iterable[Tuple[int, Mapping[str, Any]]]:
+    def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 1000) -> Iterable[Tuple[int, Mapping[str, Any]]]:
         """
         Reads the downloaded binary data, using lines chunks, set by `chunk_size`.
         @ path: string - the path to the downloaded temporarily binary data.
@@ -536,6 +537,7 @@ class BulkSalesforceStream(SalesforceStream):
         try:
             with open(path, "r", encoding=file_encoding) as data:
                 chunks = pd.read_csv(data, chunksize=chunk_size, iterator=True, dialect="unix", dtype=object)
+                self.logger.info(f"Found Data in File: {path}")
                 for chunk in chunks:
                     chunk = chunk.replace({nan: None}).to_dict(orient="records")
                     for row in chunk:
@@ -555,7 +557,8 @@ class BulkSalesforceStream(SalesforceStream):
         self.logger.warning("Broken job was aborted")
 
     def delete_job(self, url: str):
-        self._send_http_request("DELETE", url=url)
+        self.logger.info(f"skipping delete job URL: {url}")
+        # self._send_http_request("DELETE", url=url)
 
     @property
     def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
@@ -626,7 +629,7 @@ class BulkSalesforceStream(SalesforceStream):
         salesforce_bulk_api_locator = None
         while True:
             req = PreparedRequest()
-            req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator})
+            req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator, "maxRecords": 250000})
             tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
             for record in self.read_with_chunks(tmp_file, response_encoding):
                 yield record
@@ -634,6 +637,9 @@ class BulkSalesforceStream(SalesforceStream):
             if response_headers.get("Sforce-Locator", "null") == "null":
                 break
             salesforce_bulk_api_locator = response_headers.get("Sforce-Locator")
+            numberOfRecords = response_headers.get("Sforce-NumberOfRecords")
+            self.logger.info(f"numberOfRecords {numberOfRecords}")
+
         self.delete_job(url=job_full_url)
 
     def get_standard_instance(self) -> SalesforceStream:
@@ -721,7 +727,8 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, ABC):
         where_conditions = []
 
         if start_date:
-            where_conditions.append(f"{self.cursor_field} >= {start_date}")
+            # NOTE: Changed >= to > by Data pipes
+            where_conditions.append(f"{self.cursor_field} > {start_date}")
         if end_date:
             where_conditions.append(f"{self.cursor_field} < {end_date}")
 
@@ -760,7 +767,8 @@ class BulkIncrementalSalesforceStream(BulkSalesforceStream, IncrementalRestSales
 
         select_fields = self.get_query_select_fields()
         table_name = self.name
-        where_conditions = [f"{self.cursor_field} >= {start_date}", f"{self.cursor_field} < {end_date}"]
+        # NOTE: Changed >= to > by Data pipes
+        where_conditions = [f"{self.cursor_field} > {start_date}", f"{self.cursor_field} < {end_date}"]
 
         where_clause = f"WHERE {' AND '.join(where_conditions)}"
         query = f"SELECT {select_fields} FROM {table_name} {where_clause}"
