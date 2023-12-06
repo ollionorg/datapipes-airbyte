@@ -6,6 +6,7 @@ import csv
 import ctypes
 import math
 import os
+import io
 import time
 import urllib.parse
 import uuid
@@ -513,18 +514,46 @@ class BulkSalesforceStream(SalesforceStream):
         """
         # set filepath for binary data from response
         tmp_file = str(uuid.uuid4())
-        with closing(self._send_http_request("GET", url, headers={"Accept-Encoding": "gzip"}, stream=True)) as response, open(
-            tmp_file, "wb"
-        ) as data_file:
-            response_headers = response.headers
-            response_encoding = self.get_response_encoding(response_headers)
-            for chunk in response.iter_content(chunk_size=chunk_size):
-                data_file.write(self.filter_null_bytes(chunk))
+        # with closing(self._send_http_request("GET", url, headers={"Accept-Encoding": "gzip"}, stream=True)) as response, open(
+        #     tmp_file, "wb"
+        # ) as data_file:
+        #     response_headers = response.headers
+        #     response_encoding = self.get_response_encoding(response_headers)
+        #     for chunk in response.iter_content(chunk_size=chunk_size):
+        #         data_file.write(self.filter_null_bytes(chunk))
+        # # check the file exists
+        # if os.path.isfile(tmp_file):
+        #     return tmp_file, response_encoding, response_headers
+        # else:
+        #     raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
+        self.logger.info(f"Creating File...:{url}")
+
+        response = self._send_http_request("GET", url, headers={"Accept-Encoding": "gzip"})
+        response_headers = response.headers
+        response_encoding = self.get_response_encoding(response_headers)
+        try:
+
+            # data_file.write(self.filter_null_bytes(chunk))
+            data = self.filter_null_bytes(response.content)
+            chunks = pd.read_csv(io.StringIO(data.decode(response_encoding)), iterator=True, dialect="unix", dtype=object)
+            for row_chunk in chunks:
+                chunk = row_chunk.replace({nan: None}).to_dict(orient="records")
+                for row in chunk:
+                    yield row
+        except pd.errors.EmptyDataError as e:
+            self.logger.info(f"Empty data received. {e}")
+            yield from []
+        except Exception as ex:
+            self.logger.error("error found in data")
+            self.logger.error(response)
+            raise ex
+        # self.logger.info(f"Created File...")
         # check the file exists
-        if os.path.isfile(tmp_file):
-            return tmp_file, response_encoding, response_headers
-        else:
-            raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
+        # if os.path.isfile(tmp_file):
+        #     return tmp_file, response_encoding, response_headers
+        # else:
+        #     raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
+        return response_headers
 
     def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 100) -> Iterable[Tuple[int, Mapping[str, Any]]]:
         """
@@ -626,10 +655,16 @@ class BulkSalesforceStream(SalesforceStream):
         salesforce_bulk_api_locator = None
         while True:
             req = PreparedRequest()
-            req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator})
-            tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
-            for record in self.read_with_chunks(tmp_file, response_encoding):
-                yield record
+            # req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator})
+            req.prepare_url(f"{job_full_url}/results", {"maxRecords": 50000})
+            # tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
+            downloaded_data = self.download_data(url=req.url)
+            try:
+                while True:
+                    record = next(downloaded_data)
+                    yield record
+            except StopIteration as ex:
+                response_headers = ex.value
 
             if response_headers.get("Sforce-Locator", "null") == "null":
                 break
