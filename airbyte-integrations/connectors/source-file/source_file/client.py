@@ -339,7 +339,7 @@ class Client:
             if not isinstance(result, list):
                 result = [result]
         # for json and jsonl
-        result = [{**d, 'file_location': self._url} for d in result]
+        result = [{**d, '_ab_source_file_url': self._url} for d in result]
         return result
 
     def load_yaml(self, fp):
@@ -472,7 +472,7 @@ class Client:
                     for batch in self.load_dataframes(fp):
                         df = batch.to_pandas() if self._reader_format == "parquet" else batch
                         # for parquet files
-                        df['file_location'] = self._url
+                        df['_ab_source_file_url'] = self._url
                         columns = fields.intersection(set(df.columns)) if fields else df.columns
                         df.replace({np.nan: None}, inplace=True)
                         yield from df[list(columns)].to_dict(orient="records")
@@ -543,7 +543,7 @@ class Client:
                     fields[col]["format"] = "date-time"
 
         stream = {}
-        fields['file_location'] = {'type': 'string'}
+        fields['_ab_source_file_url'] = {'type': 'string'}
         for field in fields:
             stream[field] = {"type": [fields[field]["type"] if fields[field]["type"] else "string", "null"]}
             if "format" in fields[field]:
