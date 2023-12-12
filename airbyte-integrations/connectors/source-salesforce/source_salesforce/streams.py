@@ -637,14 +637,14 @@ class BulkSalesforceStream(SalesforceStream):
             req = PreparedRequest()
             req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator, "maxRecords": 1000000})
             tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
+            numberOfRecords = response_headers.get("Sforce-NumberOfRecords")
+            self.logger.info(f"numberOfRecords {numberOfRecords}")
             for record in self.read_with_chunks(tmp_file, response_encoding):
                 yield record
 
             if response_headers.get("Sforce-Locator", "null") == "null":
                 break
             salesforce_bulk_api_locator = response_headers.get("Sforce-Locator")
-            numberOfRecords = response_headers.get("Sforce-NumberOfRecords")
-            self.logger.info(f"numberOfRecords {numberOfRecords}")
 
         self.delete_job(url=job_full_url)
 
