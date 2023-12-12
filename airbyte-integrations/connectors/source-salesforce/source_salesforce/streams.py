@@ -348,6 +348,7 @@ class BulkSalesforceStream(SalesforceStream):
         """
         docs: https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/create_job.html
         """
+        self.logger.info(f"create_stream_job {query}")
         json = {"operation": "queryAll", "query": query, "contentType": "CSV", "columnDelimiter": "COMMA", "lineEnding": "LF"}
         try:
             response = self._send_http_request("POST", url, json=json)
@@ -534,14 +535,17 @@ class BulkSalesforceStream(SalesforceStream):
         @ file_encoding: string - encoding for binary data file according to Standard Encodings from codecs module
         @ chunk_size: int - the number of lines to read at a time, default: 100 lines / time.
         """
+        self.logger.info(f"read_with_chunks started.")
         try:
             with open(path, "r", encoding=file_encoding) as data:
                 chunks = pd.read_csv(data, chunksize=chunk_size, iterator=True, dialect="unix", dtype=object)
+                self.logger.info(f"read_with_chunks chunks created.")
                 self.logger.info(f"Found Data in File: {path}")
                 for chunk in chunks:
                     chunk = chunk.replace({nan: None}).to_dict(orient="records")
                     for row in chunk:
                         yield row
+            self.logger.info(f"read_with_chunks finished.")
         except pd.errors.EmptyDataError as e:
             self.logger.info(f"Empty data received. {e}")
             yield from []
@@ -605,7 +609,9 @@ class BulkSalesforceStream(SalesforceStream):
     ) -> Iterable[Mapping[str, Any]]:
         stream_state = stream_state or {}
         next_page_token = None
-
+        self.logger.info(cursor_field)
+        self.logger.info(stream_slice)
+        self.logger.info(stream_state)
         params = self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         path = self.path(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         job_full_url, job_status = self.execute_job(query=params["q"], url=f"{self.url_base}{path}")
@@ -629,7 +635,7 @@ class BulkSalesforceStream(SalesforceStream):
         salesforce_bulk_api_locator = None
         while True:
             req = PreparedRequest()
-            req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator, "maxRecords": 250000})
+            req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator, "maxRecords": 1000000})
             tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
             for record in self.read_with_chunks(tmp_file, response_encoding):
                 yield record
