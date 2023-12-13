@@ -188,6 +188,6 @@ class SourceFile(Source):
         for configured_stream in catalog.streams:
             fields = configured_stream.stream.json_schema["properties"].keys()
             if config["reader_options"].get("header", {}) is None:
-                fields = [int(str_col_idx) for str_col_idx in fields]
+                fields = [str_col_idx for str_col_idx in fields]
 
             yield from fields
