@@ -528,7 +528,7 @@ class BulkSalesforceStream(SalesforceStream):
         else:
             raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
 
-    def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 1000) -> Iterable[Tuple[int, Mapping[str, Any]]]:
+    def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 100000) -> Iterable[Tuple[int, Mapping[str, Any]]]:
         """
         Reads the downloaded binary data, using lines chunks, set by `chunk_size`.
         @ path: string - the path to the downloaded temporarily binary data.
@@ -536,6 +536,7 @@ class BulkSalesforceStream(SalesforceStream):
         @ chunk_size: int - the number of lines to read at a time, default: 100 lines / time.
         """
         self.logger.info(f"read_with_chunks started.")
+        count = 0
         try:
             with open(path, "r", encoding=file_encoding) as data:
                 chunks = pd.read_csv(data, chunksize=chunk_size, iterator=True, dialect="unix", dtype=object)
@@ -545,6 +546,8 @@ class BulkSalesforceStream(SalesforceStream):
                     chunk = chunk.replace({nan: None}).to_dict(orient="records")
                     for row in chunk:
                         yield row
+                    self.logger.info(f"chunk:{count} read.")
+                    count += 1
             self.logger.info(f"read_with_chunks finished.")
         except pd.errors.EmptyDataError as e:
             self.logger.info(f"Empty data received. {e}")
