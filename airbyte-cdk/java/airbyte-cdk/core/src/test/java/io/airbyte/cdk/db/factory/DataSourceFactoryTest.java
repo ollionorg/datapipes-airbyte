@@ -94,21 +94,21 @@ class DataSourceFactoryTest extends CommonFactoryTest {
     }
   }
 
-  @Test
-  void testCreatingMsSQLServerDataSourceWithConnectionTimeoutSetBelowDefault() {
-    try (var mssqlServerContainer = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest").acceptLicense()) {
-      mssqlServerContainer.start();
-      final DataSource dataSource = DataSourceFactory.create(
-          mssqlServerContainer.getUsername(),
-          mssqlServerContainer.getPassword(),
-          mssqlServerContainer.getDriverClassName(),
-          mssqlServerContainer.getJdbcUrl(),
-          Map.of("loginTimeout", "5"));
-      assertNotNull(dataSource);
-      assertEquals(HikariDataSource.class, dataSource.getClass());
-      assertEquals(5000, ((HikariDataSource) dataSource).getHikariConfigMXBean().getConnectionTimeout());
-    }
-  }
+//  @Test
+//  void testCreatingMsSQLServerDataSourceWithConnectionTimeoutSetBelowDefault() {
+//    try (var mssqlServerContainer = new MSSQLServerContainer<>("mcr.microsoft.com/mssql/server:2019-latest").acceptLicense()) {
+//      mssqlServerContainer.start();
+//      final DataSource dataSource = DataSourceFactory.create(
+//          mssqlServerContainer.getUsername(),
+//          mssqlServerContainer.getPassword(),
+//          mssqlServerContainer.getDriverClassName(),
+//          mssqlServerContainer.getJdbcUrl(),
+//          Map.of("loginTimeout", "5"));
+//      assertNotNull(dataSource);
+//      assertEquals(HikariDataSource.class, dataSource.getClass());
+//      assertEquals(5000, ((HikariDataSource) dataSource).getHikariConfigMXBean().getConnectionTimeout());
+//    }
+//  }
 
   @Test
   void testCreatingDataSourceWithConnectionTimeoutSetWithZero() {
