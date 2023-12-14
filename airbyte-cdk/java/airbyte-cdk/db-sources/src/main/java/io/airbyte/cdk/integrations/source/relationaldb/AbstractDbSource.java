@@ -365,8 +365,8 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
     if (airbyteStream.getStream().getAdditionalProperties().containsKey("where_clause")) {
       whereClause = (String) airbyteStream.getStream().getAdditionalProperties().get("where_clause");
     }
-    if (airbyteStream.getStream().getAdditionalProperties().containsKey("customSQL")) {
-      customSQL = (String) airbyteStream.getStream().getAdditionalProperties().get("customSQL");
+    if (airbyteStream.getStream().getAdditionalProperties().containsKey("custom_sql")) {
+      customSQL = (String) airbyteStream.getStream().getAdditionalProperties().get("custom_sql");
     }
     final AirbyteStreamNameNamespacePair pair = new AirbyteStreamNameNamespacePair(streamName,
         namespace);
