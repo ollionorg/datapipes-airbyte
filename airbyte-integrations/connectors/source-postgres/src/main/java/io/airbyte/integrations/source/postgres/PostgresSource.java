@@ -11,6 +11,7 @@ import static io.airbyte.cdk.db.jdbc.JdbcUtils.AMPERSAND;
 import static io.airbyte.cdk.db.jdbc.JdbcUtils.EQUALS;
 import static io.airbyte.cdk.db.jdbc.JdbcUtils.PLATFORM_DATA_INCREASE_FACTOR;
 import static io.airbyte.cdk.integrations.debezium.AirbyteDebeziumHandler.isAnyStreamIncrementalSyncMode;
+import static io.airbyte.cdk.integrations.debezium.AirbyteDebeziumHandler.isAnyStreamIncrementalSyncModeAndNoneDatapipeCustomProps;
 import static io.airbyte.cdk.integrations.source.jdbc.JdbcDataSourceUtils.DEFAULT_JDBC_PARAMETERS_DELIMITER;
 import static io.airbyte.cdk.integrations.source.jdbc.JdbcSSLConnectionUtils.CLIENT_KEY_STORE_PASS;
 import static io.airbyte.cdk.integrations.source.jdbc.JdbcSSLConnectionUtils.CLIENT_KEY_STORE_URL;
@@ -546,7 +547,7 @@ public class PostgresSource extends AbstractJdbcSource<PostgresType> implements 
           .flatMap(Collection::stream)
           .collect(Collectors.toList());
 
-    } else if (isAnyStreamIncrementalSyncMode(catalog)) {
+    } else if (isAnyStreamIncrementalSyncModeAndNoneDatapipeCustomProps(catalog)) {
       final PostgresCursorBasedStateManager postgresCursorBasedStateManager =
           new PostgresCursorBasedStateManager(stateManager.getRawStateMessages(), catalog);
       final StreamsCategorised<CursorBasedStreams> streamsCategorised = categoriseStreams(postgresCursorBasedStateManager, catalog);

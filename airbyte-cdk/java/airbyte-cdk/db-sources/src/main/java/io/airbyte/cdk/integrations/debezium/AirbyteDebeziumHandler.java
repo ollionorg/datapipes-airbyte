@@ -32,6 +32,8 @@ import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Properties;
@@ -176,4 +178,14 @@ public class AirbyteDebeziumHandler<T> {
         .anyMatch(syncMode -> syncMode == SyncMode.INCREMENTAL);
   }
 
+  public static boolean isAnyStreamIncrementalSyncModeAndNoneDatapipeCustomProps(final ConfiguredAirbyteCatalog catalog) {
+    return catalog.getStreams().stream()
+        .filter(stream -> stream.getSyncMode() == SyncMode.INCREMENTAL)
+        .anyMatch(stream -> !hasDatapipeCustomProperty(stream.getStream().getAdditionalProperties()));
+  }
+
+  private static boolean hasDatapipeCustomProperty(Map<String, Object> additionalProperties) {
+    return (additionalProperties.containsKey("custom_sql") && Objects.nonNull(additionalProperties.get("custom_sql"))) ||
+        (additionalProperties.containsKey("where_clause") && Objects.nonNull(additionalProperties.get("where_clause")));
+  }
 }
