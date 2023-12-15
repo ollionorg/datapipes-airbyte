@@ -147,6 +147,9 @@ public class MssqlSource extends AbstractJdbcSource<JDBCType> implements Source 
         preparedSqlQuery = String.format("SELECT %s FROM %s WHERE %s ORDER BY %s ASC", newIdentifiers,
             getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), whereClause, quotedCursorField);
       }
+      else if (customSQL != null && !customSQL.equals("")) {
+        preparedSqlQuery = String.format("SELECT * FROM (%s) sc ORDER BY %s ASC", customSQL, quotedCursorField);
+      }
       LOGGER.info("Prepared SQL query for TableFullRefresh is: " + preparedSqlQuery);
       return queryTable(database, preparedSqlQuery, tableName, schemaName);
     } else {
@@ -157,6 +160,9 @@ public class MssqlSource extends AbstractJdbcSource<JDBCType> implements Source 
           String.format("SELECT %s FROM %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()));
       if (!whereClause.equals("")){
         preparedSqlQuery = String.format("SELECT %s FROM %s WHERE %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), whereClause);
+      }
+      else if (customSQL != null && !customSQL.equals("")) {
+        preparedSqlQuery = customSQL;
       }
       LOGGER.info("Prepared SQL query for TableFullRefresh is: " + preparedSqlQuery);
       return queryTable(database, preparedSqlQuery, tableName, schemaName);

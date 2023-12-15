@@ -127,7 +127,7 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
             whereClause,
             quotedCursorField);
       } else if (customSQL != null && !customSQL.equals("")) {
-        query = String.format("SELECT * FROM (%s) ORDER BY %s ASC", customSQL, quotedCursorField);
+        query = String.format("SELECT * FROM (%s) sc ORDER BY %s ASC", customSQL, quotedCursorField);
       } else {
         query = String.format("SELECT %s FROM %s ORDER BY %s ASC",
             enquoteIdentifierList(columnNames, getQuoteString()),
@@ -387,7 +387,7 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
               final String wrappedColumnNames = getWrappedColumnNames(database, connection, columnNames, schemaName, tableName);
               StringBuilder sql = new StringBuilder();
               if (customSQL!= null && !customSQL.equals("")) {
-                sql = new StringBuilder(String.format("SELECT * FROM (%s) WHERE %s %s ?", customSQL, quotedCursorField, operator));
+                sql = new StringBuilder(String.format("SELECT * FROM (%s) sc WHERE %s %s ?", customSQL, quotedCursorField, operator));
               } else {
                 sql = new StringBuilder(String.format("SELECT %s FROM %s WHERE %s %s ?",
                     wrappedColumnNames,
