@@ -22,7 +22,7 @@ MAIN_REQUIREMENTS = [
     "xlrd==2.0.1",
     "openpyxl==3.0.10",
     "pyxlsb==1.0.9",
-    "python-gnupg==0.5.1",
+    "python-gnupg==0.5.2",
 ]
 
 TEST_REQUIREMENTS = ["requests-mock~=1.9.3", "pytest~=6.2", "pytest-docker~=2.0.1", "pytest-mock~=3.6.1"]
