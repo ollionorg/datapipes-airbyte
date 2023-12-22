@@ -5,6 +5,7 @@
 
 import json
 import logging
+import os
 import sys
 import tempfile
 import traceback
@@ -34,6 +35,7 @@ from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 from pandas.errors import ParserError
 from paramiko import SSHException
+from smart_open import open as s_open
 from urllib3.exceptions import ProtocolError
 from pandas.api.types import is_datetime64_any_dtype as is_datetime
 from pandas.api.types import is_timedelta64_dtype as is_timedelta
@@ -443,9 +445,11 @@ class Client:
     def read(self, fields: Iterable = None) -> Iterable[dict]:
         """Read data from the stream"""
         with self.reader.open() as fp:
-            if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
-                fp = Pgp(**self.encryption_options).decrypt(fp)
             try:
+                if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
+                    file_path = f"/tmp/plain.{self._reader_format}"
+                    Pgp(**self.encryption_options).decrypt(fp, file_path)
+                    fp = s_open(file_path, 'r')
                 if self._reader_format in ["json", "jsonl"]:
                     yield from self.load_nested_json(fp)
                 elif self._reader_format == "yaml":
@@ -479,6 +483,10 @@ class Client:
                 error_msg = f"File {fp} can not be parsed. Please check your reader_options. https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html"
                 logger.error(f"{error_msg}\n{traceback.format_exc()}")
                 raise ConfigurationError(error_msg) from err
+            finally:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"The file at {file_path} has been deleted.")
 
     def _cache_stream(self, fp):
         """cache stream to file"""
@@ -532,7 +540,9 @@ class Client:
         # TODO handle discovery of directories of multiple files instead
         with self.reader.open() as fp:
             if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
-                fp = Pgp(**self.encryption_options).decrypt(fp)
+                file_path = f"/tmp/plain.{self._reader_format}"
+                Pgp(**self.encryption_options).decrypt(fp, file_path)
+                fp = s_open(file_path, 'r')
             if self._reader_format in ["json", "jsonl"]:
                 json_schema = self.load_nested_json_schema(fp)
             else:
@@ -543,6 +553,9 @@ class Client:
                     "properties": stream_property["stream"],
                     "row_count": stream_property["row_count"],
                 }
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logger.info(f"The file at {file_path} has been deleted.")
         yield AirbyteStream(name=self.stream_name, json_schema=json_schema, supported_sync_modes=[SyncMode.full_refresh])
 
     def openpyxl_chunk_reader(self, file, **kwargs):
