@@ -446,6 +446,7 @@ class Client:
         """Read data from the stream"""
         with self.reader.open() as fp:
             try:
+                file_path = ""
                 if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
                     file_path = f"/tmp/plain.{self._reader_format}"
                     Pgp(**self.encryption_options).decrypt(fp, file_path)
@@ -539,6 +540,7 @@ class Client:
         """Discovers available streams"""
         # TODO handle discovery of directories of multiple files instead
         with self.reader.open() as fp:
+            file_path = ""
             if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
                 file_path = f"/tmp/plain.{self._reader_format}"
                 Pgp(**self.encryption_options).decrypt(fp, file_path)
