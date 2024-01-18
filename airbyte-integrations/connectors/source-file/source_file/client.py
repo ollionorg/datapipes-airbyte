@@ -427,11 +427,11 @@ class Client:
             return current_type
         if dtype == object:
             return "string"
-        if dtype in number_types and (not current_type or current_type == "number"):
+        if str(dtype).lower() in number_types:
             return "number"
-        if dtype in integer_types and (not current_type or current_type == "integer"):
-            return "integer"
-        if dtype == "bool" and (not current_type or current_type == "boolean"):
+        if str(dtype).lower() in integer_types:
+            return "integer" if not current_type else current_type
+        if str(dtype).lower() == "bool" and (not current_type or current_type == "boolean"):
             return "boolean"
         if dtype == "datetime64[ns]":
             return "date-time"
