@@ -18,10 +18,11 @@ MAIN_REQUIREMENTS = [
     "lxml==4.9.1",
     "html5lib==1.1",
     "beautifulsoup4==4.11.1",
-    "pyarrow==9.0.0",
+    "pyarrow==13.0.0",
     "xlrd==2.0.1",
     "openpyxl==3.0.10",
     "pyxlsb==1.0.9",
+    "python-gnupg==0.5.2",
 ]
 
 TEST_REQUIREMENTS = ["requests-mock~=1.9.3", "pytest~=6.2", "pytest-docker~=2.0.1", "pytest-mock~=3.6.1"]
