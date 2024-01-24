@@ -18,4 +18,5 @@ Here we would have the update steps for 1.2.4 for people to follow.
  
 ### Fixed
 - fixed the mapping between pandas dtype to airbyte types. 
+- Changed stream name to dataset name. 
   
