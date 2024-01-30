@@ -6,6 +6,7 @@ import csv
 import ctypes
 import math
 import os
+import io
 import time
 import urllib.parse
 import uuid
@@ -348,7 +349,6 @@ class BulkSalesforceStream(SalesforceStream):
         """
         docs: https://developer.salesforce.com/docs/atlas.en-us.api_asynch.meta/api_asynch/create_job.html
         """
-        self.logger.info(f"create_stream_job {query}")
         json = {"operation": "queryAll", "query": query, "contentType": "CSV", "columnDelimiter": "COMMA", "lineEnding": "LF"}
         try:
             response = self._send_http_request("POST", url, json=json)
@@ -505,7 +505,7 @@ class BulkSalesforceStream(SalesforceStream):
 
         return self.encoding
 
-    def download_data(self, url: str, chunk_size: int = 1024*1024*10) -> tuple[str, str, dict]:
+    def download_data(self, url: str, chunk_size: int = 1024) -> tuple[str, str, dict]:
         """
         Retrieves binary data result from successfully `executed_job`, using chunks, to avoid local memory limitations.
         @ url: string - the url of the `executed_job`
@@ -514,41 +514,61 @@ class BulkSalesforceStream(SalesforceStream):
         """
         # set filepath for binary data from response
         tmp_file = str(uuid.uuid4())
-        with closing(self._send_http_request("GET", url, headers={"Accept-Encoding": "gzip"}, stream=True)) as response, open(
-            tmp_file, "wb"
-        ) as data_file:
-            response_headers = response.headers
-            response_encoding = self.get_response_encoding(response_headers)
-            for chunk in response.iter_content(chunk_size=chunk_size):
-                data_file.write(self.filter_null_bytes(chunk))
-        self.logger.info(f"Created File...")
-        # check the file exists
-        if os.path.isfile(tmp_file):
-            return tmp_file, response_encoding, response_headers
-        else:
-            raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
+        # with closing(self._send_http_request("GET", url, headers={"Accept-Encoding": "gzip"}, stream=True)) as response, open(
+        #     tmp_file, "wb"
+        # ) as data_file:
+        #     response_headers = response.headers
+        #     response_encoding = self.get_response_encoding(response_headers)
+        #     for chunk in response.iter_content(chunk_size=chunk_size):
+        #         data_file.write(self.filter_null_bytes(chunk))
+        # # check the file exists
+        # if os.path.isfile(tmp_file):
+        #     return tmp_file, response_encoding, response_headers
+        # else:
+        #     raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
+        self.logger.info(f"Creating File...:{url}")
 
-    def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 100000) -> Iterable[Tuple[int, Mapping[str, Any]]]:
+        response = self._send_http_request("GET", url, headers={"Accept-Encoding": "gzip"})
+        response_headers = response.headers
+        response_encoding = self.get_response_encoding(response_headers)
+        try:
+
+            # data_file.write(self.filter_null_bytes(chunk))
+            data = self.filter_null_bytes(response.content)
+            chunks = pd.read_csv(io.StringIO(data.decode(response_encoding)), iterator=True, dialect="unix", dtype=object)
+            for row_chunk in chunks:
+                chunk = row_chunk.replace({nan: None}).to_dict(orient="records")
+                for row in chunk:
+                    yield row
+        except pd.errors.EmptyDataError as e:
+            self.logger.info(f"Empty data received. {e}")
+            yield from []
+        except Exception as ex:
+            self.logger.error("error found in data")
+            self.logger.error(response)
+            raise ex
+        # self.logger.info(f"Created File...")
+        # check the file exists
+        # if os.path.isfile(tmp_file):
+        #     return tmp_file, response_encoding, response_headers
+        # else:
+        #     raise TmpFileIOError(f"The IO/Error occured while verifying binary data. Stream: {self.name}, file {tmp_file} doesn't exist.")
+        return response_headers
+
+    def read_with_chunks(self, path: str, file_encoding: str, chunk_size: int = 100) -> Iterable[Tuple[int, Mapping[str, Any]]]:
         """
         Reads the downloaded binary data, using lines chunks, set by `chunk_size`.
         @ path: string - the path to the downloaded temporarily binary data.
         @ file_encoding: string - encoding for binary data file according to Standard Encodings from codecs module
         @ chunk_size: int - the number of lines to read at a time, default: 100 lines / time.
         """
-        self.logger.info(f"read_with_chunks started.")
-        count = 0
         try:
             with open(path, "r", encoding=file_encoding) as data:
                 chunks = pd.read_csv(data, chunksize=chunk_size, iterator=True, dialect="unix", dtype=object)
-                self.logger.info(f"read_with_chunks chunks created.")
-                self.logger.info(f"Found Data in File: {path}")
                 for chunk in chunks:
                     chunk = chunk.replace({nan: None}).to_dict(orient="records")
                     for row in chunk:
                         yield row
-                    self.logger.info(f"chunk:{count} read.")
-                    count += 1
-            self.logger.info(f"read_with_chunks finished.")
         except pd.errors.EmptyDataError as e:
             self.logger.info(f"Empty data received. {e}")
             yield from []
@@ -564,8 +584,7 @@ class BulkSalesforceStream(SalesforceStream):
         self.logger.warning("Broken job was aborted")
 
     def delete_job(self, url: str):
-        self.logger.info(f"skipping delete job URL: {url}")
-        # self._send_http_request("DELETE", url=url)
+        self._send_http_request("DELETE", url=url)
 
     @property
     def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
@@ -612,9 +631,7 @@ class BulkSalesforceStream(SalesforceStream):
     ) -> Iterable[Mapping[str, Any]]:
         stream_state = stream_state or {}
         next_page_token = None
-        self.logger.info(cursor_field)
-        self.logger.info(stream_slice)
-        self.logger.info(stream_state)
+
         params = self.request_params(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         path = self.path(stream_state=stream_state, stream_slice=stream_slice, next_page_token=next_page_token)
         job_full_url, job_status = self.execute_job(query=params["q"], url=f"{self.url_base}{path}")
@@ -638,17 +655,20 @@ class BulkSalesforceStream(SalesforceStream):
         salesforce_bulk_api_locator = None
         while True:
             req = PreparedRequest()
-            req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator, "maxRecords": 1000000})
-            tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
-            numberOfRecords = response_headers.get("Sforce-NumberOfRecords")
-            self.logger.info(f"numberOfRecords {numberOfRecords}")
-            for record in self.read_with_chunks(tmp_file, response_encoding):
-                yield record
+            # req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator})
+            req.prepare_url(f"{job_full_url}/results", {"maxRecords": 50000})
+            # tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
+            downloaded_data = self.download_data(url=req.url)
+            try:
+                while True:
+                    record = next(downloaded_data)
+                    yield record
+            except StopIteration as ex:
+                response_headers = ex.value
 
             if response_headers.get("Sforce-Locator", "null") == "null":
                 break
             salesforce_bulk_api_locator = response_headers.get("Sforce-Locator")
-
         self.delete_job(url=job_full_url)
 
     def get_standard_instance(self) -> SalesforceStream:
@@ -736,8 +756,7 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, ABC):
         where_conditions = []
 
         if start_date:
-            # NOTE: Changed >= to > by Data pipes
-            where_conditions.append(f"{self.cursor_field} > {start_date}")
+            where_conditions.append(f"{self.cursor_field} >= {start_date}")
         if end_date:
             where_conditions.append(f"{self.cursor_field} < {end_date}")
 
@@ -776,8 +795,7 @@ class BulkIncrementalSalesforceStream(BulkSalesforceStream, IncrementalRestSales
 
         select_fields = self.get_query_select_fields()
         table_name = self.name
-        # NOTE: Changed >= to > by Data pipes
-        where_conditions = [f"{self.cursor_field} > {start_date}", f"{self.cursor_field} < {end_date}"]
+        where_conditions = [f"{self.cursor_field} >= {start_date}", f"{self.cursor_field} < {end_date}"]
 
         where_clause = f"WHERE {' AND '.join(where_conditions)}"
         query = f"SELECT {select_fields} FROM {table_name} {where_clause}"
