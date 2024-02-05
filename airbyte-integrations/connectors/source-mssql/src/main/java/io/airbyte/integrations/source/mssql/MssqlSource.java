@@ -155,14 +155,16 @@ public class MssqlSource extends AbstractJdbcSource<JDBCType> implements Source 
     } else {
       // If we are in FULL_REFRESH mode, state messages are never emitted, so we don't care about ordering
       // of the records.
-      final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
-      String preparedSqlQuery =
-          String.format("SELECT %s FROM %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()));
+      String preparedSqlQuery = "";
       if (!whereClause.equals("")){
+        final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
         preparedSqlQuery = String.format("SELECT %s FROM %s WHERE %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()), whereClause);
       }
       else if (customSQL != null && !customSQL.equals("")) {
         preparedSqlQuery = customSQL;
+      } else {
+        final String newIdentifiers = getWrappedColumnNames(database, null, columnNames, schemaName, tableName);
+        preparedSqlQuery = String.format("SELECT %s FROM %s", newIdentifiers, getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString()));
       }
       LOGGER.info("Prepared SQL query for TableFullRefresh is: " + preparedSqlQuery);
       return queryTable(database, preparedSqlQuery, tableName, schemaName);
