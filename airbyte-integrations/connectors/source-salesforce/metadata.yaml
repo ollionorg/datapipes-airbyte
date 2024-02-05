@@ -11,7 +11,7 @@ data:
   connectorType: source
   definitionId: b117307c-14b6-41aa-9422-947e34922962
   dockerImageTag: 2.2.2-v1
-  dockerRepository: airbyte/source-salesforce
+  dockerRepository: datapipes-airbyte/source-salesforce
   documentationUrl: https://docs.airbyte.com/integrations/sources/salesforce
   githubIssueLabel: source-salesforce
   icon: salesforce.svg
