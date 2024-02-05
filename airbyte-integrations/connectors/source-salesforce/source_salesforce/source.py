@@ -164,15 +164,7 @@ class SourceSalesforce(ConcurrentSourceAdapter):
         for stream_name, sobject_options in stream_objects.items():
             json_schema = schemas.get(stream_name, {})
 
-            api_type = cls._get_api_type(stream_name, selected_properties, config.get("force_use_bulk_api", False))
-            if api_type == "rest":
-                logger.info("using rest api")
-                full_refresh, incremental = RestSalesforceStream, IncrementalRestSalesforceStream
-            elif api_type == "bulk":
-                logger.info("using bulk api")
-                full_refresh, incremental = BulkSalesforceStream, BulkIncrementalSalesforceStream
-            else:
-                raise Exception(f"Stream {stream_name} cannot be processed by REST or BULK API.")
+            stream_class, kwargs = cls.prepare_stream(stream_name, json_schema, sobject_options, *default_args)
 
             parent_name = PARENT_SALESFORCE_OBJECTS.get(stream_name, {}).get("parent_name")
             if parent_name:
