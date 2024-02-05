@@ -339,7 +339,7 @@ class BulkSalesforceStream(SalesforceStream):
     @default_backoff_handler(max_tries=5, factor=15)
     def _send_http_request(self, method: str, url: str, json: dict = None, headers: dict = None, stream: bool = False):
         headers = self.authenticator.get_auth_header() if not headers else headers | self.authenticator.get_auth_header()
-        response = self._session.request(method, url=url, headers=headers, json=json, stream=stream)
+        response = self._session.request(method, url=url, headers=headers, json=json, stream=stream, timeout=30)
         if response.status_code not in [200, 204]:
             self.logger.error(f"error body: {response.text}, sobject options: {self.sobject_options}")
         response.raise_for_status()
@@ -656,7 +656,7 @@ class BulkSalesforceStream(SalesforceStream):
         while True:
             req = PreparedRequest()
             # req.prepare_url(f"{job_full_url}/results", {"locator": salesforce_bulk_api_locator})
-            req.prepare_url(f"{job_full_url}/results", {"maxRecords": 50000})
+            req.prepare_url(f"{job_full_url}/results", {"maxRecords": 100000})
             # tmp_file, response_encoding, response_headers = self.download_data(url=req.url)
             downloaded_data = self.download_data(url=req.url)
             try:
@@ -756,7 +756,7 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, ABC):
         where_conditions = []
 
         if start_date:
-            where_conditions.append(f"{self.cursor_field} >= {start_date}")
+            where_conditions.append(f"{self.cursor_field} > {start_date}")
         if end_date:
             where_conditions.append(f"{self.cursor_field} < {end_date}")
 
@@ -795,7 +795,7 @@ class BulkIncrementalSalesforceStream(BulkSalesforceStream, IncrementalRestSales
 
         select_fields = self.get_query_select_fields()
         table_name = self.name
-        where_conditions = [f"{self.cursor_field} >= {start_date}", f"{self.cursor_field} < {end_date}"]
+        where_conditions = [f"{self.cursor_field} > {start_date}", f"{self.cursor_field} < {end_date}"]
 
         where_clause = f"WHERE {' AND '.join(where_conditions)}"
         query = f"SELECT {select_fields} FROM {table_name} {where_clause}"
