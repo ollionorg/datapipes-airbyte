@@ -774,7 +774,7 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, ABC):
         where_conditions = []
 
         if start_date:
-            where_conditions.append(f"{self.cursor_field} >= {start_date}")
+            where_conditions.append(f"{self.cursor_field} > {start_date}")
         if end_date:
             where_conditions.append(f"{self.cursor_field} < {end_date}")
 
@@ -813,7 +813,7 @@ class BulkIncrementalSalesforceStream(BulkSalesforceStream, IncrementalRestSales
 
         select_fields = self.get_query_select_fields()
         table_name = self.name
-        where_conditions = [f"{self.cursor_field} >= {start_date}", f"{self.cursor_field} < {end_date}"]
+        where_conditions = [f"{self.cursor_field} > {start_date}", f"{self.cursor_field} < {end_date}"]
 
         where_clause = f"WHERE {' AND '.join(where_conditions)}"
         query = f"SELECT {select_fields} FROM {table_name} {where_clause}"
