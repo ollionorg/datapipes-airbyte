@@ -339,7 +339,7 @@ class BulkSalesforceStream(SalesforceStream):
     @default_backoff_handler(max_tries=5, factor=15)
     def _send_http_request(self, method: str, url: str, json: dict = None, headers: dict = None, stream: bool = False):
         headers = self.authenticator.get_auth_header() if not headers else headers | self.authenticator.get_auth_header()
-        response = self._session.request(method, url=url, headers=headers, json=json, stream=stream)
+        response = self._session.request(method, url=url, headers=headers, json=json, stream=stream, timeout=30)
         if response.status_code not in [200, 204]:
             self.logger.error(f"error body: {response.text}, sobject options: {self.sobject_options}")
         response.raise_for_status()
