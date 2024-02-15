@@ -10,6 +10,7 @@ import sys
 import tempfile
 import traceback
 import urllib
+import zipfile
 from os import environ, getcwd
 from typing import Iterable
 from urllib.parse import urlparse
@@ -292,7 +293,8 @@ class Client:
         self._provider = provider
         self._reader_format = format or "csv"
         self._reader_options = reader_options or {}
-        self.binary_source = self._reader_format in self.binary_formats or encryption_options
+        self._is_zip = url.endswith(".zip")
+        self.binary_source = self._reader_format in self.binary_formats or encryption_options or self._is_zip
         self.encoding = self._reader_options.get("encoding")
         self.encryption_options = encryption_options
 
@@ -465,6 +467,8 @@ class Client:
                     fields = frozenset(fields) if fields else None
                     # if self.binary_source:
                     #     fp = self._cache_stream(fp)
+                    # if self._is_zip:
+                    #     fp = self._unzip(fp)
                     for batch in self.load_dataframes(fp):
                         df = batch.to_pandas() if self._reader_format == "parquet" else batch
                         # for parquet files
@@ -491,9 +495,20 @@ class Client:
                     os.remove(file_path)
                     logger.info(f"The file at {file_path} has been deleted.")
 
+    def _unzip(self, fp):
+        tmp_dir = tempfile.TemporaryDirectory()
+        with zipfile.ZipFile(str(fp.name), "r") as zip_ref:
+            zip_ref.extractall(tmp_dir.name)
+
+        logger.info("Temp dir content: " + str(os.listdir(tmp_dir.name)))
+        final_file: str = os.path.join(tmp_dir.name, os.listdir(tmp_dir.name)[0])
+        logger.info("Pick up first file: " + final_file)
+        fp_tmp = open(final_file, "r")
+        return fp_tmp
+
     def _cache_stream(self, fp):
         """cache stream to file"""
-        fp_tmp = tempfile.TemporaryFile(mode="w+b")
+        fp_tmp = tempfile.NamedTemporaryFile(mode="w+b")
         fp_tmp.write(fp.read())
         fp_tmp.seek(0)
         fp.close()
@@ -511,6 +526,8 @@ class Client:
             # if self.binary_source:
             #     fp = self._cache_stream(fp)
             #     logger.info("Cache stream successs")
+            # if self._is_zip:
+            #     fp = self._unzip(fp)
             df_list = self.load_dataframes(fp, skip_data=False)
         fields = {}
         for df in df_list:
