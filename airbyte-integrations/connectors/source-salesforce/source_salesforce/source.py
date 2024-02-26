@@ -132,7 +132,7 @@ class SourceSalesforce(ConcurrentSourceAdapter):
     def get_stream_end_date(stream_name, config):
         table_time_frames = config.get("table_time_frame", [])
         for table_time_frame in table_time_frames:
-            if table_time_frame and table_time_frame.get("stream_name", "") == stream_name:
+            if table_time_frame and str(table_time_frame.get("stream_name", "")).lower() == stream_name.lower():
                 return table_time_frame.get("end_date", None)
         return None
 

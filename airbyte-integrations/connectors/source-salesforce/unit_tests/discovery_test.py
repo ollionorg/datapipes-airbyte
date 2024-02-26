@@ -106,6 +106,7 @@ def test_convert_sf_types(sf_types, json_type, with_raise):
             ({}, "", None),
             ({}, "Account", None),
             ({"table_time_frame": [{"stream_name": "Account", "end_date": "2015-08-31"}, {"stream_name": "Contact", "end_date": "2015-08-31"}]}, "Account", "2015-08-31"),
+            ({"table_time_frame": [{"stream_name": "Account", "end_date": "2015-08-31"}, {"stream_name": "Contact", "end_date": "2015-08-31"}]}, "account", "2015-08-31"),
             ({"table_time_frame": [{"stream_name": "Account", "end_date": "2015-08-31"}]}, "Contact", None),
     ),
 )
