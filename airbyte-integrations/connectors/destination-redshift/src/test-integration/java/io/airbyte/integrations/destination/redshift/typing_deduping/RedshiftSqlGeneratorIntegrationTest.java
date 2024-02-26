@@ -5,9 +5,16 @@
 package io.airbyte.integrations.destination.redshift.typing_deduping;
 
 import static io.airbyte.cdk.db.jdbc.DateTimeConverter.putJavaSQLTime;
-import static io.airbyte.integrations.destination.redshift.operations.RedshiftSqlOperations.escapeStringLiteral;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_AB_EXTRACTED_AT;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_AB_ID;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_AB_LOADED_AT;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_AB_META;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_AB_RAW_ID;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_DATA;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.COLUMN_NAME_EMITTED_AT;
+import static io.airbyte.cdk.integrations.base.JavaBaseConstants.LEGACY_RAW_TABLE_COLUMNS;
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -17,12 +24,13 @@ import io.airbyte.cdk.db.jdbc.DateTimeConverter;
 import io.airbyte.cdk.db.jdbc.JdbcDatabase;
 import io.airbyte.cdk.db.jdbc.JdbcSourceOperations;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
-import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcSqlGenerator;
-import io.airbyte.cdk.integrations.standardtest.destination.typing_deduping.JdbcSqlGeneratorIntegrationTest;
+import io.airbyte.cdk.integrations.base.JavaBaseConstants;
+import io.airbyte.cdk.integrations.destination.jdbc.TableDefinition;
 import io.airbyte.commons.json.Jsons;
+import io.airbyte.integrations.base.destination.typing_deduping.BaseSqlGeneratorIntegrationTest;
 import io.airbyte.integrations.base.destination.typing_deduping.DestinationHandler;
-import io.airbyte.integrations.base.destination.typing_deduping.DestinationInitialState;
-import io.airbyte.integrations.base.destination.typing_deduping.Sql;
+import io.airbyte.integrations.base.destination.typing_deduping.SqlGenerator;
+import io.airbyte.integrations.base.destination.typing_deduping.StreamId;
 import io.airbyte.integrations.destination.redshift.RedshiftInsertDestination;
 import io.airbyte.integrations.destination.redshift.RedshiftSQLNameTransformer;
 import java.nio.file.Files;
@@ -33,20 +41,23 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import javax.sql.DataSource;
 import org.jooq.DSLContext;
-import org.jooq.DataType;
-import org.jooq.Field;
-import org.jooq.SQLDialect;
+import org.jooq.InsertValuesStepN;
+import org.jooq.Name;
+import org.jooq.Record;
 import org.jooq.conf.Settings;
 import org.jooq.impl.DSL;
 import org.jooq.impl.DefaultDataType;
+import org.jooq.impl.SQLDataType;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
-public class RedshiftSqlGeneratorIntegrationTest extends JdbcSqlGeneratorIntegrationTest {
+public class RedshiftSqlGeneratorIntegrationTest extends BaseSqlGeneratorIntegrationTest<TableDefinition> {
 
   /**
    * Redshift's JDBC driver doesn't map certain data types onto {@link java.sql.JDBCType} usefully.
@@ -137,7 +148,7 @@ public class RedshiftSqlGeneratorIntegrationTest extends JdbcSqlGeneratorIntegra
   }
 
   @Override
-  protected JdbcSqlGenerator getSqlGenerator() {
+  protected SqlGenerator<TableDefinition> getSqlGenerator() {
     return new RedshiftSqlGenerator(new RedshiftSQLNameTransformer()) {
 
       // Override only for tests to print formatted SQL. The actual implementation should use unformatted
@@ -151,41 +162,160 @@ public class RedshiftSqlGeneratorIntegrationTest extends JdbcSqlGeneratorIntegra
   }
 
   @Override
-  protected DestinationHandler getDestinationHandler() {
+  protected DestinationHandler<TableDefinition> getDestinationHandler() {
     return new RedshiftDestinationHandler(databaseName, database);
   }
 
   @Override
-  protected JdbcDatabase getDatabase() {
-    return database;
+  protected void createNamespace(final String namespace) throws Exception {
+    database.execute(DSL.createSchemaIfNotExists(namespace).getSQL());
   }
 
   @Override
-  protected DataType<?> getStructType() {
-    return new DefaultDataType<>(null, String.class, "super");
+  protected void createRawTable(final StreamId streamId) throws Exception {
+    database.execute(DSL.createTable(DSL.name(streamId.rawNamespace(), streamId.rawName()))
+        .column(COLUMN_NAME_AB_RAW_ID, SQLDataType.VARCHAR(36).nullable(false))
+        .column(COLUMN_NAME_AB_EXTRACTED_AT, SQLDataType.TIMESTAMPWITHTIMEZONE.nullable(false))
+        .column(COLUMN_NAME_AB_LOADED_AT, SQLDataType.TIMESTAMPWITHTIMEZONE)
+        .column(COLUMN_NAME_DATA, new DefaultDataType<>(null, String.class, "super").nullable(false))
+        .getSQL());
   }
 
   @Override
-  protected SQLDialect getSqlDialect() {
-    return SQLDialect.POSTGRES;
+  protected void createV1RawTable(final StreamId v1RawTable) throws Exception {
+    database.execute(DSL.createTable(DSL.name(v1RawTable.rawNamespace(), v1RawTable.rawName()))
+        .column(COLUMN_NAME_AB_ID, SQLDataType.VARCHAR(36).nullable(false))
+        .column(COLUMN_NAME_EMITTED_AT, SQLDataType.TIMESTAMPWITHTIMEZONE.nullable(false))
+        .column(COLUMN_NAME_DATA, new DefaultDataType<>(null, String.class, "super").nullable(false))
+        .getSQL());
   }
 
   @Override
-  protected Field<?> toJsonValue(final String valueAsString) {
-    return DSL.function("JSON_PARSE", String.class, DSL.val(escapeStringLiteral(valueAsString)));
+  protected List<JsonNode> dumpRawTableRecords(final StreamId streamId) throws Exception {
+    return database.queryJsons(DSL.selectFrom(DSL.name(streamId.rawNamespace(), streamId.rawName())).getSQL());
+  }
+
+  @Override
+  protected List<JsonNode> dumpFinalTableRecords(final StreamId streamId, final String suffix) throws Exception {
+    return database.queryJsons(DSL.selectFrom(DSL.name(streamId.finalNamespace(), streamId.finalName() + suffix)).getSQL());
+  }
+
+  @Override
+  protected void teardownNamespace(final String namespace) throws Exception {
+    database.execute(DSL.dropSchema(namespace).cascade().getSQL());
+  }
+
+  @Override
+  protected void insertFinalTableRecords(final boolean includeCdcDeletedAt,
+                                         final StreamId streamId,
+                                         final String suffix,
+                                         final List<JsonNode> records)
+      throws Exception {
+    final List<String> columnNames = includeCdcDeletedAt ? FINAL_TABLE_COLUMN_NAMES_CDC : FINAL_TABLE_COLUMN_NAMES;
+    insertRecords(
+        DSL.name(streamId.finalNamespace(), streamId.finalName() + suffix),
+        columnNames,
+        records,
+        COLUMN_NAME_AB_META, "struct", "array", "unknown");
+  }
+
+  @Override
+  protected void insertV1RawTableRecords(final StreamId streamId, final List<JsonNode> records) throws Exception {
+    insertRecords(
+        DSL.name(streamId.rawNamespace(), streamId.rawName()),
+        LEGACY_RAW_TABLE_COLUMNS,
+        records,
+        COLUMN_NAME_DATA);
+  }
+
+  @Override
+  protected void insertRawTableRecords(final StreamId streamId, final List<JsonNode> records) throws Exception {
+    insertRecords(
+        DSL.name(streamId.rawNamespace(), streamId.rawName()),
+        JavaBaseConstants.V2_RAW_TABLE_COLUMN_NAMES,
+        records,
+        COLUMN_NAME_DATA);
+  }
+
+  /**
+   * Insert arbitrary records into an arbitrary table.
+   *
+   * @param columnsToParseJson Columns that must be wrapped in JSON_PARSE, because we're inserting
+   *        them into a SUPER column. Naively inserting a string results a SUPER value containing a
+   *        json string, rather than a json object.
+   */
+  private void insertRecords(final Name tableName, final List<String> columnNames, final List<JsonNode> records, final String... columnsToParseJson)
+      throws SQLException {
+    InsertValuesStepN<Record> insert = DSL.insertInto(
+        DSL.table(tableName),
+        columnNames.stream().map(DSL::field).toList());
+    for (final JsonNode record : records) {
+      insert = insert.values(
+          columnNames.stream()
+              .map(fieldName -> {
+                // Convert this field to a string. Pretty naive implementation.
+                final JsonNode column = record.get(fieldName);
+                final String columnAsString;
+                if (column == null) {
+                  columnAsString = null;
+                } else if (column.isTextual()) {
+                  columnAsString = column.asText();
+                } else {
+                  columnAsString = column.toString();
+                }
+
+                if (Arrays.asList(columnsToParseJson).contains(fieldName)) {
+                  // TODO this is redshift-specific. If we try and genericize this class, we need to handle this
+                  // specifically
+                  return DSL.function("JSON_PARSE", String.class, DSL.inline(escapeStringLiteral(columnAsString)));
+                } else {
+                  return DSL.inline(escapeStringLiteral(columnAsString));
+                }
+              })
+              .toList());
+    }
+    database.execute(insert.getSQL());
   }
 
   @Override
   @Test
   public void testCreateTableIncremental() throws Exception {
-    final Sql sql = generator.createTable(incrementalDedupStream, "", false);
+    final String sql = generator.createTable(incrementalDedupStream, "", false);
     destinationHandler.execute(sql);
-    List<DestinationInitialState> initialStates = destinationHandler.gatherInitialState(List.of(incrementalDedupStream));
-    assertEquals(1, initialStates.size());
-    final DestinationInitialState initialState = initialStates.getFirst();
-    assertTrue(initialState.isFinalTablePresent());
-    assertFalse(initialState.isSchemaMismatch());
+
+    final Optional<TableDefinition> existingTable = destinationHandler.findExistingTable(incrementalDedupStream.id());
+
+    assertTrue(existingTable.isPresent());
+    assertAll(
+        () -> assertEquals("varchar", existingTable.get().columns().get("_airbyte_raw_id").type()),
+        () -> assertEquals("timestamptz", existingTable.get().columns().get("_airbyte_extracted_at").type()),
+        () -> assertEquals("super", existingTable.get().columns().get("_airbyte_meta").type()),
+        () -> assertEquals("int8", existingTable.get().columns().get("id1").type()),
+        () -> assertEquals("int8", existingTable.get().columns().get("id2").type()),
+        () -> assertEquals("timestamptz", existingTable.get().columns().get("updated_at").type()),
+        () -> assertEquals("super", existingTable.get().columns().get("struct").type()),
+        () -> assertEquals("super", existingTable.get().columns().get("array").type()),
+        () -> assertEquals("varchar", existingTable.get().columns().get("string").type()),
+        () -> assertEquals("numeric", existingTable.get().columns().get("number").type()),
+        () -> assertEquals("int8", existingTable.get().columns().get("integer").type()),
+        () -> assertEquals("bool", existingTable.get().columns().get("boolean").type()),
+        () -> assertEquals("timestamptz", existingTable.get().columns().get("timestamp_with_timezone").type()),
+        () -> assertEquals("timestamp", existingTable.get().columns().get("timestamp_without_timezone").type()),
+        () -> assertEquals("timetz", existingTable.get().columns().get("time_with_timezone").type()),
+        () -> assertEquals("time", existingTable.get().columns().get("time_without_timezone").type()),
+        () -> assertEquals("date", existingTable.get().columns().get("date").type()),
+        () -> assertEquals("super", existingTable.get().columns().get("unknown").type()));
     // TODO assert on table clustering, etc.
+  }
+
+  private static String escapeStringLiteral(final String str) {
+    if (str == null) {
+      return null;
+    } else {
+      // jooq handles most things
+      // but we need to manually escape backslashes for some reason
+      return str.replace("\\", "\\\\");
+    }
   }
 
 }

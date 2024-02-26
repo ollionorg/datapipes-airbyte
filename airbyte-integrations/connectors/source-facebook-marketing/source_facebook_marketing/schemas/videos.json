@@ -1,8 +1,5 @@
 {
   "properties": {
-    "account_id": {
-      "type": ["null", "string"]
-    },
     "id": {
       "type": "string"
     },

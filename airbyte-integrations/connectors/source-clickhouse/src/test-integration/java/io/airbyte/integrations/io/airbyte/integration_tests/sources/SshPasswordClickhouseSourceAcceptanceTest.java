@@ -5,9 +5,7 @@
 package io.airbyte.integrations.io.airbyte.integration_tests.sources;
 
 import io.airbyte.cdk.integrations.base.ssh.SshTunnel;
-import org.junit.jupiter.api.Disabled;
 
-@Disabled
 public class SshPasswordClickhouseSourceAcceptanceTest extends
     AbstractSshClickHouseSourceAcceptanceTest {
 

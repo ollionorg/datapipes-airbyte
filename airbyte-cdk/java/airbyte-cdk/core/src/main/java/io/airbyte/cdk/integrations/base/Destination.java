@@ -162,11 +162,4 @@ public interface Destination extends Integration {
 
   }
 
-  /**
-   * Denotes if the destination fully supports Destinations V2.
-   */
-  default boolean isV2Destination() {
-    return false;
-  }
-
 }

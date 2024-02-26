@@ -4,11 +4,15 @@
 
 package io.airbyte.cdk.integrations.debezium.internals;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import io.airbyte.cdk.integrations.debezium.internals.mongodb.MongoDbDebeziumPropertiesManager;
+import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
 import io.debezium.engine.ChangeEvent;
 import io.debezium.engine.DebeziumEngine;
 import io.debezium.engine.format.Json;
 import io.debezium.engine.spi.OffsetCommitPolicy;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -34,8 +38,14 @@ public class DebeziumRecordPublisher implements AutoCloseable {
   private final CountDownLatch engineLatch;
   private final DebeziumPropertiesManager debeziumPropertiesManager;
 
-  public DebeziumRecordPublisher(DebeziumPropertiesManager debeziumPropertiesManager) {
-    this.debeziumPropertiesManager = debeziumPropertiesManager;
+  public DebeziumRecordPublisher(final Properties properties,
+                                 final JsonNode config,
+                                 final ConfiguredAirbyteCatalog catalog,
+                                 final AirbyteFileOffsetBackingStore offsetManager,
+                                 final Optional<AirbyteSchemaHistoryStorage> schemaHistoryManager,
+                                 final DebeziumPropertiesManager.DebeziumConnectorType debeziumConnectorType) {
+    this.debeziumPropertiesManager = createDebeziumPropertiesManager(debeziumConnectorType, properties, config, catalog, offsetManager,
+        schemaHistoryManager);
     this.hasClosed = new AtomicBoolean(false);
     this.isClosing = new AtomicBoolean(false);
     this.thrownError = new AtomicReference<>();
@@ -43,11 +53,21 @@ public class DebeziumRecordPublisher implements AutoCloseable {
     this.engineLatch = new CountDownLatch(1);
   }
 
-  public void start(final BlockingQueue<ChangeEvent<String, String>> queue,
-                    final AirbyteFileOffsetBackingStore offsetManager,
-                    final Optional<AirbyteSchemaHistoryStorage> schemaHistoryManager) {
+  private DebeziumPropertiesManager createDebeziumPropertiesManager(final DebeziumPropertiesManager.DebeziumConnectorType debeziumConnectorType,
+                                                                    final Properties properties,
+                                                                    final JsonNode config,
+                                                                    final ConfiguredAirbyteCatalog catalog,
+                                                                    final AirbyteFileOffsetBackingStore offsetManager,
+                                                                    final Optional<AirbyteSchemaHistoryStorage> schemaHistoryManager) {
+    return switch (debeziumConnectorType) {
+      case MONGODB -> new MongoDbDebeziumPropertiesManager(properties, config, catalog, offsetManager);
+      default -> new RelationalDbDebeziumPropertiesManager(properties, config, catalog, offsetManager, schemaHistoryManager);
+    };
+  }
+
+  public void start(final BlockingQueue<ChangeEvent<String, String>> queue) {
     engine = DebeziumEngine.create(Json.class)
-        .using(debeziumPropertiesManager.getDebeziumProperties(offsetManager, schemaHistoryManager))
+        .using(debeziumPropertiesManager.getDebeziumProperties())
         .using(new OffsetCommitPolicy.AlwaysCommitOffsetPolicy())
         .notifying(e -> {
           // debezium outputs a tombstone event that has a value of null. this is an artifact of how it
@@ -66,14 +86,12 @@ public class DebeziumRecordPublisher implements AutoCloseable {
         .using((success, message, error) -> {
           LOGGER.info("Debezium engine shutdown. Engine terminated successfully : {}", success);
           LOGGER.info(message);
-          if (!success) {
-            if (error != null) {
-              thrownError.set(error);
-            } else {
-              // There are cases where Debezium doesn't succeed but only fills the message field.
-              // In that case, we still want to fail loud and clear
-              thrownError.set(new RuntimeException(message));
-            }
+          thrownError.set(error);
+          // If debezium has not shutdown correctly, it can indicate an error with the connector configuration
+          // or a partial sync success.
+          // In situations like these, the preference is to fail loud and clear.
+          if (thrownError.get() != null && !success) {
+            thrownError.set(new RuntimeException(message));
           }
           engineLatch.countDown();
         })

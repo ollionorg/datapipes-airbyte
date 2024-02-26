@@ -6,14 +6,21 @@
     "id": {
       "type": ["null", "string"]
     },
-    "displayName": {
+    "display_name": {
       "type": ["null", "string"]
     },
     "roles": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "description": {
       "type": ["null", "string"]
@@ -21,7 +28,7 @@
     "email": {
       "type": ["null", "string"]
     },
-    "webUrl": {
+    "web_url": {
       "type": ["null", "string"]
     }
   }

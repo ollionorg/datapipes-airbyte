@@ -2,16 +2,13 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-import io
 import sys
-import tempfile
-from pathlib import Path
-from typing import Any, Callable, Dict, Optional, TextIO, Tuple
+from typing import Any, Callable, Optional, TextIO
 
 import anyio
 import dagger
 from asyncclick import Context, get_current_context
-from pipelines import main_logger
+from dagger.api.gen import Client, Container
 from pipelines.cli.click_decorators import LazyPassDecorator
 from pydantic import BaseModel, Field, PrivateAttr
 
@@ -26,13 +23,13 @@ class ClickPipelineContext(BaseModel, Singleton):
     Dagger client, which is used to create containers for running pipelines.
     """
 
-    dockerd_service: Optional[dagger.Container] = Field(default=None)
-    _dagger_client: Optional[dagger.Client] = PrivateAttr(default=None)
+    dockerd_service: Optional[Container] = Field(default=None)
+    _dagger_client: Optional[Client] = PrivateAttr(default=None)
     _click_context: Callable[[], Context] = PrivateAttr(default_factory=lambda: get_current_context)
-    _og_click_context: Context = PrivateAttr(default=None)
+    _og_click_context: Callable[[], Context] = PrivateAttr(default=None)
 
     @property
-    def params(self) -> Dict[str, Any]:
+    def params(self):
         """
         Returns a combination of the click context object and the click context params.
 
@@ -57,7 +54,7 @@ class ClickPipelineContext(BaseModel, Singleton):
     class Config:
         arbitrary_types_allowed = True
 
-    def __init__(self, **data: dict[str, Any]) -> None:
+    def __init__(self, **data: dict[str, Any]):
         """
         Initialize the ClickPipelineContext instance.
 
@@ -79,15 +76,15 @@ class ClickPipelineContext(BaseModel, Singleton):
 
     _dagger_client_lock: anyio.Lock = PrivateAttr(default_factory=anyio.Lock)
 
-    async def get_dagger_client(self, pipeline_name: Optional[str] = None) -> dagger.Client:
+    async def get_dagger_client(self, pipeline_name: Optional[str] = None, log_output: Optional[TextIO] = sys.stdout) -> Client:
         """
         Get (or initialize) the Dagger Client instance.
         """
         if not self._dagger_client:
             async with self._dagger_client_lock:
                 if not self._dagger_client:
+                    connection = dagger.Connection(dagger.Config(log_output=log_output))
 
-                    connection = dagger.Connection(dagger.Config(log_output=self.get_log_output()))
                     """
                     Sets up the '_dagger_client' attribute, intended for single-threaded use within connectors.
 
@@ -99,23 +96,6 @@ class ClickPipelineContext(BaseModel, Singleton):
 
         assert self._dagger_client, "Error initializing Dagger client"
         return self._dagger_client.pipeline(pipeline_name) if pipeline_name else self._dagger_client
-
-    def get_log_output(self) -> TextIO:
-        # This `show_dagger_logs` flag is likely going to be removed in the future.
-        # See https://github.com/airbytehq/airbyte/issues/33487
-        if self.params.get("show_dagger_logs", False):
-            return sys.stdout
-        else:
-            log_output, self._click_context().obj["dagger_logs_path"] = self._create_dagger_client_log_file()
-            return log_output
-
-    def _create_dagger_client_log_file(self) -> Tuple[TextIO, Path]:
-        """
-        Create the dagger client log file.
-        """
-        dagger_logs_file_descriptor, dagger_logs_temp_file_path = tempfile.mkstemp(dir="/tmp", prefix="dagger_client_", suffix=".log")
-        main_logger.info(f"Dagger client logs stored in {dagger_logs_temp_file_path}")
-        return io.TextIOWrapper(io.FileIO(dagger_logs_file_descriptor, "w+")), Path(dagger_logs_temp_file_path)
 
 
 # Create @pass_pipeline_context decorator for use in click commands

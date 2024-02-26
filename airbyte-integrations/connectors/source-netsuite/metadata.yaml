@@ -12,10 +12,6 @@ data:
   icon: netsuite.svg
   license: MIT
   name: Netsuite
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-netsuite
   registries:
     cloud:
       enabled: true

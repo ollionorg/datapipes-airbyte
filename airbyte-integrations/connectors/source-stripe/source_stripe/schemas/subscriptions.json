@@ -49,12 +49,6 @@
     "billing_cycle_anchor": {
       "type": ["null", "number"]
     },
-    "billing_cycle_anchor_config": {
-      "type": ["null", "object"]
-    },
-    "invoice_settings": {
-      "type": ["null", "object"]
-    },
     "cancel_at_period_end": {
       "type": ["null", "boolean"]
     },

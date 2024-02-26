@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_metabase.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_metabase import SourceMetabase
 
 if __name__ == "__main__":
-    run()
+    source = SourceMetabase()
+    launch(source, sys.argv[1:])

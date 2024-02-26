@@ -2,10 +2,6 @@ data:
   allowedHosts:
     hosts:
       - ${subdomain}.zendesk.com
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-zendesk-sunshine
   registries:
     oss:
       enabled: true

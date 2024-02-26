@@ -61,9 +61,6 @@ from .utils import read_full_refresh
 
 
 class SourceGithub(AbstractSource):
-
-    continue_sync_on_stream_failure = True
-
     @staticmethod
     def _get_org_repositories(config: Mapping[str, Any], authenticator: MultipleTokenAuthenticator) -> Tuple[List[str], List[str]]:
         """
@@ -126,7 +123,14 @@ class SourceGithub(AbstractSource):
     def _get_authenticator(self, config: Mapping[str, Any]):
         _, token = self.get_access_token(config)
         tokens = [t.strip() for t in token.split(constants.TOKEN_SEPARATOR)]
-        return MultipleTokenAuthenticatorWithRateLimiter(tokens=tokens)
+        requests_per_hour = config.get("requests_per_hour")
+        if requests_per_hour:
+            return MultipleTokenAuthenticatorWithRateLimiter(
+                tokens=tokens,
+                auth_method="token",
+                requests_per_hour=requests_per_hour,
+            )
+        return MultipleTokenAuthenticator(tokens=tokens, auth_method="token")
 
     def _validate_and_transform_config(self, config: MutableMapping[str, Any]) -> MutableMapping[str, Any]:
         config = self._ensure_default_values(config)

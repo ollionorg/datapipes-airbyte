@@ -1,18 +1,22 @@
 plugins {
+    id 'application'
     id 'airbyte-java-connector'
 }
 
 airbyteJavaConnector {
-    cdkVersionRequired = '0.19.0'
-    features = ['db-destinations', 'datastore-mongo']
+    cdkVersionRequired = '0.2.0'
+    features = ['db-destinations']
     useLocalCdk = false
 }
 
+//remove once upgrading the CDK version to 0.4.x or later
 java {
     compileJava {
-        options.compilerArgs += "-Xlint:-try"
+        options.compilerArgs.remove("-Werror")
     }
 }
+
+airbyteJavaConnector.addCdkDependencies()
 
 application {
     mainClass = 'io.airbyte.integrations.destination.mongodb.MongodbDestination'
@@ -20,7 +24,14 @@ application {
 }
 
 dependencies {
-    implementation 'commons-codec:commons-codec:1.16.0'
+    implementation 'org.apache.commons:commons-lang3:3.11'
 
-    testImplementation 'org.testcontainers:mongodb:1.19.0'
+    implementation 'org.mongodb:mongodb-driver-sync:4.3.0'
+
+    // TODO: remove this dependency
+    implementation libs.google.cloud.storage
+
+    testImplementation libs.testcontainers.mongodb
+
+    integrationTestJavaImplementation project(':airbyte-integrations:connectors:destination-mongodb')
 }

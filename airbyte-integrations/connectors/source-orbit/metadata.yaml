@@ -2,10 +2,6 @@ data:
   allowedHosts:
     hosts:
       - "*"
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-orbit
   registries:
     oss:
       enabled: true
@@ -25,7 +21,7 @@ data:
   supportLevel: community
   documentationUrl: https://docs.airbyte.com/integrations/sources/orbit
   tags:
-    - language:low-code
+    - language:lowcode
   ab_internal:
     sl: 100
     ql: 100

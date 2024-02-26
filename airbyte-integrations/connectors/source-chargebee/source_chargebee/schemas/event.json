@@ -4,7 +4,8 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 40
     },
     "occurred_at": {
       "type": ["integer", "null"]
@@ -13,7 +14,8 @@
       "type": ["string", "null"]
     },
     "user": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 150
     },
     "event_type": {
       "type": ["string", "null"]
@@ -27,16 +29,14 @@
     "content": {
       "type": ["object", "null"]
     },
-    "object": {
-      "type": ["string", "null"]
-    },
     "webhooks": {
       "type": ["array", "null"],
       "items": {
         "type": ["object", "null"],
         "properties": {
           "id": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "maxLength": 40
           },
           "webhook_status": {
             "type": ["string", "null"]
@@ -45,7 +45,18 @@
       }
     },
     "custom_fields": {
-      "$ref": "_definitions.json#/definitions/custom_fields"
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "name": {
+            "type": ["null", "string"]
+          },
+          "value": {
+            "type": ["null", "string"]
+          }
+        }
+      }
     }
   }
 }

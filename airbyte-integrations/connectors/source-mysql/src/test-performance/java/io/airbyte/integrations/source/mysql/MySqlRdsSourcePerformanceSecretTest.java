@@ -10,7 +10,6 @@ import io.airbyte.cdk.db.Database;
 import io.airbyte.cdk.db.factory.DSLContextFactory;
 import io.airbyte.cdk.db.factory.DatabaseDriver;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
-import io.airbyte.cdk.integrations.JdbcConnector;
 import io.airbyte.cdk.integrations.standardtest.source.performancetest.AbstractSourcePerformanceTest;
 import io.airbyte.commons.io.IOs;
 import io.airbyte.commons.json.Jsons;
@@ -43,7 +42,7 @@ public class MySqlRdsSourcePerformanceSecretTest extends AbstractSourcePerforman
         .put("replication_method", plainConfig.get("replication_method"))
         .build());
 
-    final DSLContext dslContext = DSLContextFactory.create(
+    try (final DSLContext dslContext = DSLContextFactory.create(
         config.get(JdbcUtils.USERNAME_KEY).asText(),
         config.get(JdbcUtils.PASSWORD_KEY).asText(),
         DatabaseDriver.MYSQL.getDriverClassName(),
@@ -52,14 +51,14 @@ public class MySqlRdsSourcePerformanceSecretTest extends AbstractSourcePerforman
             config.get(JdbcUtils.PORT_KEY).asInt(),
             config.get(JdbcUtils.DATABASE_KEY).asText()),
         SQLDialect.MYSQL,
-        Map.of("zeroDateTimeBehavior", "convertToNull"),
-        JdbcConnector.CONNECT_TIMEOUT_DEFAULT);
+        Map.of("zeroDateTimeBehavior", "convertToNull"))) {
 
-    final Database database = new Database(dslContext);
+      final Database database = new Database(dslContext);
 
-    // It disable strict mode in the DB and allows to insert specific values.
-    // For example, it's possible to insert date with zero values "2021-00-00"
-    database.query(ctx -> ctx.execute("SET @@sql_mode=''"));
+      // It disable strict mode in the DB and allows to insert specific values.
+      // For example, it's possible to insert date with zero values "2021-00-00"
+      database.query(ctx -> ctx.execute("SET @@sql_mode=''"));
+    }
   }
 
   /**

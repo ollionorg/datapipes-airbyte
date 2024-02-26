@@ -6,9 +6,6 @@
       "type": ["null", "string"],
       "maxLength": 13
     },
-    "object": {
-      "type": ["null", "string"]
-    },
     "name": {
       "type": ["null", "string"],
       "maxLength": 256

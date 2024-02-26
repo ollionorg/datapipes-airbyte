@@ -37,14 +37,13 @@ import io.airbyte.protocol.models.v0.StreamDescriptor;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -238,7 +237,7 @@ public class BufferedStreamConsumerTest {
 
   @Test
   void testExceptionDuringOnClose() throws Exception {
-    doThrow(new IllegalStateException("induced exception")).when(onClose).accept(false, new HashMap<>());
+    doThrow(new IllegalStateException("induced exception")).when(onClose).accept(false);
 
     final List<AirbyteMessage> expectedRecordsBatch1 = generateRecords(1_000);
     final List<AirbyteMessage> expectedRecordsBatch2 = generateRecords(1_000);
@@ -508,13 +507,13 @@ public class BufferedStreamConsumerTest {
 
   private void verifyStartAndClose() throws Exception {
     verify(onStart).call();
-    verify(onClose).accept(false, new HashMap<>());
+    verify(onClose).accept(false);
   }
 
   /** Indicates that a failure occurred while consuming AirbyteMessages */
   private void verifyStartAndCloseFailure() throws Exception {
     verify(onStart).call();
-    verify(onClose).accept(true, new HashMap<>());
+    verify(onClose).accept(true);
   }
 
   private static void consumeRecords(final BufferedStreamConsumer consumer, final Collection<AirbyteMessage> records) {

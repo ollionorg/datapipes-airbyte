@@ -83,7 +83,7 @@ definitions:
     $parameters:
       name: "message"
       primary_key: "ID"
-      path: "/message?ShowSubject=true"
+      path: "/message"
   listrecipient_stream:
     $ref: "#/definitions/base_stream"
     retriever:

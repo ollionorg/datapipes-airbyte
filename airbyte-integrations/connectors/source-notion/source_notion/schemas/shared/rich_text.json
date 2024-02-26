@@ -32,17 +32,6 @@
       "properties": {
         "type": {
           "type": ["null", "string"]
-        },
-        "info": {
-          "type": ["null", "object"],
-          "properties": {
-            "id": {
-              "type": ["null", "string"]
-            },
-            "object": {
-              "type": ["null", "string"]
-            }
-          }
         }
       }
     },

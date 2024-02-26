@@ -18,7 +18,6 @@ import io.airbyte.integrations.source.redshift.RedshiftSource;
 import io.airbyte.integrations.source.redshift.RedshiftSourceOperations;
 import java.nio.file.Path;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeFormatterBuilder;
@@ -29,7 +28,6 @@ import org.junit.jupiter.api.Test;
 
 public class RedshiftSourceOperationsTest {
 
-  private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(60);
   private JdbcDatabase database;
 
   @BeforeEach
@@ -41,8 +39,7 @@ public class RedshiftSourceOperationsTest {
         config.get("password").asText(),
         DatabaseDriver.REDSHIFT.getDriverClassName(),
         RedshiftSource.getJdbcUrl(config),
-        JdbcDataSourceUtils.getConnectionProperties(config),
-        CONNECTION_TIMEOUT);
+        JdbcDataSourceUtils.getConnectionProperties(config));
     database = new DefaultJdbcDatabase(dataSource, new RedshiftSourceOperations());
   }
 

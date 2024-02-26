@@ -3,7 +3,11 @@
 #
 
 
-from source_salesforce.run import run
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_salesforce import SourceSalesforce
 
 if __name__ == "__main__":
-    run()
+    source = SourceSalesforce()
+    launch(source, sys.argv[1:])

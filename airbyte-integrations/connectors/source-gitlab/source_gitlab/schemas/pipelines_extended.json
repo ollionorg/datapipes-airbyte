@@ -63,9 +63,6 @@
         },
         "web_url": {
           "type": ["null", "string"]
-        },
-        "locked": {
-          "type": ["null", "boolean"]
         }
       }
     },

@@ -1,10 +1,8 @@
----
-products: cloud, oss-enterprise
----
-
 # Manage your workspace
 
 A workspace in Airbyte allows you to collaborate with other users and manage connections together. On Airbyte Cloud it will allow you to share billing details for a workspace.
+
+<AppliesTo cloud selfManagedEnterprise />
 
 :::info
 Airbyte [credits](https://airbyte.com/pricing) are assigned per workspace and cannot be transferred between workspaces.
@@ -16,7 +14,7 @@ To add a user to your workspace:
 
 1. Go to the **Settings** via the side navigation in Airbyte.
 
-2. Click **Workspace** > **Access Management**.
+2. Click **Access Management**.
 
 3. Click **+ New user**.
 
@@ -34,7 +32,7 @@ To remove a user from your workspace:
 
 1. Go to the **Settings** via the side navigation in Airbyte.
 
-2. Click **Workspace** > **Access Management**.
+2. Click **Access Management**.
 
 3. Click **Remove** next to the user’s email.
 
@@ -46,7 +44,7 @@ To rename a workspace:
 
 1. Go to the **Settings** via the side navigation in Airbyte.
 
-2. Click **Workspace** > **General**.
+2. Click **General Settings**.
 
 3. In the **Workspace name** field, enter the new name for your workspace. 
 
@@ -58,7 +56,7 @@ To delete a workspace:
 
 1. Go to the **Settings** via the side navigation in Airbyte.
 
-2. Click **Workspace** > **General**.
+2. Click **General Settings**.
 
 3. In the **Delete your workspace** section, click **Delete**.
 

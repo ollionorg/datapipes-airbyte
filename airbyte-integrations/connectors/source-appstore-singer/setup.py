@@ -19,30 +19,13 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    entry_points={
-        "console_scripts": [
-            "source-appstore-singer=source_appstore_singer.run:run",
-        ],
-    },
     name="source_appstore_singer",
     description="Source implementation for Appstore, built on the Singer tap implementation.",
     author="Airbyte",
     author_email="contact@airbyte.io",
     packages=find_packages(),
     install_requires=MAIN_REQUIREMENTS,
-    package_data={
-        "": [
-            # Include yaml files in the package (if any)
-            "*.yml",
-            "*.yaml",
-            # Include all json files in the package, up to 4 levels deep
-            "*.json",
-            "*/*.json",
-            "*/*/*.json",
-            "*/*/*/*.json",
-            "*/*/*/*/*.json",
-        ]
-    },
+    package_data={"": ["*.json", "schemas/*.json", "schemas/shared/*.json"]},
     extras_require={
         "tests": TEST_REQUIREMENTS,
     },

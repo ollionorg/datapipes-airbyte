@@ -7,25 +7,32 @@ package io.airbyte.integrations.source.db2;
 import static io.airbyte.cdk.integrations.source.relationaldb.RelationalDbQueryUtils.enquoteIdentifier;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
+import io.airbyte.cdk.db.jdbc.JdbcUtils;
+import io.airbyte.cdk.integrations.source.jdbc.AbstractJdbcSource;
 import io.airbyte.cdk.integrations.source.jdbc.test.JdbcSourceAcceptanceTest;
 import io.airbyte.commons.json.Jsons;
+import java.sql.JDBCType;
 import java.util.Collections;
 import java.util.Set;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.testcontainers.containers.Db2Container;
 
-@Disabled
-class Db2JdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<Db2Source, Db2TestDatabase> {
+class Db2JdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest {
 
-  private final static Db2Container DB_2_CONTAINER = new Db2Container("ibmcom/db2:11.5.5.0").acceptLicense();
-  private static final String QUOTE_STRING = "\"";
   private static Set<String> TEST_TABLES = Collections.emptySet();
+  private static Db2Container db;
+  private JsonNode config;
 
   @BeforeAll
   static void init() {
+    db = new Db2Container("ibmcom/db2:11.5.5.0").acceptLicense();
+    db.start();
+
     // Db2 transforms names to upper case, so we need to use upper case name to retrieve data later.
     SCHEMA_NAME = "JDBC_INTEGRATION_TEST1";
     SCHEMA_NAME2 = "JDBC_INTEGRATION_TEST2";
@@ -57,49 +64,57 @@ class Db2JdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<Db2Source, Db
     INSERT_TABLE_WITHOUT_CURSOR_TYPE_QUERY = "INSERT INTO %s VALUES(true)";
   }
 
-  @AfterAll
-  static void cleanUp() {
-    DB_2_CONTAINER.close();
+  @BeforeEach
+  public void setup() throws Exception {
+    config = Jsons.jsonNode(ImmutableMap.builder()
+        .put(JdbcUtils.HOST_KEY, db.getHost())
+        .put(JdbcUtils.PORT_KEY, db.getFirstMappedPort())
+        .put("db", db.getDatabaseName())
+        .put(JdbcUtils.USERNAME_KEY, db.getUsername())
+        .put(JdbcUtils.PASSWORD_KEY, db.getPassword())
+        .put(JdbcUtils.ENCRYPTION_KEY, Jsons.jsonNode(ImmutableMap.builder()
+            .put("encryption_method", "unencrypted")
+            .build()))
+        .build());
+
+    super.setup();
   }
 
-  static void deleteTablesAndSchema(final Db2TestDatabase testdb) {
+  @AfterEach
+  public void clean() throws Exception {
     // In Db2 before dropping a schema, all objects that were in that schema must be dropped or moved to
     // another schema.
     for (final String tableName : TEST_TABLES) {
       final String dropTableQuery = String
           .format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME, tableName);
-      testdb.with(dropTableQuery);
+      super.database.execute(connection -> connection.createStatement().execute(dropTableQuery));
     }
     for (int i = 2; i < 10; i++) {
       final String dropTableQuery = String
           .format("DROP TABLE IF EXISTS %s.%s%s", SCHEMA_NAME, TABLE_NAME, i);
-      testdb.with(dropTableQuery);
+      super.database.execute(connection -> connection.createStatement().execute(dropTableQuery));
     }
-    testdb.with(String
+    super.database.execute(connection -> connection.createStatement().execute(String
         .format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME,
-            enquoteIdentifier(TABLE_NAME_WITH_SPACES, QUOTE_STRING)));
-    testdb.with(String
+            enquoteIdentifier(TABLE_NAME_WITH_SPACES, connection.getMetaData().getIdentifierQuoteString()))));
+    super.database.execute(connection -> connection.createStatement().execute(String
         .format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME,
-            enquoteIdentifier(TABLE_NAME_WITH_SPACES + 2, QUOTE_STRING)));
-    testdb.with(String
+            enquoteIdentifier(TABLE_NAME_WITH_SPACES + 2, connection.getMetaData().getIdentifierQuoteString()))));
+    super.database.execute(connection -> connection.createStatement().execute(String
         .format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME2,
-            enquoteIdentifier(TABLE_NAME, QUOTE_STRING)));
-    testdb.with(String
+            enquoteIdentifier(TABLE_NAME, connection.getMetaData().getIdentifierQuoteString()))));
+    super.database.execute(connection -> connection.createStatement().execute(String
         .format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME,
-            enquoteIdentifier(TABLE_NAME_WITHOUT_CURSOR_TYPE, QUOTE_STRING)));
-    testdb.with(String
+            enquoteIdentifier(TABLE_NAME_WITHOUT_CURSOR_TYPE, connection.getMetaData().getIdentifierQuoteString()))));
+    super.database.execute(connection -> connection.createStatement().execute(String
         .format("DROP TABLE IF EXISTS %s.%s", SCHEMA_NAME,
-            enquoteIdentifier(TABLE_NAME_WITH_NULLABLE_CURSOR_TYPE, QUOTE_STRING)));
-    for (final String schemaName : TEST_SCHEMAS) {
-      testdb.with(DROP_SCHEMA_QUERY, schemaName);
-    }
-
+            enquoteIdentifier(TABLE_NAME_WITH_NULLABLE_CURSOR_TYPE, connection.getMetaData().getIdentifierQuoteString()))));
+    super.tearDown();
   }
 
-  @Override
-  protected Db2TestDatabase createTestDatabase() {
-    DB_2_CONTAINER.start();
-    return new Db2TestDatabase(DB_2_CONTAINER).initialized();
+  @AfterAll
+  static void cleanUp() {
+    db.close();
   }
 
   @Override
@@ -108,12 +123,17 @@ class Db2JdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<Db2Source, Db
   }
 
   @Override
-  public JsonNode config() {
-    return Jsons.clone(testdb.configBuilder().build());
+  public JsonNode getConfig() {
+    return Jsons.clone(config);
   }
 
   @Override
-  protected Db2Source source() {
+  public String getDriverClass() {
+    return Db2Source.DRIVER_CLASS;
+  }
+
+  @Override
+  public AbstractJdbcSource<JDBCType> getJdbcSource() {
     return new Db2Source();
   }
 

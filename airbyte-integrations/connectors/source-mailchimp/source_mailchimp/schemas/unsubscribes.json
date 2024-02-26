@@ -17,9 +17,7 @@
       "type": ["null", "boolean"]
     },
     "timestamp": {
-      "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_with_timezone"
+      "type": ["null", "string"]
     },
     "reason": {
       "type": ["null", "string"]

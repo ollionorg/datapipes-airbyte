@@ -39,9 +39,6 @@
     "sourceMetadata": {
       "type": ["null", "string"]
     },
-    "dataSensitivity": {
-      "type": ["null", "string"]
-    },
     "companyId": {
       "type": ["null", "number"]
     },

@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_outreach.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_outreach import SourceOutreach
 
 if __name__ == "__main__":
-    run()
+    source = SourceOutreach()
+    launch(source, sys.argv[1:])

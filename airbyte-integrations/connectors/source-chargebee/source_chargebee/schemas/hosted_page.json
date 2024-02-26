@@ -7,13 +7,26 @@
       "type": ["string", "null"]
     },
     "type": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "enum": [
+        "checkout_new",
+        "checkout_existing",
+        "update_payment_method",
+        "manage_payment_sources",
+        "collect_now",
+        "extend_subscription",
+        "checkout_gift",
+        "claim_gift",
+        "checkout_one_time",
+        "pre_cancel"
+      ]
     },
     "url": {
       "type": ["string", "null"]
     },
     "state": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "enum": ["created", "requested", "succeeded", "cancelled", "acknowledged"]
     },
     "pass_thru_content": {
       "type": ["string", "null"]
@@ -42,11 +55,19 @@
     "business_entity_id": {
       "type": ["string", "null"]
     },
-    "object": {
-      "type": ["string", "null"]
-    },
     "custom_fields": {
-      "$ref": "_definitions.json#/definitions/custom_fields"
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "name": {
+            "type": ["null", "string"]
+          },
+          "value": {
+            "type": ["null", "string"]
+          }
+        }
+      }
     }
   }
 }

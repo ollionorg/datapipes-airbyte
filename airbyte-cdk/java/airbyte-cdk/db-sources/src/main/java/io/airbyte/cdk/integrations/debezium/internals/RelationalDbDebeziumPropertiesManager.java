@@ -10,6 +10,7 @@ import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
 import io.airbyte.protocol.models.v0.SyncMode;
 import java.util.Iterator;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -20,8 +21,10 @@ public class RelationalDbDebeziumPropertiesManager extends DebeziumPropertiesMan
 
   public RelationalDbDebeziumPropertiesManager(final Properties properties,
                                                final JsonNode config,
-                                               final ConfiguredAirbyteCatalog catalog) {
-    super(properties, config, catalog);
+                                               final ConfiguredAirbyteCatalog catalog,
+                                               final AirbyteFileOffsetBackingStore offsetManager,
+                                               final Optional<AirbyteSchemaHistoryStorage> schemaHistoryManager) {
+    super(properties, config, catalog, offsetManager, schemaHistoryManager);
   }
 
   @Override

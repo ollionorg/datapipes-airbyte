@@ -59,6 +59,7 @@ class SourceAzureBlobStorageStreamReader(AbstractFileBasedStreamReader):
                 if not globs or self.file_matches_globs(remote_file, globs):
                     yield remote_file
 
+    @contextmanager
     def open_file(self, file: RemoteFile, mode: FileReadMode, encoding: Optional[str], logger: logging.Logger) -> IOBase:
         try:
             result = open(
@@ -72,4 +73,8 @@ class SourceAzureBlobStorageStreamReader(AbstractFileBasedStreamReader):
                 f"We don't have access to {file.uri}. The file appears to have become unreachable during sync."
                 f"Check whether key {file.uri} exists in `{self.config.azure_blob_storage_container_name}` container and/or has proper ACL permissions"
             )
-        return result
+        # see https://docs.python.org/3/library/contextlib.html#contextlib.contextmanager for why we do this
+        try:
+            yield result
+        finally:
+            result.close()

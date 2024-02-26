@@ -3,37 +3,44 @@
   "type": ["null", "object"],
   "additionalProperties": true,
   "properties": {
-    "businessPhones": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+    "business_phones": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
-    "displayName": {
+    "display_name": {
       "type": ["null", "string"]
     },
-    "givenName": {
+    "given_name": {
       "type": ["null", "string"]
     },
-    "jobTitle": {
+    "job_title": {
       "type": ["null", "string"]
     },
     "mail": {
       "type": ["null", "string"]
     },
-    "mobilePhone": {
+    "mobile_phone": {
       "type": ["null", "string"]
     },
-    "officeLocation": {
+    "office_location": {
       "type": ["null", "string"]
     },
-    "preferredLanguage": {
+    "preferred_language": {
       "type": ["null", "string"]
     },
     "surname": {
       "type": ["null", "string"]
     },
-    "userPrincipalName": {
+    "user_principal_name": {
       "type": ["null", "string"]
     },
     "id": {

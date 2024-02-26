@@ -6,33 +6,29 @@
     "id": {
       "type": ["null", "string"]
     },
-    "groupId": {
+    "group_id": {
       "type": ["null", "string"]
     },
-    "conversationId": {
+    "conversation_id": {
       "type": ["null", "string"]
     },
     "topic": {
       "type": ["null", "string"]
     },
-    "hasAttachments": {
+    "has_attachments": {
       "type": ["null", "boolean"]
     },
-    "lastDeliveredDateTime": {
+    "last_delivered_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "uniqueSenders": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+    "unique_senders": {
+      "type": ["null", "string"]
     },
     "preview": {
       "type": ["null", "string"]
     },
-    "isLocked": {
+    "is_locked": {
       "type": ["null", "boolean"]
     }
   }

@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_ringcentral.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_ringcentral import SourceRingcentral
 
 if __name__ == "__main__":
-    run()
+    source = SourceRingcentral()
+    launch(source, sys.argv[1:])

@@ -88,9 +88,8 @@ public class GlobalMemoryManager {
     log.info("Freeing {} bytes..", bytes);
     currentMemoryBytes.addAndGet(-bytes);
 
-    final long currentMemory = currentMemoryBytes.get();
-    if (currentMemory < 0) {
-      log.info("Freed more memory than allocated ({} of {})", bytes, currentMemory + bytes);
+    if (currentMemoryBytes.get() < 0) {
+      log.warn("Freed more memory than allocated. This should never happen. Please report this bug.");
     }
   }
 

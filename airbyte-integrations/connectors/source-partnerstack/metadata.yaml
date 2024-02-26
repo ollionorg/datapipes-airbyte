@@ -8,10 +8,6 @@ data:
   icon: partnerstack.svg
   license: MIT
   name: PartnerStack
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-partnerstack
   registries:
     cloud:
       enabled: false

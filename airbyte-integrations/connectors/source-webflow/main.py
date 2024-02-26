@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_webflow.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_webflow import SourceWebflow
 
 if __name__ == "__main__":
-    run()
+    source = SourceWebflow()
+    launch(source, sys.argv[1:])

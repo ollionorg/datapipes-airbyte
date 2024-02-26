@@ -4,9 +4,6 @@
 
 package io.airbyte.integrations.source.postgres;
 
-import static io.airbyte.integrations.source.postgres.PostgresSpecConstants.INVALID_CDC_CURSOR_POSITION_PROPERTY;
-import static io.airbyte.integrations.source.postgres.PostgresSpecConstants.RESYNC_DATA_OPTION;
-
 import com.google.common.collect.ImmutableMap;
 import io.airbyte.cdk.db.factory.DatabaseDriver;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
@@ -24,17 +21,15 @@ public class PostgresTestDatabase extends
 
   public static enum BaseImage {
 
-    POSTGRES_16("postgres:16-bullseye", 16),
-    POSTGRES_12("postgres:12-bullseye", 12),
-    POSTGRES_9("postgres:9-alpine", 9),
-    POSTGRES_SSL_DEV("marcosmarxm/postgres-ssl:dev", 16);
+    POSTGRES_16("postgres:16-bullseye"),
+    POSTGRES_12("postgres:12-bullseye"),
+    POSTGRES_9("postgres:9-alpine"),
+    POSTGRES_SSL_DEV("marcosmarxm/postgres-ssl:dev");
 
-    public final String reference;
-    public final int majorVersion;
+    private final String reference;
 
-    private BaseImage(String reference, int majorVersion) {
+    private BaseImage(String reference) {
       this.reference = reference;
-      this.majorVersion = majorVersion;
     };
 
   }
@@ -177,10 +172,10 @@ public class PostgresTestDatabase extends
     }
 
     public PostgresConfigBuilder withCdcReplication() {
-      return withCdcReplication("While reading Data", RESYNC_DATA_OPTION);
+      return withCdcReplication("While reading Data");
     }
 
-    public PostgresConfigBuilder withCdcReplication(String LsnCommitBehaviour, String cdcCursorFailBehaviour) {
+    public PostgresConfigBuilder withCdcReplication(String LsnCommitBehaviour) {
       return this
           .with("is_test", true)
           .with("replication_method", Jsons.jsonNode(ImmutableMap.builder()
@@ -189,7 +184,6 @@ public class PostgresTestDatabase extends
               .put("publication", testDatabase.getPublicationName())
               .put("initial_waiting_seconds", DEFAULT_CDC_REPLICATION_INITIAL_WAIT.getSeconds())
               .put("lsn_commit_behaviour", LsnCommitBehaviour)
-              .put(INVALID_CDC_CURSOR_POSITION_PROPERTY, cdcCursorFailBehaviour)
               .build()));
     }
 

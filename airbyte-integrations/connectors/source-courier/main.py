@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_courier.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_courier import SourceCourier
 
 if __name__ == "__main__":
-    run()
+    source = SourceCourier()
+    launch(source, sys.argv[1:])

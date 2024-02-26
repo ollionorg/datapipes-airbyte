@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_search_metrics.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_search_metrics import SourceSearchMetrics
 
 if __name__ == "__main__":
-    run()
+    source = SourceSearchMetrics()
+    launch(source, sys.argv[1:])

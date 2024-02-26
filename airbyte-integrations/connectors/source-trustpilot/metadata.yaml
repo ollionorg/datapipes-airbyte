@@ -8,10 +8,6 @@ data:
   icon: trustpilot.svg
   license: MIT
   name: TrustPilot
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-trustpilot
   registries:
     cloud:
       enabled: true

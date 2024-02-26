@@ -23,7 +23,7 @@
     "searchable": true,
     "clauseNames": ["issuetype", "type"],
     "schema": {
-      "type": "option",
+      "type": "issuetype",
       "system": "issuetype"
     }
   },
@@ -36,33 +36,5 @@
     "navigable": true,
     "searchable": false,
     "clauseNames": ["parent"]
-  },
-  {
-    "id": "issuetype2",
-    "key": "issuetype2",
-    "name": "Issue Type2",
-    "custom": true,
-    "orderable": true,
-    "navigable": true,
-    "searchable": true,
-    "clauseNames": ["issuetype", "type"],
-    "schema": {
-      "type": "option",
-      "system": "issuetype"
-    }
-  },
-  {
-    "id": "issuetype3",
-    "key": "issuetype3",
-    "name": "Issue Type3",
-    "custom": true,
-    "orderable": true,
-    "navigable": true,
-    "searchable": true,
-    "clauseNames": ["issuetype", "type"],
-    "schema": {
-      "type": "option",
-      "system": "issuetype"
-    }
   }
 ]

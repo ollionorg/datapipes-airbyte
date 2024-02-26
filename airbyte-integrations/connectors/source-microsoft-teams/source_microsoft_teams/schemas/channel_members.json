@@ -6,34 +6,30 @@
     "id": {
       "type": ["null", "string"]
     },
-    "@odata.type": {
-      "type": ["null", "string"]
-    },
-    "displayName": {
+    "display_name": {
       "type": ["null", "string"]
     },
     "roles": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
-    "userId": {
+    "user_id": {
       "type": ["null", "string"]
     },
     "email": {
       "type": ["null", "string"]
     },
-    "channelId": {
+    "channel_id": {
       "type": ["null", "string"]
-    },
-    "tenantId": {
-      "type": ["null", "string"]
-    },
-    "visibleHistoryStartDateTime": {
-      "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
     }
   }
 }

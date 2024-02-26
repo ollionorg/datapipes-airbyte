@@ -14,9 +14,6 @@
     "childAsin": {
       "type": ["null", "string"]
     },
-    "sku": {
-      "type": ["null", "string"]
-    },
     "salesByAsin": {
       "type": "object",
       "properties": {

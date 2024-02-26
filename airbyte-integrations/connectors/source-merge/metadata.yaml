@@ -8,10 +8,6 @@ data:
   icon: merge.svg
   license: MIT
   name: Merge
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-merge
   registries:
     cloud:
       enabled: false

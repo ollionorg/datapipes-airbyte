@@ -8,10 +8,6 @@ data:
   icon: mailerlite.svg
   license: MIT
   name: MailerLite
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-mailerlite
   registries:
     cloud:
       enabled: false

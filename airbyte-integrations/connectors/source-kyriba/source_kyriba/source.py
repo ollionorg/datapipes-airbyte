@@ -270,15 +270,9 @@ class SourceKyriba(AbstractSource):
         return f"https://{config['domain']}/gateway"
 
     def check_connection(self, logger, config) -> Tuple[bool, any]:
-        try:
-            client = KyribaClient(config["username"], config["password"], self.gateway_url(config))
-            client.login()
-            return True, None
-        except Exception as e:
-            if isinstance(e, requests.exceptions.HTTPError) and e.response.status_code == 401:
-                err_message = f"Please check your `username` and `password`. Error: {repr(e)}"
-                return False, err_message
-            return False, repr(e)
+        client = KyribaClient(config["username"], config["password"], self.gateway_url(config))
+        client.login()
+        return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         gateway_url = self.gateway_url(config)

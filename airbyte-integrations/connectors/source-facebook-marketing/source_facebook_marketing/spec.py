@@ -5,14 +5,11 @@
 import logging
 from datetime import datetime, timezone
 from enum import Enum
-from typing import List, Optional, Set
+from typing import List, Optional
 
 from airbyte_cdk.sources.config import BaseConfig
-from facebook_business.adobjects.ad import Ad
-from facebook_business.adobjects.adset import AdSet
 from facebook_business.adobjects.adsinsights import AdsInsights
-from facebook_business.adobjects.campaign import Campaign
-from pydantic import BaseModel, Field, PositiveInt, constr
+from pydantic import BaseModel, Field, PositiveInt
 
 logger = logging.getLogger("airbyte")
 
@@ -20,9 +17,6 @@ logger = logging.getLogger("airbyte")
 ValidFields = Enum("ValidEnums", AdsInsights.Field.__dict__)
 ValidBreakdowns = Enum("ValidBreakdowns", AdsInsights.Breakdowns.__dict__)
 ValidActionBreakdowns = Enum("ValidActionBreakdowns", AdsInsights.ActionBreakdowns.__dict__)
-ValidCampaignStatuses = Enum("ValidCampaignStatuses", Campaign.EffectiveStatus.__dict__)
-ValidAdSetStatuses = Enum("ValidAdSetStatuses", AdSet.EffectiveStatus.__dict__)
-ValidAdStatuses = Enum("ValidAdStatuses", Ad.EffectiveStatus.__dict__)
 DATE_TIME_PATTERN = "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$"
 EMPTY_PATTERN = "^$"
 
@@ -38,12 +32,7 @@ class InsightConfig(BaseModel):
         description="The name value of insight",
     )
 
-    level: str = Field(
-        title="Level",
-        description="Chosen level for API",
-        default="ad",
-        enum=["ad", "adset", "campaign", "account"],
-    )
+    level: str = Field(title="Level", description="Chosen level for API", default="ad", enum=["ad", "adset", "campaign", "account"])
 
     fields: Optional[List[ValidFields]] = Field(
         title="Fields",
@@ -108,13 +97,6 @@ class InsightConfig(BaseModel):
         mininum=1,
         default=28,
     )
-    insights_job_timeout: Optional[PositiveInt] = Field(
-        title="Custom Insights Job Timeout",
-        description="The insights job timeout",
-        maximum=60,
-        mininum=10,
-        default=60,
-    )
 
 
 class ConnectorConfig(BaseConfig):
@@ -122,20 +104,19 @@ class ConnectorConfig(BaseConfig):
 
     class Config:
         title = "Source Facebook Marketing"
-        use_enum_values = True
 
-    account_ids: Set[constr(regex="^[0-9]+$")] = Field(
-        title="Ad Account ID(s)",
+    account_id: str = Field(
+        title="Ad Account ID",
         order=0,
         description=(
-            "The Facebook Ad account ID(s) to pull data from. "
+            "The Facebook Ad account ID to use when pulling data from the Facebook Marketing API. "
             "The Ad account ID number is in the account dropdown menu or in your browser's address "
             'bar of your <a href="https://adsmanager.facebook.com/adsmanager/">Meta Ads Manager</a>. '
             'See the <a href="https://www.facebook.com/business/help/1492627900875762">docs</a> for more information.'
         ),
-        pattern_descriptor="The Ad Account ID must be a number.",
+        pattern="^[0-9]+$",
+        pattern_descriptor="1234567890",
         examples=["111111111111111"],
-        min_items=1,
     )
 
     access_token: str = Field(
@@ -174,37 +155,23 @@ class ConnectorConfig(BaseConfig):
         default_factory=lambda: datetime.now(tz=timezone.utc),
     )
 
-    campaign_statuses: Optional[List[ValidCampaignStatuses]] = Field(
-        title="Campaign Statuses",
+    include_deleted: bool = Field(
+        title="Include Deleted Campaigns, Ads, and AdSets",
         order=4,
-        description="Select the statuses you want to be loaded in the stream. If no specific statuses are selected, the API's default behavior applies, and some statuses may be filtered out.",
-        default=[],
-    )
-
-    adset_statuses: Optional[List[ValidAdSetStatuses]] = Field(
-        title="AdSet Statuses",
-        order=5,
-        description="Select the statuses you want to be loaded in the stream. If no specific statuses are selected, the API's default behavior applies, and some statuses may be filtered out.",
-        default=[],
-    )
-
-    ad_statuses: Optional[List[ValidAdStatuses]] = Field(
-        title="Ad Statuses",
-        order=6,
-        description="Select the statuses you want to be loaded in the stream. If no specific statuses are selected, the API's default behavior applies, and some statuses may be filtered out.",
-        default=[],
+        default=False,
+        description="Set to active if you want to include data from deleted Campaigns, Ads, and AdSets.",
     )
 
     fetch_thumbnail_images: bool = Field(
         title="Fetch Thumbnail Images from Ad Creative",
-        order=7,
+        order=5,
         default=False,
         description="Set to active if you want to fetch the thumbnail_url and store the result in thumbnail_data_url for each Ad Creative.",
     )
 
     custom_insights: Optional[List[InsightConfig]] = Field(
         title="Custom Insights",
-        order=8,
+        order=6,
         description=(
             "A list which contains ad statistics entries, each entry must have a name and can contains fields, "
             'breakdowns or action_breakdowns. Click on "add" to fill this field.'
@@ -213,7 +180,7 @@ class ConnectorConfig(BaseConfig):
 
     page_size: Optional[PositiveInt] = Field(
         title="Page Size of Requests",
-        order=10,
+        order=7,
         default=100,
         description=(
             "Page size used when sending requests to Facebook API to specify number of records per page when response has pagination. "
@@ -223,7 +190,7 @@ class ConnectorConfig(BaseConfig):
 
     insights_lookback_window: Optional[PositiveInt] = Field(
         title="Insights Lookback Window",
-        order=11,
+        order=8,
         description=(
             "The attribution window. Facebook freezes insight data 28 days after it was generated, "
             "which means that all data from the past 28 days may have changed since we last emitted it, "
@@ -233,20 +200,6 @@ class ConnectorConfig(BaseConfig):
         maximum=28,
         mininum=1,
         default=28,
-    )
-
-    insights_job_timeout: Optional[PositiveInt] = Field(
-        title="Insights Job Timeout",
-        order=12,
-        description=(
-            "Insights Job Timeout establishes the maximum amount of time (in minutes) of waiting for the report job to complete. "
-            "When timeout is reached the job is considered failed and we are trying to request smaller amount of data by breaking the job to few smaller ones. "
-            "If you definitely know that 60 minutes is not enough for your report to be processed then you can decrease the timeout value, "
-            "so we start breaking job to smaller parts faster."
-        ),
-        maximum=60,
-        mininum=10,
-        default=60,
     )
 
     action_breakdowns_allow_empty: bool = Field(

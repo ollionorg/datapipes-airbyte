@@ -9,7 +9,6 @@ import static io.airbyte.integrations.destination.snowflake.SnowflakeInternalSta
 
 import io.airbyte.cdk.db.jdbc.JdbcDatabase;
 import io.airbyte.cdk.integrations.base.TypingAndDedupingFlag;
-import io.airbyte.cdk.integrations.destination.jdbc.TableDefinition;
 import io.airbyte.integrations.base.destination.typing_deduping.StreamConfig;
 import io.airbyte.integrations.base.destination.typing_deduping.StreamId;
 import io.airbyte.integrations.base.destination.typing_deduping.TypeAndDedupeTransaction;
@@ -17,7 +16,6 @@ import io.airbyte.integrations.base.destination.typing_deduping.V2TableMigrator;
 import io.airbyte.protocol.models.v0.DestinationSyncMode;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,8 +48,8 @@ public class SnowflakeV2TableMigrator implements V2TableMigrator {
         streamConfig.id().originalName(),
         rawNamespace);
     final boolean syncModeRequiresMigration = streamConfig.destinationSyncMode() != DestinationSyncMode.OVERWRITE;
-    final boolean existingTableCaseSensitiveExists = findExistingTable(caseSensitiveStreamId).isPresent();
-    final boolean existingTableUppercaseDoesNotExist = findExistingTable(streamConfig.id()).isEmpty();
+    final boolean existingTableCaseSensitiveExists = findExistingTable_caseSensitive(caseSensitiveStreamId).isPresent();
+    final boolean existingTableUppercaseDoesNotExist = !handler.findExistingTable(streamConfig.id()).isPresent();
     LOGGER.info(
         "Checking whether upcasing migration is necessary for {}.{}. Sync mode requires migration: {}; existing case-sensitive table exists: {}; existing uppercased table does not exist: {}",
         streamConfig.id().originalNamespace(),
@@ -89,15 +87,41 @@ public class SnowflakeV2TableMigrator implements V2TableMigrator {
     return identifier.replace("\"", "\"\"");
   }
 
-  private Optional<TableDefinition> findExistingTable(final StreamId id) throws SQLException {
+  // And this was taken from
+  // https://github.com/airbytehq/airbyte/blob/master/airbyte-integrations/connectors/destination-snowflake/src/main/java/io/airbyte/integrations/destination/snowflake/typing_deduping/SnowflakeDestinationHandler.java
+  public Optional<SnowflakeTableDefinition> findExistingTable_caseSensitive(final StreamId id) throws SQLException {
     // The obvious database.getMetaData().getColumns() solution doesn't work, because JDBC translates
     // VARIANT as VARCHAR
-    LinkedHashMap<String, LinkedHashMap<String, TableDefinition>> existingTableMap =
-        SnowflakeDestinationHandler.findExistingTables(database, databaseName, List.of(id));
-    if (existingTableMap.containsKey(id.finalNamespace()) && existingTableMap.get(id.finalNamespace()).containsKey(id.finalName())) {
-      return Optional.of(existingTableMap.get(id.finalNamespace()).get(id.finalName()));
+    final LinkedHashMap<String, SnowflakeColumnDefinition> columns = database.queryJsons(
+        """
+        SELECT column_name, data_type, is_nullable
+        FROM information_schema.columns
+        WHERE table_catalog = ?
+          AND table_schema = ?
+          AND table_name = ?
+        ORDER BY ordinal_position;
+        """,
+        databaseName.toUpperCase(),
+        id.finalNamespace(),
+        id.finalName()).stream()
+        .collect(LinkedHashMap::new,
+            (map, row) -> map.put(
+                row.get("COLUMN_NAME").asText(),
+                new SnowflakeColumnDefinition(row.get("DATA_TYPE").asText(), fromSnowflakeBoolean(row.get("IS_NULLABLE").asText()))),
+            LinkedHashMap::putAll);
+    if (columns.isEmpty()) {
+      return Optional.empty();
+    } else {
+      return Optional.of(new SnowflakeTableDefinition(columns));
     }
-    return Optional.empty();
+  }
+
+  /**
+   * In snowflake information_schema tables, booleans return "YES" and "NO", which DataBind doesn't
+   * know how to use
+   */
+  private boolean fromSnowflakeBoolean(String input) {
+    return input.equalsIgnoreCase("yes");
   }
 
 }

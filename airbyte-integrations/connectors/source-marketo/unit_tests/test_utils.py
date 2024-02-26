@@ -3,10 +3,8 @@
 #
 
 
-from datetime import datetime
-
 import pytest
-from source_marketo.utils import clean_string, format_value, to_datetime_str
+from source_marketo.utils import clean_string, format_value
 
 test_data = [
     (1, {"type": "integer"}, int),
@@ -17,12 +15,11 @@ test_data = [
     ("1.5", {"type": "integer"}, int),
     ("15", {"type": "integer"}, int),
     ("true", {"type": "boolean"}, bool),
-    ("test_custom", {"type": "custom_type"}, str),
 ]
 
 
 @pytest.mark.parametrize("value,schema,expected_output_type", test_data)
-def test_format_value(value, schema, expected_output_type):
+def test_fromat_value(value, schema, expected_output_type):
     test = format_value(value, schema)
 
     assert isinstance(test, expected_output_type)
@@ -58,9 +55,3 @@ def test_clean_string(value, expected):
     test = clean_string(value)
 
     assert test == expected
-
-def test_to_datetime_str():
-    input = datetime(2023, 1, 1)
-    expected = "2023-01-01T00:00:00Z"
-
-    assert to_datetime_str(input) == expected

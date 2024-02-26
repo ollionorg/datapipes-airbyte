@@ -2,34 +2,28 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
 from dataclasses import dataclass
-from typing import Any, Iterable, Mapping
+from typing import Any, Iterable, Mapping, Union
 
-from pendulum import local_timezone, timezone
+from pendulum import timezone
 from pendulum.tz.timezone import Timezone
 
 
 @dataclass
 class CustomerModel:
     id: str
-    time_zone: timezone = local_timezone()
+    time_zone: Union[timezone, str] = "local"
     is_manager_account: bool = False
-    login_customer_id: str = None
 
     @classmethod
-    def from_accounts(cls, accounts: Iterable[Mapping[str, Any]]) -> Iterable["CustomerModel"]:
+    def from_accounts(cls, accounts: Iterable[Iterable[Mapping[str, Any]]]):
         data_objects = []
-        for account in accounts:
-            time_zone_name = account.get("customer_client.time_zone")
-            tz = Timezone(time_zone_name) if time_zone_name else local_timezone()
+        for account_list in accounts:
+            for account in account_list:
+                time_zone_name = account.get("customer.time_zone")
+                tz = Timezone(time_zone_name) if time_zone_name else "local"
 
-            data_objects.append(
-                cls(
-                    id=str(account["customer_client.id"]),
-                    time_zone=tz,
-                    is_manager_account=bool(account.get("customer_client.manager")),
-                    login_customer_id=account.get("login_customer_id"),
+                data_objects.append(
+                    cls(id=str(account["customer.id"]), time_zone=tz, is_manager_account=bool(account.get("customer.manager")))
                 )
-            )
         return data_objects

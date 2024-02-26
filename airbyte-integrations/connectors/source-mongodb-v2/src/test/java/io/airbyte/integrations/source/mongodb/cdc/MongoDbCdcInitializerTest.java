@@ -5,8 +5,6 @@
 package io.airbyte.integrations.source.mongodb.cdc;
 
 import static io.airbyte.integrations.source.mongodb.MongoConstants.DATABASE_CONFIG_CONFIGURATION_KEY;
-import static io.airbyte.integrations.source.mongodb.MongoConstants.INVALID_CDC_CURSOR_POSITION_PROPERTY;
-import static io.airbyte.integrations.source.mongodb.MongoConstants.RESYNC_DATA_OPTION;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -22,7 +20,6 @@ import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import com.google.common.collect.ImmutableMap;
 import com.mongodb.MongoCommandException;
 import com.mongodb.ServerAddress;
 import com.mongodb.client.AggregateIterable;
@@ -33,12 +30,12 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import com.mongodb.client.model.Aggregates;
-import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.connection.ClusterDescription;
 import com.mongodb.connection.ClusterType;
 import com.mongodb.connection.ServerDescription;
+import io.airbyte.cdk.integrations.debezium.internals.mongodb.MongoDbDebeziumConstants;
+import io.airbyte.cdk.integrations.debezium.internals.mongodb.MongoDbDebeziumStateUtil;
 import io.airbyte.commons.exceptions.ConfigErrorException;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.commons.util.AutoCloseableIterator;
@@ -63,7 +60,6 @@ import io.airbyte.protocol.models.v0.StreamDescriptor;
 import io.airbyte.protocol.models.v0.SyncMode;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -71,7 +67,6 @@ import java.util.function.Consumer;
 import org.bson.BsonDocument;
 import org.bson.BsonString;
 import org.bson.Document;
-import org.bson.conversions.Bson;
 import org.bson.types.ObjectId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,8 +108,6 @@ class MongoDbCdcInitializerTest {
   private MongoCursor<Document> findCursor;
   private ChangeStreamIterable<BsonDocument> changeStreamIterable;
   private MongoDbCdcConnectorMetadataInjector cdcConnectorMetadataInjector;
-  private static final List<Bson> PIPELINE = Collections.singletonList(Aggregates.match(
-      Filters.in("ns.coll", List.of(COLLECTION))));
 
   @BeforeEach
   void setUp() {
@@ -141,7 +134,6 @@ class MongoDbCdcInitializerTest {
     when(clusterDescription.getServerDescriptions()).thenReturn(List.of(serverDescription));
     when(clusterDescription.getType()).thenReturn(ClusterType.REPLICA_SET);
     when(mongoClient.watch(BsonDocument.class)).thenReturn(changeStreamIterable);
-    when(mongoDatabase.watch(PIPELINE, BsonDocument.class)).thenReturn(changeStreamIterable);
     when(mongoClient.getDatabase(DATABASE)).thenReturn(mongoDatabase);
     when(mongoClient.getClusterDescription()).thenReturn(clusterDescription);
     when(mongoDatabase.getCollection(COLLECTION)).thenReturn(mongoCollection);
@@ -208,51 +200,18 @@ class MongoDbCdcInitializerTest {
   }
 
   @Test
-  void testCreateCdcIteratorsWithCompletedInitialSnapshotSavedOffsetInvalidDefaultBehavior() {
-    when(changeStreamIterable.cursor())
-        .thenReturn(mongoChangeStreamCursor)
-        .thenThrow(new MongoCommandException(new BsonDocument(), new ServerAddress()))
-        .thenReturn(mongoChangeStreamCursor);
-    final MongoDbStateManager stateManager = MongoDbStateManager.createStateManager(createInitialDebeziumState(InitialSnapshotStatus.COMPLETE));
-    assertThrows(ConfigErrorException.class, () -> cdcInitializer.createCdcIterators(mongoClient, cdcConnectorMetadataInjector, CONFIGURED_CATALOG,
-        stateManager, EMITTED_AT, CONFIG));
-  }
-
-  @Test
-  void testCreateCdcIteratorsWithCompletedInitialSnapshotSavedOffsetFailOption() {
-    when(changeStreamIterable.cursor())
-        .thenReturn(mongoChangeStreamCursor)
-        .thenThrow(new MongoCommandException(new BsonDocument(), new ServerAddress()))
-        .thenReturn(mongoChangeStreamCursor);
-    final MongoDbStateManager stateManager = MongoDbStateManager.createStateManager(createInitialDebeziumState(InitialSnapshotStatus.COMPLETE));
-    assertThrows(ConfigErrorException.class, () -> cdcInitializer.createCdcIterators(mongoClient, cdcConnectorMetadataInjector, CONFIGURED_CATALOG,
-        stateManager, EMITTED_AT, CONFIG));
-  }
-
-  @Test
-  void testCreateCdcIteratorsWithCompletedInitialSnapshotSavedOffsetInvalidResyncOption() {
-    MongoDbSourceConfig resyncConfig = new MongoDbSourceConfig(createConfig(RESYNC_DATA_OPTION));
+  void testCreateCdcIteratorsWithCompletedInitialSnapshotSavedOffsetInvalid() {
     when(changeStreamIterable.cursor())
         .thenReturn(mongoChangeStreamCursor)
         .thenThrow(new MongoCommandException(new BsonDocument(), new ServerAddress()))
         .thenReturn(mongoChangeStreamCursor);
     final MongoDbStateManager stateManager = MongoDbStateManager.createStateManager(createInitialDebeziumState(InitialSnapshotStatus.COMPLETE));
     final List<AutoCloseableIterator<AirbyteMessage>> iterators = cdcInitializer
-        .createCdcIterators(mongoClient, cdcConnectorMetadataInjector, CONFIGURED_CATALOG, stateManager, EMITTED_AT, resyncConfig);
+        .createCdcIterators(mongoClient, cdcConnectorMetadataInjector, CONFIGURED_CATALOG, stateManager, EMITTED_AT, CONFIG);
     assertNotNull(iterators);
     assertEquals(2, iterators.size(), "Should always have 2 iterators: 1 for the initial snapshot and 1 for the cdc stream");
     assertTrue(iterators.get(0).hasNext(),
         "Initial snapshot iterator should at least have one message if its snapshot state is set as complete but needs to start over due to invalid saved offset");
-  }
-
-  JsonNode createConfig(String cdcCursorFailBehaviour) {
-    return Jsons.jsonNode(ImmutableMap.builder()
-        .put(DATABASE_CONFIG_CONFIGURATION_KEY,
-            Map.of(
-                MongoDbDebeziumConstants.Configuration.CONNECTION_STRING_CONFIGURATION_KEY, "mongodb://host:12345/",
-                MongoDbDebeziumConstants.Configuration.DATABASE_CONFIGURATION_KEY, DATABASE))
-        .put(INVALID_CDC_CURSOR_POSITION_PROPERTY, cdcCursorFailBehaviour)
-        .build());
   }
 
   @Test

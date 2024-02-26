@@ -3,104 +3,101 @@
   "type": "object",
   "properties": {
     "allowedDomains": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": "string"
       }
     },
     "avatar": {
-      "type": ["object", "null"],
+      "type": "object",
       "properties": {
         "avatarType": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "avatarUuid": {
-          "type": ["null", "string"]
-        },
-        "avatarUrl": {
           "type": ["null", "string"]
         }
       }
     },
     "color": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "dataScrubber": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "dataScrubberDefaults": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "dateCreated": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "defaultEnvironment": {
       "type": ["null", "string"]
     },
     "digestsMaxDelay": {
-      "type": ["integer", "null"]
+      "type": "integer"
     },
     "digestsMinDelay": {
-      "type": ["integer", "null"]
+      "type": "integer"
     },
     "features": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": "string"
       }
     },
     "firstEvent": {
       "type": ["null", "string"]
     },
     "hasAccess": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "id": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "isBookmarked": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "isInternal": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "isMember": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "isPublic": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "latestRelease": {
       "type": ["null", "object"],
       "properties": {
         "authors": {
-          "type": ["array", "null"],
+          "type": "array",
           "items": {
-            "type": ["object", "null"],
+            "type": "object",
             "properties": {
               "name": {
-                "type": ["string", "null"]
+                "type": "string"
               },
               "email": {
-                "type": ["string", "null"]
+                "type": "string"
               }
             }
           }
         },
         "commitCount": {
-          "type": ["integer", "null"]
+          "type": "integer"
         },
         "data": {
-          "type": ["object", "null"]
+          "type": "object"
         },
         "dateCreated": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "dateReleased": {
           "type": ["null", "string"]
         },
         "deployCount": {
-          "type": ["integer", "null"]
+          "type": "integer"
         },
         "firstEvent": {
           "type": ["null", "string"]
@@ -115,21 +112,21 @@
           "type": ["null", "string"]
         },
         "newGroups": {
-          "type": ["integer", "null"]
+          "type": "integer"
         },
         "owner": {
           "type": ["null", "string"]
         },
         "projects": {
-          "type": ["array", "null"],
+          "type": "array",
           "items": {
-            "type": ["object", "null"],
+            "type": "object",
             "properties": {
               "name": {
-                "type": ["string", "null"]
+                "type": "string"
               },
               "slug": {
-                "type": ["string", "null"]
+                "type": "string"
               }
             }
           }
@@ -138,89 +135,86 @@
           "type": ["null", "string"]
         },
         "shortVersion": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "url": {
           "type": ["null", "string"]
         },
         "version": {
-          "type": ["string", "null"]
+          "type": "string"
         }
       }
     },
     "name": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "options": {
-      "type": ["object", "null"],
+      "type": "object",
       "properties": {
         "feedback:branding": {
-          "type": ["boolean", "null"]
+          "type": "boolean"
         },
         "filters:blacklisted_ips": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "filters:error_messages": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "filters:releases": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "sentry:csp_ignored_sources": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "sentry:csp_ignored_sources_defaults": {
-          "type": ["boolean", "null"]
+          "type": "boolean"
         },
         "sentry:reprocessing_active": {
-          "type": ["boolean", "null"]
+          "type": "boolean"
         }
       }
     },
     "organization": {
-      "type": ["object", "null"],
+      "type": "object",
       "properties": {
         "avatar": {
-          "type": ["object", "null"],
+          "type": "object",
           "properties": {
             "avatarType": {
-              "type": ["string", "null"]
+              "type": "string"
             },
             "avatarUuid": {
-              "type": ["null", "string"]
-            },
-            "avatarUrl": {
               "type": ["null", "string"]
             }
           }
         },
         "dateCreated": {
-          "type": ["string", "null"],
+          "type": "string",
           "format": "date-time"
         },
         "id": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "isEarlyAdopter": {
-          "type": ["boolean", "null"]
+          "type": "boolean"
         },
         "name": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "require2FA": {
-          "type": ["boolean", "null"]
+          "type": "boolean"
         },
         "slug": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "status": {
-          "type": ["object", "null"],
+          "type": "object",
           "properties": {
             "id": {
-              "type": ["string", "null"]
+              "type": "string"
             },
             "name": {
-              "type": ["string", "null"]
+              "type": "string"
             }
           }
         }
@@ -230,116 +224,91 @@
       "type": ["null", "string"]
     },
     "platforms": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": "string"
       }
     },
     "plugins": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["object", "null"],
+        "type": "object",
         "properties": {
-          "altIsSentryApp": {},
           "assets": {
-            "type": ["array", "null"],
+            "type": "array",
             "items": {
-              "type": ["string", "null"]
+              "type": "string"
             }
           },
           "author": {
             "type": ["null", "object"],
-            "additionalProperties": true,
             "properties": {
               "name": {
-                "type": ["string", "null"]
+                "type": "string"
               },
               "url": {
-                "type": ["string", "null"]
+                "type": "string"
               }
             }
           },
           "canDisable": {
-            "type": ["boolean", "null"]
+            "type": "boolean"
           },
           "contexts": {
-            "type": ["array", "null"],
+            "type": "array",
             "items": {
-              "type": ["string", "null"]
+              "type": "string"
             }
           },
           "description": {
-            "type": ["string", "null"]
+            "type": "string"
           },
-          "deprecationDate": {},
           "doc": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "enabled": {
-            "type": ["boolean", "null"]
+            "type": "boolean"
           },
-          "features": {
-            "type": ["array", "null"],
-            "items": {
-              "type": ["string", "null"]
-            }
-          },
-          "featureDescriptions": {
-            "type": ["array", "null"],
-            "items": {
-              "type": ["object", "null"],
-              "additionalProperties": true
-            }
-          },
-          "firstPartyAlternative": {},
           "hasConfiguration": {
-            "type": ["boolean", "null"]
+            "type": "boolean"
           },
           "id": {
-            "type": ["string", "null"]
-          },
-          "isDeprecated": {
-            "type": ["boolean", "null"]
-          },
-          "isHidden": {
-            "type": ["boolean", "null"]
+            "type": "string"
           },
           "isTestable": {
-            "type": ["boolean", "null"]
+            "type": "boolean"
           },
           "metadata": {
-            "type": ["object", "null"],
-            "additionalProperties": true
+            "type": "object"
           },
           "name": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "resourceLinks": {
             "type": ["null", "array"],
             "items": {
-              "type": ["object", "null"],
-              "additionalProperties": true,
+              "type": "object",
               "properties": {
                 "title": {
-                  "type": ["string", "null"]
+                  "type": "string"
                 },
                 "url": {
-                  "type": ["string", "null"]
+                  "type": "string"
                 }
               }
             }
           },
           "shortName": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "slug": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "status": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "type": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "version": {
             "type": ["null", "string"]
@@ -348,86 +317,86 @@
       }
     },
     "processingIssues": {
-      "type": ["integer", "null"]
+      "type": "integer"
     },
     "relayPiiConfig": {
       "type": ["null", "string"]
     },
     "resolveAge": {
-      "type": ["integer", "null"]
+      "type": "integer"
     },
     "safeFields": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": "string"
       }
     },
     "scrapeJavaScript": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "scrubIPAddresses": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "securityToken": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "securityTokenHeader": {
       "type": ["null", "string"]
     },
     "sensitiveFields": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["string", "null"]
+        "type": "string"
       }
     },
     "slug": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "status": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "storeCrashReports": {
       "type": ["null", "boolean"]
     },
     "subjectPrefix": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "subjectTemplate": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "team": {
-      "type": ["object", "null"],
+      "type": "object",
       "properties": {
         "id": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "name": {
-          "type": ["string", "null"]
+          "type": "string"
         },
         "slug": {
-          "type": ["string", "null"]
+          "type": "string"
         }
       }
     },
     "teams": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["object", "null"],
+        "type": "object",
         "properties": {
           "id": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "name": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "slug": {
-            "type": ["string", "null"]
+            "type": "string"
           }
         }
       }
     },
     "verifySSL": {
-      "type": ["boolean", "null"]
+      "type": "boolean"
     },
     "access": {
       "type": ["null", "array"],
@@ -470,15 +439,9 @@
     "hasProfiles": { "type": ["null", "boolean"] },
     "hasReplays": { "type": ["null", "boolean"] },
     "hasSessions": { "type": ["null", "boolean"] },
-    "hasFeedbacks": { "type": ["null", "boolean"] },
-    "hasNewFeedbacks": { "type": ["null", "boolean"] },
-    "hasCustomMetrics": { "type": ["null", "boolean"] },
     "recapServerUrl": { "type": ["null", "string"] },
     "secondaryGroupingConfig": { "type": ["null", "string"] },
     "secondaryGroupingExpiry": { "type": ["null", "integer"] },
-    "symbolSources": { "type": ["null", "string"] },
-    "stats": {},
-    "transactionStats": {},
-    "sessionStats": {}
+    "symbolSources": { "type": ["null", "string"] }
   }
 }

@@ -6,9 +6,8 @@ from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any, Generic, List, Mapping, Optional, Set, Tuple, Type, TypeVar
 
-from airbyte_cdk.models import AirbyteAnalyticsTraceMessage, AirbyteStateMessage, SyncMode
+from airbyte_cdk.models import AirbyteAnalyticsTraceMessage, SyncMode
 from airbyte_cdk.sources import AbstractSource
-from airbyte_cdk.sources.source import TState
 from airbyte_protocol.models import ConfiguredAirbyteCatalog
 
 
@@ -27,7 +26,7 @@ class SourceBuilder(ABC, Generic[SourceType]):
     """
 
     @abstractmethod
-    def build(self, configured_catalog: Optional[Mapping[str, Any]], config: Optional[Mapping[str, Any]], state: Optional[TState]) -> SourceType:
+    def build(self, configured_catalog: Optional[Mapping[str, Any]]) -> SourceType:
         raise NotImplementedError()
 
 
@@ -81,11 +80,11 @@ class TestScenario(Generic[SourceType]):
             return self.catalog.dict()  # type: ignore  # dict() is not typed
 
         catalog: Mapping[str, Any] = {"streams": []}
-        for stream in catalog["streams"]:
+        for stream in self.source.streams(self.config):
             catalog["streams"].append(
                 {
                     "stream": {
-                        "name": stream["name"],
+                        "name": stream.name,
                         "json_schema": {},
                         "supported_sync_modes": [sync_mode.value],
                     },
@@ -153,7 +152,7 @@ class TestScenarioBuilder(Generic[SourceType]):
         self._expected_logs = expected_logs
         return self
 
-    def set_expected_records(self, expected_records: Optional[List[Mapping[str, Any]]]) -> "TestScenarioBuilder[SourceType]":
+    def set_expected_records(self, expected_records: List[Mapping[str, Any]]) -> "TestScenarioBuilder[SourceType]":
         self._expected_records = expected_records
         return self
 
@@ -191,14 +190,8 @@ class TestScenarioBuilder(Generic[SourceType]):
     def build(self) -> "TestScenario[SourceType]":
         if self.source_builder is None:
             raise ValueError("source_builder is not set")
-        if self._incremental_scenario_config and self._incremental_scenario_config.input_state:
-            state = [AirbyteStateMessage.parse_obj(s) for s in self._incremental_scenario_config.input_state]
-        else:
-            state = None
         source = self.source_builder.build(
-            self._configured_catalog(SyncMode.incremental if self._incremental_scenario_config else SyncMode.full_refresh),
-            self._config,
-            state,
+            self._configured_catalog(SyncMode.incremental if self._incremental_scenario_config else SyncMode.full_refresh)
         )
         return TestScenario(
             self._name,

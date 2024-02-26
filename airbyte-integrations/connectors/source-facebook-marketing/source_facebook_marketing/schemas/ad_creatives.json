@@ -60,9 +60,6 @@
             },
             "multi_share_end_card": {
               "type": ["null", "boolean"]
-            },
-            "is_click_to_message": {
-              "type": ["null", "boolean"]
             }
           }
         },
@@ -887,9 +884,6 @@
             },
             "show_multiple_images": {
               "type": ["null", "boolean"]
-            },
-            "use_flexible_image_aspect_ratio": {
-              "type": ["null", "boolean"]
             }
           },
           "type": ["null", "object"]
@@ -1105,17 +1099,6 @@
                     },
                     "type": ["null", "object"]
                   },
-                  "place_data": {
-                    "properties": {
-                      "location_source_id": {
-                        "type": ["null", "string"]
-                      },
-                      "type": {
-                        "type": ["null", "string"]
-                      }
-                    },
-                    "type": ["null", "object"]
-                  },
                   "caption": {
                     "type": ["null", "string"]
                   },
@@ -1139,9 +1122,6 @@
                 "type": ["null", "object"]
               },
               "type": ["null", "array"]
-            },
-            "format_option": {
-              "type": ["null", "string"]
             },
             "multi_share_optimized": {
               "type": ["null", "boolean"]

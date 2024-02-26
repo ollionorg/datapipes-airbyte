@@ -1,7 +1,3 @@
----
-products: oss-*
----
-
 # Monitoring Airbyte
 
 

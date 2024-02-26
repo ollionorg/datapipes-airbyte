@@ -3,53 +3,40 @@
   "type": ["null", "object"],
   "additionalProperties": true,
   "properties": {
-    "reportRefreshDate": {
-      "type": ["null", "string"],
-      "format": "date"
-    },
-    "userId": {
+    "report_refresh_date": {
       "type": ["null", "string"]
     },
-    "userPrincipalName": {
+    "user_principal_name": {
       "type": ["null", "string"]
     },
-    "lastActivityDate": {
+    "last_activity_date": {
       "type": ["null", "string"]
     },
-    "isDeleted": {
+    "is_deleted": {
       "type": ["null", "string"]
     },
-    "deletedDate": {
+    "deleted_date": {
       "type": ["null", "string"]
     },
-    "usedWeb": {
+    "used_web": {
       "type": ["null", "string"]
     },
-    "usedWindowsPhone": {
+    "used_windows_phone": {
       "type": ["null", "string"]
     },
-    "usedIOs": {
+    "used_i_os": {
       "type": ["null", "string"]
     },
-    "usedMac": {
+    "used_mac": {
       "type": ["null", "string"]
     },
-    "usedAndroidPhone": {
+    "used_android_phone": {
       "type": ["null", "string"]
     },
-    "usedWindows": {
+    "used_windows": {
       "type": ["null", "string"]
     },
-    "usedChromeOS": {
-      "type": ["null", "string"]
-    },
-    "usedLinux": {
-      "type": ["null", "string"]
-    },
-    "isLisenced": {
-      "type": ["null", "string"]
-    },
-    "reportPeriod": {
+    "report_period": {
       "type": ["null", "string"]
     }
   }

@@ -3,10 +3,10 @@
 #
 
 import json
+from logging import getLogger
 from typing import Any, Dict, Mapping
 
 import pytest
-from airbyte_cdk import AirbyteLogger
 from airbyte_cdk.models import (
     AirbyteMessage,
     AirbyteRecordMessage,
@@ -33,13 +33,13 @@ def config_fixture() -> Mapping[str, Any]:
 def configured_catalog_fixture() -> ConfiguredAirbyteCatalog:
     stream_schema = {"type": "object", "properties": {"col1": {"type": "str"}, "col2": {"type": "integer"}}}
 
-    overwrite_stream = lambda n: ConfiguredAirbyteStream(
-        stream=AirbyteStream(name=f"_airbyte_{n}", json_schema=stream_schema, supported_sync_modes=[SyncMode.incremental]),
+    overwrite_stream = ConfiguredAirbyteStream(
+        stream=AirbyteStream(name="_airbyte", json_schema=stream_schema, supported_sync_modes=[SyncMode.incremental]),
         sync_mode=SyncMode.incremental,
         destination_sync_mode=DestinationSyncMode.overwrite,
     )
 
-    return ConfiguredAirbyteCatalog(streams=[overwrite_stream(i) for i in range(2)])
+    return ConfiguredAirbyteCatalog(streams=[overwrite_stream])
 
 
 @pytest.fixture(autouse=True)
@@ -60,12 +60,12 @@ def client_fixture(config) -> Client:
 
 
 def test_check_valid_config(config: Mapping):
-    outcome = DestinationTypesense().check(AirbyteLogger(), config)
+    outcome = DestinationTypesense().check(getLogger("airbyte"), config)
     assert outcome.status == Status.SUCCEEDED
 
 
 def test_check_invalid_config():
-    outcome = DestinationTypesense().check(AirbyteLogger(), {"api_key": "not_a_real_key", "host": "https://www.fake.com"})
+    outcome = DestinationTypesense().check(getLogger("airbyte"), {"api_key": "not_a_real_key", "host": "https://www.fake.com"})
     assert outcome.status == Status.FAILED
 
 
@@ -79,18 +79,17 @@ def _record(stream: str, str_value: str, int_value: int) -> AirbyteMessage:
     )
 
 
-def collection_size(client: Client, stream: str) -> int:
-    collection = client.collections[stream].retrieve()
-    return collection["num_documents"]
+def records_count(client: Client) -> int:
+    documents_results = client.index("_airbyte").get_documents()
+    return documents_results.total
 
 
 def test_write(config: Mapping, configured_catalog: ConfiguredAirbyteCatalog, client: Client):
-    configured_streams = list(map(lambda s: s.stream.name, configured_catalog.streams))
+    overwrite_stream = configured_catalog.streams[0].stream.name
     first_state_message = _state({"state": "1"})
-    first_record_chunk = [_record(stream, str(i), i) for i, stream in enumerate(configured_streams)]
+    first_record_chunk = [_record(overwrite_stream, str(i), i) for i in range(2)]
 
     destination = DestinationTypesense()
     list(destination.write(config, configured_catalog, [*first_record_chunk, first_state_message]))
-
-    for stream in configured_streams:
-        assert collection_size(client, stream) == 1
+    collection = client.collections["_airbyte"].retrieve()
+    assert collection["num_documents"] == 2

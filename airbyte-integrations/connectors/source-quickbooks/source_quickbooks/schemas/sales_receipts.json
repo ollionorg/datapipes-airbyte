@@ -116,13 +116,7 @@
       "type": ["null", "array"],
       "items": {
         "type": ["null", "object"],
-        "additionalProperties": true,
         "properties": {
-          "SubTotalLineDetail": {
-            "type": ["null", "object"],
-            "additionalProperties": true,
-            "properties": {}
-          },
           "DiscountLineDetail": {
             "type": ["null", "object"],
             "properties": {

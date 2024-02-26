@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "additionalProperties": true,
   "properties": {
     "id": {
       "type": ["null", "integer"]
@@ -25,9 +24,7 @@
       "type": ["null", "string"]
     },
     "sender": {
-      "type": ["null", "object"],
-      "additionalProperties": true,
-      "properties": {}
+      "type": ["null", "object"]
     },
     "replyTo": {
       "type": ["null", "string"]
@@ -63,9 +60,6 @@
       "type": ["null", "string"]
     },
     "modifiedAt": {
-      "type": ["null", "string"]
-    },
-    "previewText": {
       "type": ["null", "string"]
     },
     "shareLink": {

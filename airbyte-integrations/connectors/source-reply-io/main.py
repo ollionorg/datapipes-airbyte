@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_reply_io.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_reply_io import SourceReplyIo
 
 if __name__ == "__main__":
-    run()
+    source = SourceReplyIo()
+    launch(source, sys.argv[1:])

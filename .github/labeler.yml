@@ -11,6 +11,10 @@ area/documentation:
   - docs/*
   - docs/**/*
 
+area/octavia-cli:
+  - octavia-cli/*
+  - octavia-cli/**/*
+
 CDK:
   - airbyte-cdk/*
   - airbyte-cdk/**/*

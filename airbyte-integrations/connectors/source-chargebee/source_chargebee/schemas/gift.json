@@ -7,7 +7,8 @@
       "type": ["string", "null"]
     },
     "status": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "enum": ["scheduled", "unclaimed", "claimed", "cancelled", "expired"]
     },
     "scheduled_at": {
       "type": ["integer", "null"]
@@ -41,9 +42,6 @@
         },
         "note": {
           "type": ["string", "null"]
-        },
-        "object": {
-          "type": ["string", "null"]
         }
       }
     },
@@ -64,9 +62,6 @@
         },
         "email": {
           "type": ["string", "null"]
-        },
-        "object": {
-          "type": ["string", "null"]
         }
       }
     },
@@ -76,22 +71,34 @@
         "type": ["object", "null"],
         "properties": {
           "status": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "enum": [
+              "scheduled",
+              "unclaimed",
+              "claimed",
+              "cancelled",
+              "expired"
+            ]
           },
           "occurred_at": {
             "type": ["integer", "null"]
-          },
-          "object": {
-            "type": ["string", "null"]
           }
         }
       }
     },
-    "object": {
-      "type": ["string", "null"]
-    },
     "custom_fields": {
-      "$ref": "_definitions.json#/definitions/custom_fields"
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "name": {
+            "type": ["null", "string"]
+          },
+          "value": {
+            "type": ["null", "string"]
+          }
+        }
+      }
     }
   }
 }

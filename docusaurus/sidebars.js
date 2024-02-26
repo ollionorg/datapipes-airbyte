@@ -225,6 +225,7 @@ const buildAConnector = {
       },
       items: [
         "connector-development/testing-connectors/connector-acceptance-tests-reference",
+        "connector-development/testing-connectors/testing-a-local-catalog-in-development",
       ],
     },
     {
@@ -272,8 +273,7 @@ const connectorCatalog = {
       type: "category",
       label: "Sources",
       link: {
-        type: "doc",
-        id: "integrations/sources/README",
+        type: "generated-index",
       },
       items: [sourcePostgres, sourceMysql, ...getSourceConnectors()].sort((itemA, itemB) => itemA.label.localeCompare(itemB.label)),
     },
@@ -281,8 +281,7 @@ const connectorCatalog = {
       type: "category",
       label: "Destinations",
       link: {
-        type: "doc",
-        id: "integrations/destinations/README",
+        type: "generated-index",
       },
       items: getDestinationConnectors(),
     },
@@ -312,7 +311,6 @@ const contributeToAirbyte = {
         "contributing-to-airbyte/resources/pull-requests-handbook",
         "contributing-to-airbyte/resources/code-style",
         "contributing-to-airbyte/resources/code-formatting",
-        "contributing-to-airbyte/resources/qa-checks",
         "contributing-to-airbyte/resources/developing-locally",
         "contributing-to-airbyte/resources/developing-on-docker",
       ],
@@ -384,18 +382,17 @@ const understandingAirbyte = {
   type: "category",
   label: "Understand Airbyte",
   items: [
-    "understanding-airbyte/high-level-view",
+    "understanding-airbyte/beginners-guide-to-catalog",
     "understanding-airbyte/airbyte-protocol",
     "understanding-airbyte/airbyte-protocol-docker",
-    "understanding-airbyte/jobs",
-    "understanding-airbyte/database-data-catalog",
-    "understanding-airbyte/beginners-guide-to-catalog",
-    "understanding-airbyte/supported-data-types",
     "understanding-airbyte/operations",
-    "understanding-airbyte/cdc",
-    "understanding-airbyte/json-avro-conversion",
-    "understanding-airbyte/schemaless-sources-and-destinations",
+    "understanding-airbyte/high-level-view",
+    "understanding-airbyte/jobs",
     "understanding-airbyte/tech-stack",
+    "understanding-airbyte/cdc",
+    "understanding-airbyte/supported-data-types",
+    "understanding-airbyte/json-avro-conversion",
+    "understanding-airbyte/database-data-catalog",
   ],
 };
 
@@ -414,7 +411,6 @@ module.exports = {
         id: "using-airbyte/getting-started/readme",
       },
       items: [
-        "using-airbyte/core-concepts/readme",
         "using-airbyte/getting-started/add-a-source",
         "using-airbyte/getting-started/add-a-destination",
         "using-airbyte/getting-started/set-up-a-connection",
@@ -422,10 +418,10 @@ module.exports = {
     },
     {
       type: "category",
-      label: "Configuring Connections",
+      label: "Core Concepts",
       link: {
         type: "doc",
-        id: "cloud/managing-airbyte-cloud/configuring-connections"
+        id: "using-airbyte/core-concepts/readme"
       },
       items: [
         "using-airbyte/core-concepts/sync-schedules",
@@ -444,18 +440,21 @@ module.exports = {
             "using-airbyte/core-concepts/sync-modes/full-refresh-overwrite",
           ],
         },
-        {
-          type: "category",
-          label: "Typing and Deduping",
-          link: {
-            type: "doc",
-            id: "using-airbyte/core-concepts/typing-deduping"
-          },
-          items: [
-            "using-airbyte/core-concepts/basic-normalization"
-          ],
-        },
+        "using-airbyte/core-concepts/typing-deduping",
+        "using-airbyte/core-concepts/basic-normalization",
+      ],
+    },
+    {
+      type: "category",
+      label: "Configuring Connections",
+      link: {
+        type: "doc",
+        id: "cloud/managing-airbyte-cloud/configuring-connections"
+      },
+      items: [
         "cloud/managing-airbyte-cloud/manage-schema-changes",
+        "cloud/managing-airbyte-cloud/manage-data-residency",
+        "cloud/managing-airbyte-cloud/manage-connection-state",
         {
           type: "category",
           label: "Transformations",
@@ -476,33 +475,30 @@ module.exports = {
         "cloud/managing-airbyte-cloud/review-sync-history",
         "operator-guides/browsing-output-logs",
         "operator-guides/reset",
-        "cloud/managing-airbyte-cloud/manage-connection-state",
       ],
     },
     {
       type: "category",
       label: "Workspace Management",
       items: [
-        "cloud/managing-airbyte-cloud/manage-data-residency",
         "using-airbyte/workspaces",
         "cloud/managing-airbyte-cloud/manage-airbyte-cloud-notifications",
         "cloud/managing-airbyte-cloud/manage-credits",
         "operator-guides/using-custom-connectors",
-        
       ]
     },
-    sectionHeader("Managing Airbyte"),
+    sectionHeader("Operating Airbyte"),
     deployAirbyte,
     {
       type: "category",
-      label: "Self-Managed Enterprise",
+      label: "Airbyte Enterprise",
       link: {
         type: "doc",
         id: "enterprise-setup/README",
       },
       items: [
         "enterprise-setup/implementation-guide",
-        "enterprise-setup/upgrading-from-community",
+        "enterprise-setup/sso",
       ]
     },
     "operator-guides/upgrading-airbyte",
@@ -516,24 +512,6 @@ module.exports = {
       items: [
         "operator-guides/configuring-airbyte-db",
         "operator-guides/configuring-connector-resources",
-        "operator-guides/telemetry",
-      ]
-    },
-    {
-      type: "category",
-      label: "Access Management",
-      items: [
-        {
-          type: "category",
-          label: "Single Sign-On (SSO)",
-          link: {
-            type: "doc",
-            id: "access-management/sso"
-          },
-          items: [
-            { type: "autogenerated", dirName: "access-management/sso-providers" },
-          ]
-        },
       ]
     },
     {
@@ -564,6 +542,10 @@ module.exports = {
     {
       type: "doc",
       id: "terraform-documentation",
+    },
+    {
+      type: "doc",
+      id: "cli-documentation",
     },
     understandingAirbyte,
     contributeToAirbyte,
@@ -597,9 +579,6 @@ module.exports = {
         type: "generated-index",
       },
       items: [
-        "release_notes/january_2024",
-        "release_notes/december_2023",
-        "release_notes/november_2023",
         "release_notes/october_2023",
         "release_notes/upgrading_to_destinations_v2",
         "release_notes/september_2023",

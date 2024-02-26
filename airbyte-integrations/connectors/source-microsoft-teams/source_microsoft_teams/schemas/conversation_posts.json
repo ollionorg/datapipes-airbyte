@@ -6,47 +6,48 @@
     "id": {
       "type": ["null", "string"]
     },
-    "threadId": {
+    "thread_id": {
       "type": ["null", "string"]
     },
-    "conversationId": {
+    "conversation_id": {
       "type": ["null", "string"]
     },
-    "createdDateTime": {
+    "created_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "lastModifiedDateTime": {
+    "last_modified_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "@odata.etag": {
-      "type": ["null", "string"]
-    },
-    "changeKey": {
+    "change_key": {
       "type": ["null", "string"]
     },
     "categories": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
-    "receivedDateTime": {
+    "received_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "hasAttachments": {
+    "has_attachments": {
       "type": ["null", "boolean"]
     },
     "body": {
       "type": ["null", "object"],
       "additionalProperties": true,
       "properties": {
-        "contentType": {
+        "content_type": {
           "type": ["null", "string"]
         },
         "content": {
@@ -60,6 +61,7 @@
       "properties": {
         "emailAddress": {
           "type": ["null", "object"],
+          "additionalProperties": false,
           "properties": {
             "name": {
               "type": ["null", "string"]

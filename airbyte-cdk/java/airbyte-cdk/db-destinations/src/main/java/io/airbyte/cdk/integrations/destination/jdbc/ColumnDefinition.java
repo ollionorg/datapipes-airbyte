@@ -4,13 +4,8 @@
 
 package io.airbyte.cdk.integrations.destination.jdbc;
 
-/**
- * Jdbc destination column definition representation
- *
- * @param name
- * @param type
- * @param columnSize
- */
-public record ColumnDefinition(String name, String type, int columnSize, boolean isNullable) {
+import java.sql.SQLType;
+
+public record ColumnDefinition(String name, String type, SQLType sqlType, int columnSize) {
 
 }

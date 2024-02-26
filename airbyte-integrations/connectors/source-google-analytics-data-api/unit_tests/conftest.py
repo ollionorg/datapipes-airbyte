@@ -49,7 +49,6 @@ def config(one_year_ago):
             "screenPageViewsPerSession",
             "bounceRate",
         ],
-        "keep_empty_rows": True,
         "custom_reports": json.dumps(
             [
                 {

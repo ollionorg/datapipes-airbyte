@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_smartsheets.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_smartsheets import SourceSmartsheets
 
 if __name__ == "__main__":
-    run()
+    source = SourceSmartsheets()
+    launch(source, sys.argv[1:])

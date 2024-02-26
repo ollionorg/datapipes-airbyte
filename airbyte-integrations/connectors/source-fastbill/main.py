@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_fastbill.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_fastbill import SourceFastbill
 
 if __name__ == "__main__":
-    run()
+    source = SourceFastbill()
+    launch(source, sys.argv[1:])

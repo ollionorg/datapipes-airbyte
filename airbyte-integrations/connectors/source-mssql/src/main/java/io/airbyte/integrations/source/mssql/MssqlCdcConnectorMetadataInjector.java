@@ -4,8 +4,6 @@
 
 package io.airbyte.integrations.source.mssql;
 
-import static io.airbyte.cdk.integrations.debezium.internals.DebeziumEventConverter.CDC_DELETED_AT;
-import static io.airbyte.cdk.integrations.debezium.internals.DebeziumEventConverter.CDC_UPDATED_AT;
 import static io.airbyte.integrations.source.mssql.MssqlSource.CDC_DEFAULT_CURSOR;
 import static io.airbyte.integrations.source.mssql.MssqlSource.CDC_EVENT_SERIAL_NO;
 import static io.airbyte.integrations.source.mssql.MssqlSource.CDC_LSN;
@@ -13,11 +11,10 @@ import static io.airbyte.integrations.source.mssql.MssqlSource.CDC_LSN;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.airbyte.cdk.integrations.debezium.CdcMetadataInjector;
-import io.airbyte.integrations.source.mssql.cdc.MssqlDebeziumStateUtil.MssqlDebeziumStateAttributes;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicLong;
 
-public class MssqlCdcConnectorMetadataInjector implements CdcMetadataInjector<MssqlDebeziumStateAttributes> {
+public class MssqlCdcConnectorMetadataInjector implements CdcMetadataInjector<Long> {
 
   private final long emittedAtConverted;
 
@@ -45,17 +42,6 @@ public class MssqlCdcConnectorMetadataInjector implements CdcMetadataInjector<Ms
     event.put(CDC_LSN, commitLsn);
     event.put(CDC_EVENT_SERIAL_NO, eventSerialNo);
     event.put(CDC_DEFAULT_CURSOR, getCdcDefaultCursor());
-  }
-
-  @Override
-  public void addMetaDataToRowsFetchedOutsideDebezium(final ObjectNode record,
-                                                      final String transactionTimestamp,
-                                                      final MssqlDebeziumStateAttributes debeziumStateAttributes) {
-    record.put(CDC_UPDATED_AT, transactionTimestamp);
-    record.put(CDC_EVENT_SERIAL_NO, 1);
-    record.put(CDC_LSN, debeziumStateAttributes.lsn().toString());
-    record.put(CDC_DELETED_AT, (String) null);
-    record.put(CDC_DEFAULT_CURSOR, getCdcDefaultCursor());
   }
 
   @Override

@@ -1,114 +1,50 @@
-[
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "accounts" }
-    }
+{
+  "accounts": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "account_coupon_redemptions" }
-    }
+  "account_coupon_redemptions": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "created_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "account_notes" }
-    }
+  "account_notes": {
+    "created_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "add_ons" }
-    }
+  "add_ons": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "billing_infos" }
-    }
+  "billing_infos": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "coupons" }
-    }
+  "coupons": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "credit_payments" }
-    }
+  "credit_payments": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "invoices" }
-    }
+  "invoices": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "line_items" }
-    }
+  "line_items": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "measured_units" }
-    }
+  "measured_units": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "plans" }
-    }
+  "plans": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "shipping_addresses" }
-    }
+  "shipping_addresses": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "shipping_methods" }
-    }
+  "shipping_methods": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "subscriptions" }
-    }
+  "subscriptions": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "transactions" }
-    }
+  "transactions": {
+    "updated_at": "2022-07-19T22:21:37Z"
   },
-  {
-    "type": "STREAM",
-    "stream": {
-      "stream_state": { "updated_at": "2036-07-19T22:21:37Z" },
-      "stream_descriptor": { "name": "unique_coupons" }
-    }
+  "unique_coupons": {
+    "updated_at": "2022-07-19T22:21:37Z"
   }
-]
+}

@@ -24,6 +24,7 @@ ${additionalMessage || ""}
 
 module.exports = function (plop) {
   const docRoot = '../../../docs/integrations';
+  const definitionRoot = '../../../airbyte-config-oss/init-oss/src/main/resources';
 
   const connectorAcceptanceTestFilesInputRoot = '../connector_acceptance_test_files';
 
@@ -294,6 +295,12 @@ module.exports = function (plop) {
         abortOnFail: true,
         templateFile: `${javaDestinationInput}/.dockerignore.hbs`,
         path: `${javaDestinationOutputRoot}/.dockerignore`
+      },
+      {
+        type: 'add',
+        abortOnFail: true,
+        templateFile: `${javaDestinationInput}/Dockerfile.hbs`,
+        path: `${javaDestinationOutputRoot}/Dockerfile`
       },
       // Java
       {

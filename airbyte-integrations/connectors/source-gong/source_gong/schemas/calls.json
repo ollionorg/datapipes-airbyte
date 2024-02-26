@@ -60,9 +60,6 @@
     },
     "isPrivate": {
       "type": ["null", "boolean"]
-    },
-    "calendarEventId": {
-      "type": ["null", "string"]
     }
   }
 }

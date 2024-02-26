@@ -6,7 +6,7 @@
 from setuptools import find_packages, setup
 
 MAIN_REQUIREMENTS = [
-    "airbyte-cdk[file-based]>=0.61.0",
+    "airbyte-cdk[file-based]>=0.55.5",
     "google-api-python-client==2.104.0",
     "google-auth-httplib2==0.1.1",
     "google-auth-oauthlib==1.1.0",
@@ -25,25 +25,8 @@ setup(
     author_email="contact@airbyte.io",
     packages=find_packages(),
     install_requires=MAIN_REQUIREMENTS,
-    package_data={
-        "": [
-            # Include yaml files in the package (if any)
-            "*.yml",
-            "*.yaml",
-            # Include all json files in the package, up to 4 levels deep
-            "*.json",
-            "*/*.json",
-            "*/*/*.json",
-            "*/*/*/*.json",
-            "*/*/*/*/*.json",
-        ]
-    },
+    package_data={"": ["*.json", "schemas/*.json", "schemas/shared/*.json"]},
     extras_require={
         "tests": TEST_REQUIREMENTS,
-    },
-    entry_points={
-        "console_scripts": [
-            "source-google-drive=source_google_drive.run:run",
-        ],
     },
 )

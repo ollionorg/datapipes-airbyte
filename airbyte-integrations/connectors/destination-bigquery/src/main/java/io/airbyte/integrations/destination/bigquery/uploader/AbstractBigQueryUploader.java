@@ -38,17 +38,20 @@ public abstract class AbstractBigQueryUploader<T extends DestinationWriter> {
   private static final Logger LOGGER = LoggerFactory.getLogger(AbstractBigQueryUploader.class);
 
   protected final TableId table;
+  protected final TableId tmpTable;
   protected final WriteDisposition syncMode;
   protected final T writer;
   protected final BigQuery bigQuery;
   protected final BigQueryRecordFormatter recordFormatter;
 
   AbstractBigQueryUploader(final TableId table,
+                           final TableId tmpTable,
                            final T writer,
                            final WriteDisposition syncMode,
                            final BigQuery bigQuery,
                            final BigQueryRecordFormatter recordFormatter) {
     this.table = table;
+    this.tmpTable = tmpTable;
     this.writer = writer;
     this.syncMode = syncMode;
     this.bigQuery = bigQuery;
@@ -117,6 +120,8 @@ public abstract class AbstractBigQueryUploader<T extends DestinationWriter> {
     } catch (final Exception e) {
       LOGGER.error("Upload data is failed!");
       throw e;
+    } finally {
+      dropTmpTable();
     }
   }
 
@@ -130,6 +135,25 @@ public abstract class AbstractBigQueryUploader<T extends DestinationWriter> {
     } else {
       LOGGER.info("Found raw table {}.", rawTable.getTableId());
     }
+  }
+
+  protected void dropTmpTable() {
+    try {
+      // clean up tmp tables;
+      LOGGER.info("Removing tmp tables...");
+      bigQuery.delete(tmpTable);
+      LOGGER.info("Finishing destination process...completed");
+    } catch (final Exception e) {
+      LOGGER.error("Fail to tmp table drop table: " + e.getMessage());
+    }
+  }
+
+  protected void uploadDataToTableFromTmpTable() {
+    LOGGER.info("Replication finished with no explicit errors. Copying data from tmp tables to permanent");
+    if (syncMode.equals(JobInfo.WriteDisposition.WRITE_APPEND)) {
+      partitionIfUnpartitioned(bigQuery, recordFormatter.getBigQuerySchema(), table);
+    }
+    copyTable(bigQuery, tmpTable, table, syncMode);
   }
 
   /**
@@ -241,6 +265,7 @@ public abstract class AbstractBigQueryUploader<T extends DestinationWriter> {
   public String toString() {
     return "AbstractBigQueryUploader{" +
         "table=" + table.getTable() +
+        ", tmpTable=" + tmpTable.getTable() +
         ", syncMode=" + syncMode +
         ", writer=" + writer.getClass() +
         ", recordFormatter=" + recordFormatter.getClass() +

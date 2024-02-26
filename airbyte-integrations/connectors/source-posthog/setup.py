@@ -14,29 +14,12 @@ TEST_REQUIREMENTS = [
 ]
 
 setup(
-    entry_points={
-        "console_scripts": [
-            "source-posthog=source_posthog.run:run",
-        ],
-    },
     name="source_posthog",
     description="Source implementation for Posthog.",
     author="Airbyte",
     author_email="contact@airbyte.io",
     packages=find_packages(),
     install_requires=MAIN_REQUIREMENTS,
-    package_data={
-        "": [
-            # Include yaml files in the package (if any)
-            "*.yml",
-            "*.yaml",
-            # Include all json files in the package, up to 4 levels deep
-            "*.json",
-            "*/*.json",
-            "*/*/*.json",
-            "*/*/*/*.json",
-            "*/*/*/*/*.json",
-        ]
-    },
+    package_data={"": ["*.json", "*.yaml", "schemas/*.json"]},
     extras_require={"tests": TEST_REQUIREMENTS},
 )

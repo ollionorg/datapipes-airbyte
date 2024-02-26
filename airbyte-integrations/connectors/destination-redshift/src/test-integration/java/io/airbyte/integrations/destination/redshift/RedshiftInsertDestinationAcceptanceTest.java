@@ -9,13 +9,11 @@ import io.airbyte.commons.json.Jsons;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.junit.jupiter.api.Disabled;
 
 /**
  * Integration test testing the {@link RedshiftInsertDestination}.
  */
-@Disabled
-public class RedshiftInsertDestinationAcceptanceTest extends RedshiftDestinationAcceptanceTest {
+public class RedshiftInsertDestinationAcceptanceTest extends RedshiftStagingS3DestinationAcceptanceTest {
 
   public JsonNode getStaticConfig() throws IOException {
     return Jsons.deserialize(Files.readString(Path.of("secrets/config.json")));

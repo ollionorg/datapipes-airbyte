@@ -6,132 +6,130 @@
     "id": {
       "type": ["null", "string"]
     },
-    "deletedDateTime": {
+    "deleted_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
     "classification": {
       "type": ["null", "string"]
     },
-    "createdDateTime": {
+    "created_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "creationOptions": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+    "creation_options": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
     "description": {
       "type": ["null", "string"]
     },
-    "displayName": {
+    "display_name": {
       "type": ["null", "string"]
     },
-    "expirationDateTime": {
+    "expiration_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "groupTypes": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+    "group_types": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     },
-    "isAssignableToRole": {
+    "is_assignable_to_role": {
       "type": ["null", "boolean"]
     },
     "mail": {
       "type": ["null", "string"]
     },
-    "mailEnabled": {
+    "mail_enabled": {
       "type": ["null", "boolean"]
     },
-    "mailNickname": {
+    "mail_nickname": {
       "type": ["null", "string"]
     },
-    "membershipRule": {
+    "membership_rule": {
       "type": ["null", "string"]
     },
-    "membershipRuleProcessingState": {
+    "membership_rule_processing_state": {
       "type": ["null", "string"]
     },
-    "onPremisesDomainName": {
+    "onPremises_domain_name": {
       "type": ["null", "string"]
     },
-    "onPremisesLastSyncDateTime": {
+    "on_premises_last_sync_date_time": {
       "type": ["null", "string"],
       "format": "date-time"
     },
-    "onPremisesNetBiosName": {
+    "on_premises_net_bios_name": {
       "type": ["null", "string"]
     },
-    "onPremisesSamAccountName": {
+    "on_premises_sam_account_name": {
       "type": ["null", "string"]
     },
-    "onPremisesSecurityIdentifier": {
+    "on_premises_security_identifier": {
       "type": ["null", "string"]
     },
-    "onPremisesSyncEnabled": {
+    "on_premises_sync_enabled": {
       "type": ["null", "boolean"]
     },
-    "preferredDataLocation": {
+    "preferred_data_location": {
       "type": ["null", "string"]
     },
-    "preferredLanguage": {
+    "preferred_language": {
       "type": ["null", "string"]
     },
-    "proxyAddresses": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
-    },
-    "renewedDateTime": {
-      "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
-    },
-    "resourceBehaviorOptions": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
-    },
-    "resourceProvisioningOptions": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
-    },
-    "securityEnabled": {
-      "type": ["null", "boolean"]
-    },
-    "securityIdentifier": {
-      "type": ["null", "string"]
-    },
-    "serviceProvisioningErrors": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "object"],
-        "properties": {
-          "createdDateTime": {
-            "type": ["null", "string"],
-            "format": "date-time",
-            "airbyte_type": "timestamp_without_timezone"
-          },
-          "isResolved": {
-            "type": ["null", "boolean"]
-          },
-          "serviceInstance": {
-            "type": ["null", "string"]
+    "proxy_addresses": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
           }
+        },
+        {
+          "type": "null"
         }
+      ]
+    },
+    "renewed_date_time": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "resource_behavior_options": {
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "string"]
       }
+    },
+    "resource_provisioning_options": {
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "string"]
+      }
+    },
+    "security_enabled": {
+      "type": ["null", "boolean"]
+    },
+    "security_edentifier": {
+      "type": ["null", "string"]
     },
     "theme": {
       "type": ["null", "string"]
@@ -139,11 +137,18 @@
     "visibility": {
       "type": ["null", "string"]
     },
-    "onPremisesProvisioningErrors": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "string"]
-      }
+    "on_premises_provisioning_errors": {
+      "anyOf": [
+        {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
     }
   }
 }

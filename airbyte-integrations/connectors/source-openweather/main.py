@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_openweather.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_openweather import SourceOpenweather
 
 if __name__ == "__main__":
-    run()
+    source = SourceOpenweather()
+    launch(source, sys.argv[1:])

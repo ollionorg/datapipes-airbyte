@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_coin_api.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_coin_api import SourceCoinApi
 
 if __name__ == "__main__":
-    run()
+    source = SourceCoinApi()
+    launch(source, sys.argv[1:])

@@ -4,7 +4,6 @@
 
 package io.airbyte.cdk.db.factory;
 
-import java.time.Duration;
 import java.util.Map;
 import javax.sql.DataSource;
 import org.jooq.DSLContext;
@@ -63,10 +62,8 @@ public class DSLContextFactory {
                                   final String driverClassName,
                                   final String jdbcConnectionString,
                                   final SQLDialect dialect,
-                                  final Map<String, String> connectionProperties,
-                                  final Duration connectionTimeout) {
-    return DSL.using(DataSourceFactory.create(username, password, driverClassName, jdbcConnectionString, connectionProperties,
-        connectionTimeout), dialect);
+                                  final Map<String, String> connectionProperties) {
+    return DSL.using(DataSourceFactory.create(username, password, driverClassName, jdbcConnectionString, connectionProperties), dialect);
   }
 
 }

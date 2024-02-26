@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_survey_sparrow.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_survey_sparrow import SourceSurveySparrow
 
 if __name__ == "__main__":
-    run()
+    source = SourceSurveySparrow()
+    launch(source, sys.argv[1:])

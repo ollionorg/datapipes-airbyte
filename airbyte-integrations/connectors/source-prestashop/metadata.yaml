@@ -15,10 +15,6 @@ data:
   icon: prestashop.svg
   license: MIT
   name: PrestaShop
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-prestashop
   registries:
     cloud:
       enabled: true

@@ -75,10 +75,7 @@ class SourceBingAds(AbstractSource):
     def check_connection(self, logger: AirbyteLogger, config: Mapping[str, Any]) -> Tuple[bool, Any]:
         try:
             client = Client(**config)
-            accounts = Accounts(client, config)
-            account_ids = set()
-            for _slice in accounts.stream_slices():
-                account_ids.update({str(account["Id"]) for account in accounts.read_records(SyncMode.full_refresh, _slice)})
+            account_ids = {str(account["Id"]) for account in Accounts(client, config).read_records(SyncMode.full_refresh)}
             self.validate_custom_reposts(config, client)
             if account_ids:
                 return True, None

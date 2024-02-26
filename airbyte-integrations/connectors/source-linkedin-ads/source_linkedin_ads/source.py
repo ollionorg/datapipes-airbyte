@@ -11,7 +11,9 @@ from airbyte_cdk.sources.streams import Stream
 from airbyte_cdk.sources.streams.http.requests_native_auth import Oauth2Authenticator, TokenAuthenticator
 from airbyte_cdk.utils import AirbyteTracedException
 from airbyte_protocol.models import FailureType
-from source_linkedin_ads.analytics_streams import (
+from source_linkedin_ads.streams import (
+    Accounts,
+    AccountUsers,
     AdCampaignAnalytics,
     AdCreativeAnalytics,
     AdImpressionDeviceAnalytics,
@@ -23,8 +25,11 @@ from source_linkedin_ads.analytics_streams import (
     AdMemberJobTitleAnalytics,
     AdMemberRegionAnalytics,
     AdMemberSeniorityAnalytics,
+    CampaignGroups,
+    Campaigns,
+    Conversions,
+    Creatives,
 )
-from source_linkedin_ads.streams import Accounts, AccountUsers, CampaignGroups, Campaigns, Conversions, Creatives
 
 logger = logging.getLogger("airbyte")
 

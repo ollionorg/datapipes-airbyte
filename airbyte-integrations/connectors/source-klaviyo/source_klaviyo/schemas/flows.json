@@ -1,5 +1,4 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
   "additionalProperties": true,
   "properties": {
@@ -20,61 +19,11 @@
     },
     "links": {
       "type": ["null", "object"],
-      "additionalProperties": true,
-      "properties": {
-        "self": { "type": "string" }
-      }
+      "additionalProperties": true
     },
     "relationships": {
       "type": ["null", "object"],
-      "additionalProperties": true,
-      "properties": {
-        "flow-actions": {
-          "type": ["null", "object"],
-          "properties": {
-            "data": {
-              "type": "array",
-              "items": {
-                "type": ["null", "object"],
-                "additionalProperties": true,
-                "properties": {
-                  "type": { "type": "string" },
-                  "id": { "type": "string" }
-                }
-              }
-            },
-            "links": {
-              "type": ["null", "object"],
-              "properties": {
-                "self": { "type": "string" },
-                "related": { "type": "string" }
-              }
-            }
-          }
-        },
-        "tags": {
-          "type": ["null", "object"],
-          "properties": {
-            "data": {
-              "type": "array",
-              "items": {
-                "type": ["null", "object"],
-                "properties": {
-                  "type": { "type": "string" },
-                  "id": { "type": "string" }
-                }
-              }
-            },
-            "links": {
-              "type": ["null", "object"],
-              "properties": {
-                "self": { "type": "string" },
-                "related": { "type": "string" }
-              }
-            }
-          }
-        }
-      }
+      "additionalProperties": true
     }
   }
 }

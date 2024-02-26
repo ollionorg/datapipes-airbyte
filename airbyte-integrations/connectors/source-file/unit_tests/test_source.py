@@ -24,7 +24,6 @@ from airbyte_cdk.models import (
 from airbyte_cdk.utils import AirbyteTracedException
 
 from source_file.client import ConfigurationError
-from airbyte_protocol.models.airbyte_protocol import Type as MessageType
 from source_file.source import SourceFile
 
 logger = logging.getLogger("airbyte")
@@ -100,8 +99,7 @@ def test_nan_to_null(absolute_path, test_files):
 
     source = SourceFile()
     records = source.read(logger=logger, config=deepcopy(config), catalog=catalog)
-
-    records = [r.record.data for r in records if r.type == MessageType.RECORD]
+    records = [r.record.data for r in records]
     assert records == [
         {"col1": "key1", "col2": 1.11, "col3": None},
         {"col1": "key2", "col2": None, "col3": 2.22},
@@ -111,14 +109,13 @@ def test_nan_to_null(absolute_path, test_files):
 
     config.update({"format": "yaml", "url": f"{absolute_path}/{test_files}/formats/yaml/demo.yaml"})
     records = source.read(logger=logger, config=deepcopy(config), catalog=catalog)
-    records = [r.record.data for r in records if r.type == MessageType.RECORD]
+    records = [r.record.data for r in records]
     assert records == []
 
     config.update({"provider": {"storage": "SSH", "user": "user", "host": "host"}})
 
     with pytest.raises(Exception):
-        for record in source.read(logger=logger, config=config, catalog=catalog):
-            pass
+        next(source.read(logger=logger, config=config, catalog=catalog))
 
 
 def test_spec(source):
@@ -189,7 +186,7 @@ def test_pandas_header_not_none(absolute_path, test_files):
 
     source = SourceFile()
     records = source.read(logger=logger, config=deepcopy(config), catalog=catalog)
-    records = [r.record.data for r in records if r.type == MessageType.RECORD]
+    records = [r.record.data for r in records]
     assert records == [
         {"text11": "text21", "text12": "text22"},
     ]
@@ -208,7 +205,7 @@ def test_pandas_header_none(absolute_path, test_files):
 
     source = SourceFile()
     records = source.read(logger=logger, config=deepcopy(config), catalog=catalog)
-    records = [r.record.data for r in records if r.type == MessageType.RECORD]
+    records = [r.record.data for r in records]
     assert records == [
         {"0": "text11", "1": "text12"},
         {"0": "text21", "1": "text22"},
@@ -237,4 +234,4 @@ def test_incorrect_reader_options(absolute_path, test_files):
     ):
         catalog = get_catalog({"0": {"type": ["string", "null"]}, "1": {"type": ["string", "null"]}})
         records = source.read(logger=logger, config=deepcopy(config), catalog=catalog)
-        records = [r.record.data for r in records if r.type == MessageType.RECORD]
+        records = [r.record.data for r in records]

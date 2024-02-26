@@ -17,15 +17,14 @@ import com.google.cloud.bigquery.QueryJobConfiguration;
 import com.google.cloud.bigquery.Table;
 import com.google.cloud.bigquery.TableDefinition;
 import com.google.cloud.bigquery.TableId;
+import com.google.cloud.bigquery.TableResult;
 import com.google.common.collect.Streams;
 import io.airbyte.cdk.integrations.base.AirbyteExceptionHandler;
 import io.airbyte.integrations.base.destination.typing_deduping.DestinationHandler;
-import io.airbyte.integrations.base.destination.typing_deduping.Sql;
 import io.airbyte.integrations.base.destination.typing_deduping.StreamId;
 import java.math.BigInteger;
+import java.time.Instant;
 import java.util.Comparator;
-import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -54,72 +53,56 @@ public class BigQueryDestinationHandler implements DestinationHandler<TableDefin
   }
 
   @Override
-  public LinkedHashMap<String, TableDefinition> findExistingFinalTables(List<StreamId> streamIds) throws Exception {
-    return null;
-  }
-
-  @Override
   public boolean isFinalTableEmpty(final StreamId id) {
     return BigInteger.ZERO.equals(bq.getTable(TableId.of(id.finalNamespace(), id.finalName())).getNumRows());
   }
 
   @Override
-  public InitialRawTableState getInitialRawTableState(final StreamId id) throws Exception {
+  public Optional<Instant> getMinTimestampForSync(final StreamId id) throws Exception {
     final Table rawTable = bq.getTable(TableId.of(id.rawNamespace(), id.rawName()));
     if (rawTable == null) {
-      // Table doesn't exist. There are no unprocessed records, and no timestamp.
-      return new InitialRawTableState(false, Optional.empty());
+      return Optional.empty();
     }
-
-    final FieldValue unloadedRecordTimestamp = bq.query(QueryJobConfiguration.newBuilder(new StringSubstitutor(Map.of(
+    final TableResult queryResult = bq.query(QueryJobConfiguration.newBuilder(new StringSubstitutor(Map.of(
         "raw_table", id.rawTableId(BigQuerySqlGenerator.QUOTE))).replace(
             // bigquery timestamps have microsecond precision
+            // and COALESCE short-circuits, so if the first subquery returns non-null, we don't
+            // evaluate the second query at all
             """
-            SELECT TIMESTAMP_SUB(MIN(_airbyte_extracted_at), INTERVAL 1 MICROSECOND)
-            FROM ${raw_table}
-            WHERE _airbyte_loaded_at IS NULL
+            SELECT COALESCE(
+              (
+                SELECT TIMESTAMP_SUB(MIN(_airbyte_extracted_at), INTERVAL 1 MICROSECOND)
+                FROM ${raw_table}
+                WHERE _airbyte_loaded_at IS NULL
+              ),
+              (
+                SELECT MAX(_airbyte_extracted_at)
+                FROM ${raw_table}
+              )
+            )
             """))
-        .build()).iterateAll().iterator().next().get(0);
-    // If this value is null, then there are no records with null loaded_at.
-    // If it's not null, then we can return immediately - we've found some unprocessed records and their
-    // timestamp.
-    if (!unloadedRecordTimestamp.isNull()) {
-      return new InitialRawTableState(true, Optional.of(unloadedRecordTimestamp.getTimestampInstant()));
-    }
-
-    final FieldValue loadedRecordTimestamp = bq.query(QueryJobConfiguration.newBuilder(new StringSubstitutor(Map.of(
-        "raw_table", id.rawTableId(BigQuerySqlGenerator.QUOTE))).replace(
-            """
-            SELECT MAX(_airbyte_extracted_at)
-            FROM ${raw_table}
-            """))
-        .build()).iterateAll().iterator().next().get(0);
-    // We know (from the previous query) that all records have been processed by T+D already.
-    // So we just need to get the timestamp of the most recent record.
-    if (loadedRecordTimestamp.isNull()) {
-      // Null timestamp because the table is empty. T+D can process the entire raw table during this sync.
-      return new InitialRawTableState(false, Optional.empty());
+        .build());
+    final FieldValue value = queryResult.iterateAll().iterator().next().get(0);
+    if (value.isNull()) {
+      return Optional.empty();
     } else {
-      // The raw table already has some records. T+D can skip all records with timestamp <= this value.
-      return new InitialRawTableState(false, Optional.of(loadedRecordTimestamp.getTimestampInstant()));
+      return Optional.ofNullable(value.getTimestampInstant());
     }
   }
 
   @Override
-  public void execute(final Sql sql) throws InterruptedException {
-    final List<String> transactions = sql.asSqlStrings("BEGIN TRANSACTION", "COMMIT TRANSACTION");
-    if (transactions.isEmpty()) {
+  public void execute(final String sql) throws InterruptedException {
+    if ("".equals(sql)) {
       return;
     }
     final UUID queryId = UUID.randomUUID();
-    final String statement = String.join("\n", transactions);
-    LOGGER.debug("Executing sql {}: {}", queryId, statement);
+    LOGGER.debug("Executing sql {}: {}", queryId, sql);
 
     /*
      * If you run a query like CREATE SCHEMA ... OPTIONS(location=foo); CREATE TABLE ...;, bigquery
      * doesn't do a good job of inferring the query location. Pass it in explicitly.
      */
-    Job job = bq.create(JobInfo.of(JobId.newBuilder().setLocation(datasetLocation).build(), QueryJobConfiguration.newBuilder(statement).build()));
+    Job job = bq.create(JobInfo.of(JobId.newBuilder().setLocation(datasetLocation).build(), QueryJobConfiguration.newBuilder(sql).build()));
     AirbyteExceptionHandler.addStringForDeinterpolation(job.getEtag());
     // job.waitFor() gets stuck forever in some failure cases, so manually poll the job instead.
     while (!JobStatus.State.DONE.equals(job.getStatus().getState())) {

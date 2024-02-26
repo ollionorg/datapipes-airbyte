@@ -257,7 +257,7 @@ public abstract class AbstractMssqlSourceDatatypeTest extends AbstractSourceData
             .sourceType("binary")
             .airbyteType(JsonSchemaType.STRING_BASE_64)
             .addInsertValues("CAST( 'A' AS BINARY(1))", "null")
-            .addExpectedValues("QQ==", null)
+            .addExpectedValues("A", null)
             .createTablePatternSql(CREATE_TABLE_SQL)
             .build());
 
@@ -267,7 +267,7 @@ public abstract class AbstractMssqlSourceDatatypeTest extends AbstractSourceData
             .fullSourceDataType("varbinary(3)")
             .airbyteType(JsonSchemaType.STRING_BASE_64)
             .addInsertValues("CAST( 'ABC' AS VARBINARY)", "null")
-            .addExpectedValues("QUJD", null)
+            .addExpectedValues("ABC", null)
             .createTablePatternSql(CREATE_TABLE_SQL)
             .build());
 

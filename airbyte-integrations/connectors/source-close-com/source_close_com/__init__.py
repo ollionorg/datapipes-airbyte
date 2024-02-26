@@ -22,6 +22,6 @@
 
 
 from .datetime_incremental_sync import CustomDatetimeIncrementalSync
-from .source import SourceCloseCom
+from .source_lc import SourceCloseCom
 
 __all__ = ["SourceCloseCom", "CustomDatetimeIncrementalSync"]

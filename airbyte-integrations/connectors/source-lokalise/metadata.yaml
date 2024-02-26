@@ -8,10 +8,6 @@ data:
   icon: lokalise.svg
   license: MIT
   name: Lokalise
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-lokalise
   registries:
     cloud:
       enabled: true

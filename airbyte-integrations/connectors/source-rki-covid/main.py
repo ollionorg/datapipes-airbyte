@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_rki_covid.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_rki_covid import SourceRkiCovid
 
 if __name__ == "__main__":
-    run()
+    source = SourceRkiCovid()
+    launch(source, sys.argv[1:])

@@ -640,4 +640,3 @@ class ConnectorTypeEnum(str, Enum):
 class SupportLevelEnum(str, Enum):
     certified = "certified"
     community = "community"
-    archived = "archived"

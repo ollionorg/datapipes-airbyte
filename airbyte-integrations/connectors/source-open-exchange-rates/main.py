@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_open_exchange_rates.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_open_exchange_rates import SourceOpenExchangeRates
 
 if __name__ == "__main__":
-    run()
+    source = SourceOpenExchangeRates()
+    launch(source, sys.argv[1:])

@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_netsuite.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_netsuite import SourceNetsuite
 
 if __name__ == "__main__":
-    run()
+    source = SourceNetsuite()
+    launch(source, sys.argv[1:])

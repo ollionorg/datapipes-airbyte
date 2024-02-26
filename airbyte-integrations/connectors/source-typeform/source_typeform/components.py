@@ -20,7 +20,9 @@ class TypeformAuthenticator(DeclarativeAuthenticator):
     oauth2: DeclarativeSingleUseRefreshTokenOauth2Authenticator
 
     def __new__(cls, token_auth, oauth2, config, *args, **kwargs):
-        return token_auth if config["credentials"]["auth_type"] == "access_token" else oauth2
+        if config["credentials"]["access_token"]:
+            return token_auth
+        return oauth2
 
 
 @dataclass

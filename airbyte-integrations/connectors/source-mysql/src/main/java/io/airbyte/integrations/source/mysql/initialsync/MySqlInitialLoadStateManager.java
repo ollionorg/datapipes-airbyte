@@ -25,8 +25,7 @@ public interface MySqlInitialLoadStateManager {
   void updatePrimaryKeyLoadState(final AirbyteStreamNameNamespacePair pair, final PrimaryKeyLoadStatus pkLoadStatus);
 
   // Returns the final state message for the initial sync.
-  AirbyteStateMessage createFinalStateMessage(final AirbyteStreamNameNamespacePair pair,
-                                              final JsonNode streamStateForIncrementalRun);
+  AirbyteStateMessage createFinalStateMessage(final AirbyteStreamNameNamespacePair pair, final JsonNode streamStateForIncrementalRun);
 
   // Returns the previous state emitted, represented as a {@link PrimaryKeyLoadStatus} associated with
   // the stream.

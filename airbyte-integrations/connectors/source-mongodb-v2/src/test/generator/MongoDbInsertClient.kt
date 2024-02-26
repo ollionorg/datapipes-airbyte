@@ -1,10 +1,7 @@
 package io.airbyte.integrations.source.mongodb
 
-import com.fasterxml.jackson.core.JsonGenerator
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.github.javafaker.Faker
+import io.airbyte.commons.json.Jsons
 import io.github.oshai.kotlinlogging.KotlinLogging
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
@@ -34,7 +31,7 @@ object MongoDbInsertClient {
         println("Enter password: ")
         val password = readln()
 
-        val config = mapOf(MongoConstants.DATABASE_CONFIG_CONFIGURATION_KEY to
+        var config = mapOf(MongoConstants.DATABASE_CONFIG_CONFIGURATION_KEY to
             mapOf(
                 MongoConstants.DATABASE_CONFIGURATION_KEY to databaseName,
                     MongoConstants.CONNECTION_STRING_CONFIGURATION_KEY to connectionString,
@@ -45,12 +42,7 @@ object MongoDbInsertClient {
 
         val faker = Faker();
 
-        val objectMapper = ObjectMapper().registerModule(JavaTimeModule())
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
-        objectMapper.configure(JsonGenerator.Feature.WRITE_BIGDECIMAL_AS_PLAIN, true)
-        val roundTrippedConfig = objectMapper.readTree(objectMapper.writeValueAsBytes(config))
-
-        MongoConnectionUtils.createMongoClient(MongoDbSourceConfig(roundTrippedConfig)).use { mongoClient ->
+        MongoConnectionUtils.createMongoClient(MongoDbSourceConfig(Jsons.deserialize(Jsons.serialize(config)))).use { mongoClient ->
             val documents = mutableListOf<Document>()
             val batches = if (numberOfDocuments > BATCH_SIZE) numberOfDocuments / BATCH_SIZE else 1;
             val batchSize = if (numberOfDocuments > BATCH_SIZE) BATCH_SIZE else numberOfDocuments;

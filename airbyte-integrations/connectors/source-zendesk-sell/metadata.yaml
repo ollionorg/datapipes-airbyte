@@ -2,10 +2,6 @@ data:
   allowedHosts:
     hosts:
       - api.getbase.com
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-zendesk-sell
   registries:
     oss:
       enabled: false
@@ -23,7 +19,7 @@ data:
   releaseStage: alpha
   documentationUrl: https://docs.airbyte.com/integrations/sources/zendesk-sell
   tags:
-    - language:low-code
+    - language:lowcode
   ab_internal:
     sl: 100
     ql: 100

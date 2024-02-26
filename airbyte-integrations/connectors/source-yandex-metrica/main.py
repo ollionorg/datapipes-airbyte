@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_yandex_metrica.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_yandex_metrica import SourceYandexMetrica
 
 if __name__ == "__main__":
-    run()
+    source = SourceYandexMetrica()
+    launch(source, sys.argv[1:])

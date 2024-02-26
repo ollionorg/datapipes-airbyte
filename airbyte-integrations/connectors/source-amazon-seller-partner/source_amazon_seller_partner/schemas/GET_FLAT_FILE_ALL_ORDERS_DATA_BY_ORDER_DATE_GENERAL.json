@@ -4,48 +4,33 @@
   "type": "object",
   "$schema": "http://json-schema.org/draft-07/schema#",
   "properties": {
-    "amazon-order-id": {
+    "order-id": {
       "type": ["null", "string"]
     },
-    "merchant-order-id": {
+    "order-item-id": {
       "type": ["null", "string"]
     },
     "purchase-date": {
       "type": ["null", "string"],
       "format": "date-time"
     },
-    "last-updated-date": {
+    "payments-date": {
       "type": ["null", "string"],
       "format": "date-time"
     },
-    "order-status": {
+    "buyer-email": {
       "type": ["null", "string"]
     },
-    "fulfillment-channel": {
-      "type": ["null", "string"]
-    },
-    "sales-channel": {
-      "type": ["null", "string"]
-    },
-    "order-channel": {
-      "type": ["null", "string"]
-    },
-    "ship-service-level": {
-      "type": ["null", "string"]
-    },
-    "product-name": {
+    "buyer-name": {
       "type": ["null", "string"]
     },
     "sku": {
       "type": ["null", "string"]
     },
-    "asin": {
+    "product-name": {
       "type": ["null", "string"]
     },
-    "item-status": {
-      "type": ["null", "string"]
-    },
-    "quantity": {
+    "quantity-purchased": {
       "type": ["null", "string"]
     },
     "currency": {
@@ -54,25 +39,25 @@
     "item-price": {
       "type": ["null", "string"]
     },
-    "item-tax": {
-      "type": ["null", "string"]
-    },
     "shipping-price": {
       "type": ["null", "string"]
     },
-    "shipping-tax": {
+    "item-tax": {
       "type": ["null", "string"]
     },
-    "gift-wrap-price": {
+    "ship-service-level": {
       "type": ["null", "string"]
     },
-    "gift-wrap-tax": {
+    "recipient-name": {
       "type": ["null", "string"]
     },
-    "item-promotion-discount": {
+    "ship-address-1": {
       "type": ["null", "string"]
     },
-    "ship-promotion-discount": {
+    "ship-address-2": {
+      "type": ["null", "string"]
+    },
+    "ship-address-3": {
       "type": ["null", "string"]
     },
     "ship-city": {
@@ -87,10 +72,37 @@
     "ship-country": {
       "type": ["null", "string"]
     },
-    "promotion-ids": {
+    "gift-wrap-type": {
       "type": ["null", "string"]
     },
-    "cpf": {
+    "gift-message-text": {
+      "type": ["null", "string"]
+    },
+    "gift-wrap-price": {
+      "type": ["null", "string"]
+    },
+    "gift-wrap-tax": {
+      "type": ["null", "string"]
+    },
+    "item-promotion-discount": {
+      "type": ["null", "string"]
+    },
+    "item-promotion-id": {
+      "type": ["null", "string"]
+    },
+    "shipping-promotion-discount": {
+      "type": ["null", "string"]
+    },
+    "shipping-promotion-id": {
+      "type": ["null", "string"]
+    },
+    "delivery-instructions": {
+      "type": ["null", "string"]
+    },
+    "order-channel": {
+      "type": ["null", "string"]
+    },
+    "order-channel-instance": {
       "type": ["null", "string"]
     },
     "is-business-order": {
@@ -102,7 +114,77 @@
     "price-designation": {
       "type": ["null", "string"]
     },
-    "signature-confirmation-recommended": {
+    "buyer-company-name": {
+      "type": ["null", "string"]
+    },
+    "licensee-name": {
+      "type": ["null", "string"]
+    },
+    "license-number": {
+      "type": ["null", "string"]
+    },
+    "license-state": {
+      "type": ["null", "string"]
+    },
+    "license-expiration-date": {
+      "type": ["null", "string"],
+      "format": "date-time"
+    },
+    "Address-Type": {
+      "type": ["null", "string"]
+    },
+    "Number-of-items": {
+      "type": ["null", "string"]
+    },
+    "is-global-express": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-name": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-field-1": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-field-2": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-field-3": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-city": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-state": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-country": {
+      "type": ["null", "string"]
+    },
+    "default-ship-from-address-postal-code": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-name": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-1": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-field-2": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-field-3": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-city": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-state": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-country": {
+      "type": ["null", "string"]
+    },
+    "actual-ship-from-address-postal-code": {
       "type": ["null", "string"]
     },
     "dataEndTime": {

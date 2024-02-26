@@ -143,17 +143,9 @@ class Users(InstagramStream):
 class UserLifetimeInsights(DatetimeTransformerMixin, InstagramStream):
     """Docs: https://developers.facebook.com/docs/instagram-api/reference/ig-user/insights"""
 
-    primary_key = ["business_account_id", "breakdown"]
-    BREAKDOWNS = ["city", "country", "age,gender"]
-    BASE_METRIC = ["follower_demographics"]
+    primary_key = ["business_account_id", "metric", "date"]
+    LIFETIME_METRICS = ["audience_city", "audience_country", "audience_gender_age", "audience_locale"]
     period = "lifetime"
-
-    def stream_slices(
-        self, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
-    ) -> Iterable[Optional[Mapping[str, Any]]]:
-        for slice in super().stream_slices(sync_mode=sync_mode, cursor_field=cursor_field, stream_state=stream_state):
-            for breakdown in self.BREAKDOWNS:
-                yield slice | {"breakdown": breakdown}
 
     def read_records(
         self,
@@ -164,14 +156,13 @@ class UserLifetimeInsights(DatetimeTransformerMixin, InstagramStream):
     ) -> Iterable[Mapping[str, Any]]:
         account = stream_slice["account"]
         ig_account = account["instagram_business_account"]
-        for insight in ig_account.get_insights(params=self.request_params(stream_slice=stream_slice)):
-            insight_data = insight.export_all_data()
+        for insight in ig_account.get_insights(params=self.request_params()):
             yield {
                 "page_id": account["page_id"],
-                "breakdown": stream_slice["breakdown"],
                 "business_account_id": ig_account.get("id"),
                 "metric": insight["name"],
-                "value": self._transform_breakdown_results(insight_data["total_value"]["breakdowns"][0]["results"]),
+                "date": insight["values"][0].get("end_time"),
+                "value": insight["values"][0].get("value"),
             }
 
     def request_params(
@@ -180,14 +171,8 @@ class UserLifetimeInsights(DatetimeTransformerMixin, InstagramStream):
         stream_state: Mapping[str, Any] = None,
     ) -> MutableMapping[str, Any]:
         params = super().request_params(stream_slice=stream_slice, stream_state=stream_state)
-        params.update(
-            {"metric": self.BASE_METRIC, "metric_type": "total_value", "period": self.period, "breakdown": stream_slice["breakdown"]}
-        )
+        params.update({"metric": self.LIFETIME_METRICS, "period": self.period})
         return params
-
-    @staticmethod
-    def _transform_breakdown_results(breakdown_results: Iterable[Mapping[str, Any]]) -> Mapping[str, Any]:
-        return {res.get("dimension_values")[0]: res.get("value") for res in breakdown_results}
 
 
 class UserInsights(DatetimeTransformerMixin, InstagramIncrementalStream):
@@ -331,7 +316,7 @@ class UserInsights(DatetimeTransformerMixin, InstagramIncrementalStream):
 
 class Media(DatetimeTransformerMixin, InstagramStream):
     """Children objects can only be of the media_type == "CAROUSEL_ALBUM".
-    And children objects do not support INVALID_CHILDREN_FIELDS fields,
+    And children object does not support INVALID_CHILDREN_FIELDS fields,
     so they are excluded when trying to get child objects to avoid the error
     """
 
@@ -373,20 +358,9 @@ class Media(DatetimeTransformerMixin, InstagramStream):
 class MediaInsights(Media):
     """Docs: https://developers.facebook.com/docs/instagram-api/reference/ig-media/insights"""
 
-    MEDIA_METRICS = ["total_interactions", "impressions", "reach", "saved", "video_views", "likes", "comments", "shares"]
-    CAROUSEL_ALBUM_METRICS = ["total_interactions", "impressions", "reach", "saved", "video_views"]
-
-    REELS_METRICS = [
-        "comments",
-        "ig_reels_avg_watch_time",
-        "ig_reels_video_view_total_time",
-        "likes",
-        "plays",
-        "reach",
-        "saved",
-        "shares",
-        "total_interactions",
-    ]
+    MEDIA_METRICS = ["engagement", "impressions", "reach", "saved"]
+    CAROUSEL_ALBUM_METRICS = ["carousel_album_engagement", "carousel_album_impressions", "carousel_album_reach", "carousel_album_saved"]
+    REELS_METRICS = ["comments", "likes", "reach", "saved", "shares", "total_interactions", "plays"]
 
     def read_records(
         self,
@@ -413,8 +387,6 @@ class MediaInsights(Media):
         """Get insights for specific media"""
         if item.get("media_product_type") == "REELS":
             metrics = self.REELS_METRICS
-        elif item.get("media_type") == "VIDEO" and item.get("media_product_type") == "FEED":
-            metrics = ["impressions", "reach", "saved", "video_views", "video_views"]
         elif item.get("media_type") == "VIDEO":
             metrics = self.MEDIA_METRICS + ["video_views"]
         elif item.get("media_type") == "CAROUSEL_ALBUM":
@@ -473,7 +445,7 @@ class Stories(DatetimeTransformerMixin, InstagramStream):
 class StoryInsights(Stories):
     """Docs: https://developers.facebook.com/docs/instagram-api/reference/ig-media/insights"""
 
-    metrics = ["impressions", "reach", "replies"]
+    metrics = ["exits", "impressions", "reach", "replies", "taps_forward", "taps_back"]
 
     def read_records(
         self,

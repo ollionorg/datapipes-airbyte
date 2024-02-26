@@ -16,8 +16,7 @@ from airbyte_cdk.test.mock_http.response_builder import (
     PaginationStrategy,
     Path,
     RecordBuilder,
-    create_record_builder,
-    create_response_builder,
+    create_builders_from_resource,
     find_template,
 )
 
@@ -38,11 +37,7 @@ def _record_builder(
     record_id_path: Optional[Path] = None,
     record_cursor_path: Optional[Union[FieldPath, NestedPath]] = None,
 ) -> RecordBuilder:
-    return create_record_builder(deepcopy(response_template), records_path, record_id_path, record_cursor_path)
-
-
-def _any_record_builder() -> RecordBuilder:
-    return create_record_builder({"record_path": [{"a_record": "record value"}]}, FieldPath("record_path"))
+    return create_builders_from_resource(deepcopy(response_template), records_path, record_id_path, record_cursor_path)[0]
 
 
 def _response_builder(
@@ -50,7 +45,7 @@ def _response_builder(
     records_path: Union[FieldPath, NestedPath],
     pagination_strategy: Optional[PaginationStrategy] = None
 ) -> HttpResponseBuilder:
-    return create_response_builder(deepcopy(response_template), records_path, pagination_strategy=pagination_strategy)
+    return create_builders_from_resource(deepcopy(response_template), records_path, pagination_strategy=pagination_strategy)[1]
 
 
 def _body(response: HttpResponse) -> Dict[str, Any]:
@@ -94,16 +89,6 @@ class RecordBuilderTest(TestCase):
         )
         record = builder.with_cursor("another cursor").build()
         assert record["nested"][_CURSOR_FIELD] == "another cursor"
-
-    def test_given_with_field_when_build_then_write_field(self) -> None:
-        builder = _any_record_builder()
-        record = builder.with_field(FieldPath("to_write_field"), "a field value").build()
-        assert record["to_write_field"] == "a field value"
-
-    def test_given_nested_cursor_when_build_then_write_field(self) -> None:
-        builder = _any_record_builder()
-        record = builder.with_field(NestedPath(["path", "to_write_field"]), "a field value").build()
-        assert record["path"]["to_write_field"] == "a field value"
 
     def test_given_cursor_path_not_provided_but_with_id_when_build_then_raise_error(self) -> None:
         builder = _record_builder(_A_RESPONSE_TEMPLATE, FieldPath(_RECORDS_FIELD))
@@ -174,4 +159,4 @@ class UtilMethodsTest(TestCase):
 
     def test_given_records_path_invalid_when_create_builders_from_resource_then_raise_exception(self) -> None:
         with pytest.raises(ValueError):
-            create_record_builder(_A_RESPONSE_TEMPLATE, NestedPath(["invalid", "record", "path"]))
+            create_builders_from_resource(_A_RESPONSE_TEMPLATE, NestedPath(["invalid", "record", "path"]))

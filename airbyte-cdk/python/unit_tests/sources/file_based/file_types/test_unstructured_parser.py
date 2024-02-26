@@ -86,10 +86,7 @@ def test_infer_schema(mock_detect_filetype, filetype, format_config, raises):
         assert schema == {
             "content": {"type": "string", "description": "Content of the file as markdown. Might be null if the file could not be parsed"},
             "document_key": {"type": "string", "description": "Unique identifier of the document, e.g. the file path"},
-            "_ab_source_file_parse_error": {
-                "type": "string",
-                "description": "Error message if the file could not be parsed even though the file is supported",
-            },
+            "_ab_source_file_parse_error": {"type": "string", "description": "Error message if the file could not be parsed even though the file is supported"},
         }
     loop.close()
     asyncio.set_event_loop(main_loop)
@@ -131,7 +128,7 @@ def test_infer_schema(mock_detect_filetype, filetype, format_config, raises):
                 {
                     "content": None,
                     "document_key": FILE_URI,
-                    "_ab_source_file_parse_error": "Error parsing record. This could be due to a mismatch between the config's file type and the actual file type, or because the file or record is not parseable. Contact Support if you need assistance.\nfilename=path/to/file.xyz message=File type FileType.CSV is not supported. Supported file types are FileType.MD, FileType.PDF, FileType.DOCX, FileType.PPTX, FileType.TXT",
+                    "_ab_source_file_parse_error": "Error parsing record. This could be due to a mismatch between the config's file type and the actual file type, or because the file or record is not parseable. Contact Support if you need assistance.\nfilename=path/to/file.xyz message=File type FileType.CSV is not supported. Supported file types are FileType.MD, FileType.PDF, FileType.DOCX, FileType.PPTX",
                 }
             ],
             False,
@@ -204,7 +201,7 @@ def test_infer_schema(mock_detect_filetype, filetype, format_config, raises):
                 {
                     "content": None,
                     "document_key": FILE_URI,
-                    "_ab_source_file_parse_error": "Error parsing record. This could be due to a mismatch between the config's file type and the actual file type, or because the file or record is not parseable. Contact Support if you need assistance.\nfilename=path/to/file.xyz message=weird parsing error",
+                    "_ab_source_file_parse_error": "Error parsing record. This could be due to a mismatch between the config's file type and the actual file type, or because the file or record is not parseable. Contact Support if you need assistance.\nfilename=path/to/file.xyz message=weird parsing error"
                 }
             ],
             True,
@@ -318,7 +315,7 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
 
 
 @pytest.mark.parametrize(
-    "filetype, format_config, raises_for_status, file_content, json_response, expected_requests, raises, expected_records, http_status_code",
+    "filetype, format_config, raises_for_status, file_content, json_response, expected_requests, raises, expected_records",
     [
         pytest.param(
             FileType.PDF,
@@ -326,49 +323,32 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
             None,
             "test",
             [{"type": "Text", "text": "test"}],
-            [
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                )
-            ],
+            [call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")})],
             False,
-            [{"content": "test", "document_key": FILE_URI, "_ab_source_file_parse_error": None}],
-            200,
+            [
+                {
+                    "content": "test",
+                    "document_key": FILE_URI,
+                    "_ab_source_file_parse_error": None
+                }
+            ],
             id="basic_request",
         ),
         pytest.param(
             FileType.PDF,
-            UnstructuredFormat(
-                skip_unprocessable_file_types=False,
-                strategy="hi_res",
-                processing=APIProcessingConfigModel(
-                    mode="api",
-                    api_key="test",
-                    api_url="http://localhost:8000",
-                    parameters=[
-                        APIParameterConfigModel(name="include_page_breaks", value="true"),
-                        APIParameterConfigModel(name="ocr_languages", value="eng"),
-                        APIParameterConfigModel(name="ocr_languages", value="kor"),
-                    ],
-                ),
-            ),
+            UnstructuredFormat(skip_unprocessable_file_types=False, strategy="hi_res", processing=APIProcessingConfigModel(mode="api", api_key="test", api_url="http://localhost:8000", parameters=[APIParameterConfigModel(name="include_page_breaks", value="true"), APIParameterConfigModel(name="ocr_languages", value="eng"), APIParameterConfigModel(name="ocr_languages", value="kor")])),
             None,
             "test",
             [{"type": "Text", "text": "test"}],
-            [
-                call(
-                    "http://localhost:8000/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "hi_res", "include_page_breaks": "true", "ocr_languages": ["eng", "kor"]},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                )
-            ],
+            [call("http://localhost:8000/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "hi_res", "include_page_breaks": "true", "ocr_languages": ["eng", "kor"]}, files={"files": ("filename", mock.ANY, "application/pdf")})],
             False,
-            [{"content": "test", "document_key": FILE_URI, "_ab_source_file_parse_error": None}],
-            200,
+            [
+                {
+                    "content": "test",
+                    "document_key": FILE_URI,
+                    "_ab_source_file_parse_error": None
+                }
+            ],
             id="request_with_params",
         ),
         pytest.param(
@@ -379,8 +359,13 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
             None,
             None,
             False,
-            [{"content": "# Mymarkdown", "document_key": FILE_URI, "_ab_source_file_parse_error": None}],
-            200,
+            [
+                {
+                    "content": "# Mymarkdown",
+                    "document_key": FILE_URI,
+                    "_ab_source_file_parse_error": None
+                }
+            ],
             id="handle_markdown_locally",
         ),
         pytest.param(
@@ -396,45 +381,19 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
             "test",
             None,
             [
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
             ],
             True,
             None,
-            200,
             id="retry_and_raise_on_api_error",
         ),
         pytest.param(
@@ -448,31 +407,21 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
             "test",
             [{"type": "Text", "text": "test"}],
             [
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
             ],
             False,
-            [{"content": "test", "document_key": FILE_URI, "_ab_source_file_parse_error": None}],
-            200,
+            [
+                {
+                    "content": "test",
+                    "document_key": FILE_URI,
+                    "_ab_source_file_parse_error": None
+                }
+            ],
             id="retry_and_recover",
         ),
         pytest.param(
@@ -484,17 +433,11 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
             "test",
             [{"type": "Text", "text": "test"}],
             [
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
             ],
             True,
             None,
-            200,
             id="no_retry_on_unexpected_error",
         ),
         pytest.param(
@@ -506,49 +449,18 @@ def test_check_config(requests_mock, format_config, raises_for_status, json_resp
             "test",
             [{"type": "Text", "text": "test"}],
             [
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
+                call("https://api.unstructured.io/general/v0/general", headers={"accept": "application/json", "unstructured-api-key": "test"}, data={"strategy": "auto"}, files={"files": ("filename", mock.ANY, "application/pdf")}),
                 call().raise_for_status(),
             ],
             True,
             None,
-            400,
             id="no_retry_on_400_error",
-        ),
-        pytest.param(
-            FileType.PDF,
-            UnstructuredFormat(skip_unprocessable_file_types=False, processing=APIProcessingConfigModel(mode="api", api_key="test")),
-            None,
-            "test",
-            [{"detail": "Something went wrong"}],
-            [
-                call(
-                    "https://api.unstructured.io/general/v0/general",
-                    headers={"accept": "application/json", "unstructured-api-key": "test"},
-                    data={"strategy": "auto"},
-                    files={"files": ("filename", mock.ANY, "application/pdf")},
-                ),
-            ],
-            False,
-            [
-                {
-                    "content": None,
-                    "document_key": FILE_URI,
-                    "_ab_source_file_parse_error": "Error parsing record. This could be due to a mismatch between the config's file type and the actual file type, or because the file or record is not parseable. Contact Support if you need assistance.\nfilename=path/to/file.xyz message=[{'detail': 'Something went wrong'}]",
-                }
-            ],
-            422,
-            id="error_record_on_422_error",
         ),
     ],
 )
 @patch("airbyte_cdk.sources.file_based.file_types.unstructured_parser.requests")
 @patch("airbyte_cdk.sources.file_based.file_types.unstructured_parser.detect_filetype")
-@patch("time.sleep", side_effect=lambda _: None)
+@patch('time.sleep', side_effect=lambda _: None)
 def test_parse_records_remotely(
     time_mock,
     mock_detect_filetype,
@@ -561,7 +473,6 @@ def test_parse_records_remotely(
     expected_requests,
     raises,
     expected_records,
-    http_status_code,
 ):
     stream_reader = MagicMock()
     mock_open(stream_reader.open_file, read_data=bytes(str(file_content), "utf-8"))
@@ -573,7 +484,6 @@ def test_parse_records_remotely(
     mock_detect_filetype.return_value = filetype
     mock_response = MagicMock()
     mock_response.json.return_value = json_response
-    mock_response.status_code = http_status_code
     if raises_for_status:
         mock_response.raise_for_status.side_effect = raises_for_status
     requests_mock.post.return_value = mock_response

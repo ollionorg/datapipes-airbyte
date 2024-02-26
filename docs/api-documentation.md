@@ -1,7 +1,3 @@
----
-products: all
----
-
 # API documentation
 
 Airbyte has two sets of APIs which are intended for different uses. The table below outlines their descriptions, use cases, availability and status.

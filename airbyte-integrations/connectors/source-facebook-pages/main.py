@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_facebook_pages.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_facebook_pages import SourceFacebookPages
 
 if __name__ == "__main__":
-    run()
+    source = SourceFacebookPages()
+    launch(source, sys.argv[1:])

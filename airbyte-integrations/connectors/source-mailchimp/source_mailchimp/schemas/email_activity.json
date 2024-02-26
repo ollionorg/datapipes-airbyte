@@ -44,8 +44,7 @@
       "type": ["string", "null"],
       "title": "Action date and time",
       "description": "The date and time recorded for the action in ISO 8601 format.",
-      "format": "date-time",
-      "airbyte_type": "timestamp_with_timezone"
+      "format": "date-time"
     },
     "url": {
       "type": ["string", "null"],

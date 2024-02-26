@@ -51,7 +51,7 @@ class BrandsAdGroup(CatalogModel):
     campaignId: Decimal
     adGroupId: Decimal
     name: str
-    bid: Decimal
+    bid: int
     keywordId: Decimal
     keywordText: str
     nativeLanguageKeyword: str

@@ -219,19 +219,6 @@ public abstract class CdcSourceTest<S extends Source, T extends TestDatabase<?, 
         recordJson.get(modelCol).asText());
   }
 
-  protected void deleteMessageOnIdCol(final String streamName, final String idCol, final int idValue) {
-    testdb.with("DELETE FROM %s.%s WHERE %s = %s", modelsSchema(), streamName, idCol, idValue);
-  }
-
-  protected void deleteCommand(final String streamName) {
-    testdb.with("DELETE FROM %s.%s", modelsSchema(), streamName);
-  }
-
-  protected void updateCommand(final String streamName, final String modelCol, final String modelVal, final String idCol, final int idValue) {
-    testdb.with("UPDATE %s.%s SET %s = '%s' WHERE %s = %s", modelsSchema(), streamName,
-        modelCol, modelVal, COL_ID, 11);
-  }
-
   static protected Set<AirbyteRecordMessage> removeDuplicates(final Set<AirbyteRecordMessage> messages) {
     final Set<JsonNode> existingDataRecordsWithoutUpdated = new HashSet<>();
     final Set<AirbyteRecordMessage> output = new HashSet<>();
@@ -359,7 +346,7 @@ public abstract class CdcSourceTest<S extends Source, T extends TestDatabase<?, 
     final List<AirbyteStateMessage> stateMessages1 = extractStateMessages(actualRecords1);
     assertExpectedStateMessages(stateMessages1);
 
-    deleteMessageOnIdCol(MODELS_STREAM_NAME, COL_ID, 11);
+    testdb.with("DELETE FROM %s.%s WHERE %s = %s", modelsSchema(), MODELS_STREAM_NAME, COL_ID, 11);
 
     final JsonNode state = Jsons.jsonNode(Collections.singletonList(stateMessages1.get(stateMessages1.size() - 1)));
     final AutoCloseableIterator<AirbyteMessage> read2 = source()
@@ -388,7 +375,8 @@ public abstract class CdcSourceTest<S extends Source, T extends TestDatabase<?, 
     final List<AirbyteStateMessage> stateMessages1 = extractStateMessages(actualRecords1);
     assertExpectedStateMessages(stateMessages1);
 
-    updateCommand(MODELS_STREAM_NAME, COL_MODEL, updatedModel, COL_ID, 11);
+    testdb.with("UPDATE %s.%s SET %s = '%s' WHERE %s = %s", modelsSchema(), MODELS_STREAM_NAME,
+        COL_MODEL, updatedModel, COL_ID, 11);
 
     final JsonNode state = Jsons.jsonNode(Collections.singletonList(stateMessages1.get(stateMessages1.size() - 1)));
     final AutoCloseableIterator<AirbyteMessage> read2 = source()
@@ -548,7 +536,8 @@ public abstract class CdcSourceTest<S extends Source, T extends TestDatabase<?, 
   @DisplayName("When no records exist, no records are returned.")
   void testNoData() throws Exception {
 
-    deleteCommand(MODELS_STREAM_NAME);
+    testdb.with("DELETE FROM %s.%s", modelsSchema(), MODELS_STREAM_NAME);
+
     final AutoCloseableIterator<AirbyteMessage> read = source().read(config(), getConfiguredCatalog(), null);
     final List<AirbyteMessage> actualRecords = AutoCloseableIterators.toListAndClose(read);
 

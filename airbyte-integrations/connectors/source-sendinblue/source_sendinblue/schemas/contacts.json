@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": "object",
-  "additionalProperties": true,
   "properties": {
     "id": {
       "type": ["null", "integer"]
@@ -25,9 +24,7 @@
       "type": ["null", "string"]
     },
     "attributes": {
-      "type": ["null", "object"],
-      "additionalProperties": true,
-      "properties": {}
+      "type": ["null", "object"]
     }
   }
 }

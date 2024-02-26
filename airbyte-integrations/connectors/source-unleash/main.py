@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_unleash.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_unleash import SourceUnleash
 
 if __name__ == "__main__":
-    run()
+    source = SourceUnleash()
+    launch(source, sys.argv[1:])

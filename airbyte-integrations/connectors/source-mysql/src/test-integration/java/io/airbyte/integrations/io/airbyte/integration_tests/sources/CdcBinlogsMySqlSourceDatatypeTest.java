@@ -8,6 +8,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.collect.Iterables;
 import io.airbyte.cdk.db.Database;
 import io.airbyte.cdk.integrations.standardtest.source.TestDataHolder;
+import io.airbyte.commons.features.FeatureFlags;
+import io.airbyte.commons.features.FeatureFlagsWrapper;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.integrations.source.mysql.MySQLTestDatabase;
 import io.airbyte.integrations.source.mysql.MySQLTestDatabase.BaseImage;
@@ -21,6 +23,11 @@ import java.util.List;
 public class CdcBinlogsMySqlSourceDatatypeTest extends AbstractMySqlSourceDatatypeTest {
 
   private JsonNode stateAfterFirstSync;
+
+  @Override
+  protected FeatureFlags featureFlags() {
+    return FeatureFlagsWrapper.overridingUseStreamCapableState(super.featureFlags(), true);
+  }
 
   @Override
   protected JsonNode getConfig() {

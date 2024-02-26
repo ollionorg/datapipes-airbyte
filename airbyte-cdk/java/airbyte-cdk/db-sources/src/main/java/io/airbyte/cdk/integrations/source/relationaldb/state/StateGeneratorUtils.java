@@ -225,8 +225,10 @@ public class StateGeneratorUtils {
    * @return The deserialized object representation of the state.
    */
   public static List<AirbyteStateMessage> deserializeInitialState(final JsonNode initialStateJson,
+                                                                  final boolean useStreamCapableState,
                                                                   final AirbyteStateType supportedStateType) {
-    final Optional<StateWrapper> typedState = StateMessageHelper.getTypedState(initialStateJson);
+    final Optional<StateWrapper> typedState = StateMessageHelper.getTypedState(initialStateJson,
+        useStreamCapableState);
     return typedState
         .map(state -> switch (state.getStateType()) {
         case GLOBAL -> List.of(StateGeneratorUtils.convertStateMessage(state.getGlobal()));

@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_gainsight_px.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_gainsight_px import SourceGainsightPx
 
 if __name__ == "__main__":
-    run()
+    source = SourceGainsightPx()
+    launch(source, sys.argv[1:])

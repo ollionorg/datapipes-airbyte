@@ -14,9 +14,6 @@
     "ad_group.campaign": {
       "type": ["null", "string"]
     },
-    "metrics.cost_micros": {
-      "type": ["null", "integer"]
-    },
     "ad_group.cpc_bid_micros": {
       "type": ["null", "integer"]
     },

@@ -15,10 +15,6 @@ data:
   icon: yandexmetrica.svg
   license: MIT
   name: Yandex Metrica
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-yandex-metrica
   registries:
     cloud:
       enabled: true

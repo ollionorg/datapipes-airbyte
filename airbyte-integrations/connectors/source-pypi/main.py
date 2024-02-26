@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_pypi.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_pypi import SourcePypi
 
 if __name__ == "__main__":
-    run()
+    source = SourcePypi()
+    launch(source, sys.argv[1:])

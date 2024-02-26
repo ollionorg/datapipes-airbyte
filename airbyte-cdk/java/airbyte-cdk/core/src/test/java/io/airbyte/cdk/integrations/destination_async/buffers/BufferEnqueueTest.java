@@ -19,7 +19,6 @@ import org.junit.jupiter.api.Test;
 public class BufferEnqueueTest {
 
   private static final int RECORD_SIZE_20_BYTES = 20;
-  private static final String DEFAULT_NAMESPACE = "foo_namespace";
 
   @Test
   void testAddRecordShouldAdd() {
@@ -34,7 +33,7 @@ public class BufferEnqueueTest {
         .withRecord(new PartialAirbyteRecordMessage()
             .withStream(streamName));
 
-    enqueue.addRecord(record, RECORD_SIZE_20_BYTES, DEFAULT_NAMESPACE);
+    enqueue.addRecord(record, RECORD_SIZE_20_BYTES);
     assertEquals(1, streamToBuffer.get(stream).size());
     assertEquals(20L, streamToBuffer.get(stream).getCurrentMemoryUsage());
 
@@ -54,8 +53,8 @@ public class BufferEnqueueTest {
         .withRecord(new PartialAirbyteRecordMessage()
             .withStream(streamName));
 
-    enqueue.addRecord(record, RECORD_SIZE_20_BYTES, DEFAULT_NAMESPACE);
-    enqueue.addRecord(record, RECORD_SIZE_20_BYTES, DEFAULT_NAMESPACE);
+    enqueue.addRecord(record, RECORD_SIZE_20_BYTES);
+    enqueue.addRecord(record, RECORD_SIZE_20_BYTES);
     assertEquals(2, streamToBuffer.get(stream).size());
     assertEquals(40, streamToBuffer.get(stream).getCurrentMemoryUsage());
 

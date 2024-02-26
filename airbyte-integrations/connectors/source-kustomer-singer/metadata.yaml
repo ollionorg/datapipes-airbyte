@@ -8,16 +8,11 @@ data:
   icon: kustomer.svg
   license: MIT
   name: Kustomer
-  remoteRegistries:
-    pypi:
-      enabled: false
-      # TODO: Set enabled=true after `airbyte-lib-validate-source` is passing.
-      packageName: airbyte-source-kustomer-singer
-  registries: # Removed from registries due to LEGACY STATE
+  registries:
     cloud:
-      enabled: false
+      enabled: true
     oss:
-      enabled: false
+      enabled: true
   releaseStage: alpha
   documentationUrl: https://docs.airbyte.com/integrations/sources/kustomer-singer
   tags:

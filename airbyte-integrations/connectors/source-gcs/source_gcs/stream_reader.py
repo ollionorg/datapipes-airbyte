@@ -5,6 +5,7 @@
 import itertools
 import json
 import logging
+from contextlib import contextmanager
 from datetime import datetime, timedelta
 from io import IOBase
 from typing import Iterable, List, Optional
@@ -93,6 +94,7 @@ class SourceGCSStreamReader(AbstractFileBasedStreamReader):
             prefix=prefix,
         ) from exc
 
+    @contextmanager
     def open_file(self, file: RemoteFile, mode: FileReadMode, encoding: Optional[str], logger: logging.Logger) -> IOBase:
         """
         Open and yield a remote file from GCS for reading.
@@ -103,4 +105,7 @@ class SourceGCSStreamReader(AbstractFileBasedStreamReader):
         except OSError as oe:
             logger.warning(ERROR_MESSAGE_ACCESS.format(uri=file.uri, bucket=self.config.bucket))
             logger.exception(oe)
-        return result
+        try:
+            yield result
+        finally:
+            result.close()

@@ -17,15 +17,10 @@ import io.airbyte.cdk.db.jdbc.JdbcDatabase;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
 import io.airbyte.commons.json.Jsons;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.util.List;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
-@Disabled
 public class OracleSourceNneAcceptanceTest extends OracleSourceAcceptanceTest {
-
-  private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(60);
 
   @Test
   public void testEncrytion() throws SQLException {
@@ -49,8 +44,7 @@ public class OracleSourceNneAcceptanceTest extends OracleSourceAcceptanceTest {
                 clone.get("connection_data").get("service_name").asText()),
             JdbcUtils.parseJdbcParameters("oracle.net.encryption_client=REQUIRED&" +
                 "oracle.net.encryption_types_client=( "
-                + algorithm + " )"),
-            CONNECTION_TIMEOUT));
+                + algorithm + " )")));
 
     final String networkServiceBanner =
         "select network_service_banner from v$session_connect_info where sid in (select distinct sid from v$mystat)";
@@ -101,8 +95,7 @@ public class OracleSourceNneAcceptanceTest extends OracleSourceAcceptanceTest {
                 config.get("connection_data").get("service_name").asText()),
             JdbcUtils.parseJdbcParameters("oracle.net.encryption_client=REQUIRED&" +
                 "oracle.net.encryption_types_client=( "
-                + algorithm + " )"),
-            CONNECTION_TIMEOUT));
+                + algorithm + " )")));
 
     final String networkServiceBanner = "SELECT sys_context('USERENV', 'NETWORK_PROTOCOL') as network_protocol FROM dual";
     final List<JsonNode> collect = database.queryJsons(networkServiceBanner);

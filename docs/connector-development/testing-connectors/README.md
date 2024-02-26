@@ -1,32 +1,34 @@
 # Testing Connectors
 
-Multiple tests suites compose the Airbyte connector testing pyramid
+## Our testing pyramid
+Multiple tests suites compose the Airbyte connector testing pyramid:
+Connector specific tests declared in the connector code directory:
+* Unit tests
+* Integration tests
 
-## Common to all connectors
-* [Connectors QA checks](https://docs.airbyte.com/contributing-to-airbyte/resources/qa-checks)
+Tests common to all connectors:
+* [QA checks](https://github.com/airbytehq/airbyte/blob/master/airbyte-ci/connectors/connector_ops/connector_ops/qa_checks.py)
 * [Connector Acceptance tests](https://docs.airbyte.com/connector-development/testing-connectors/connector-acceptance-tests-reference/)
 
-## Connector specific tests
-### 🐍 Python connectors
-We use `pytest` to run unit and integration tests:
+## Running tests
+Unit and integration tests can be run directly from the connector code.
+
+Using `pytest` for Python connectors:
 ```bash
-# From connector directory
-poetry run pytest
+python -m pytest unit_tests/
+python -m pytest integration_tests/
 ```
 
-### ☕ Java connectors
-We run Java connector tests with gradle.
+Using `gradle` for Java connectors:
 
 ```bash
-# Unit tests
 ./gradlew :airbyte-integrations:connectors:source-postgres:test
-# Integration tests
 ./gradlew :airbyte-integrations:connectors:source-postgres:integrationTestJava
 ```
 
 Please note that according to the test implementation you might have to provide connector configurations as a `config.json` file in a `.secrets` folder in the connector code directory.
 
-## 🤖 CI
+
 If you want to run the global test suite, exactly like what is run in CI, you should install [`airbyte-ci` CLI](https://github.com/airbytehq/airbyte/blob/master/airbyte-ci/connectors/pipelines/README.md) and use the following command:
 
 ```bash
@@ -37,5 +39,6 @@ This will run all the tests for the connector, including the QA checks and the C
 Connector Acceptance tests require connector configuration to be provided as a `config.json` file in a `.secrets` folder in the connector code directory.
 
 
+## Tests on pull requests
 Our CI infrastructure runs the connector tests with [`airbyte-ci` CLI](https://github.com/airbytehq/airbyte/blob/master/airbyte-ci/connectors/pipelines/README.md). Connectors tests are automatically and remotely triggered on your branch according to the changes made in your branch.
 **Passing tests are required to merge a connector pull request.**

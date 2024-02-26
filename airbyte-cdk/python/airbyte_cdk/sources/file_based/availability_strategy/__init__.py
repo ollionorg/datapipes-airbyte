@@ -1,4 +1,4 @@
-from .abstract_file_based_availability_strategy import AbstractFileBasedAvailabilityStrategy, AbstractFileBasedAvailabilityStrategyWrapper
+from .abstract_file_based_availability_strategy import AbstractFileBasedAvailabilityStrategy
 from .default_file_based_availability_strategy import DefaultFileBasedAvailabilityStrategy
 
-__all__ = ["AbstractFileBasedAvailabilityStrategy", "AbstractFileBasedAvailabilityStrategyWrapper", "DefaultFileBasedAvailabilityStrategy"]
+__all__ = ["AbstractFileBasedAvailabilityStrategy", "DefaultFileBasedAvailabilityStrategy"]

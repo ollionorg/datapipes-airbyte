@@ -13,13 +13,11 @@ import io.airbyte.cdk.db.factory.DatabaseDriver;
 import io.airbyte.cdk.db.jdbc.DefaultJdbcDatabase;
 import io.airbyte.cdk.db.jdbc.JdbcDatabase;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
+import io.airbyte.cdk.integrations.base.AirbyteMessageConsumer;
 import io.airbyte.cdk.integrations.base.Destination;
-import io.airbyte.cdk.integrations.base.DestinationConfig;
-import io.airbyte.cdk.integrations.base.SerializedAirbyteMessageConsumer;
 import io.airbyte.cdk.integrations.destination.StandardNameTransformer;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.commons.map.MoreMaps;
-import io.airbyte.integrations.base.destination.typing_deduping.StreamId;
 import io.airbyte.protocol.models.Field;
 import io.airbyte.protocol.models.JsonSchemaType;
 import io.airbyte.protocol.models.v0.AirbyteMessage;
@@ -28,7 +26,6 @@ import io.airbyte.protocol.models.v0.AirbyteRecordMessage;
 import io.airbyte.protocol.models.v0.AirbyteStateMessage;
 import io.airbyte.protocol.models.v0.CatalogHelpers;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -98,26 +95,22 @@ public class ClickhouseDestinationTest {
   @Test
   void sanityTest() throws Exception {
     final Destination dest = new ClickhouseDestination();
-    DestinationConfig.initialize(config, dest.isV2Destination());
-    final SerializedAirbyteMessageConsumer consumer = dest.getSerializedMessageConsumer(config, catalog,
+    final AirbyteMessageConsumer consumer = dest.getConsumer(config, catalog,
         Destination::defaultOutputRecordCollector);
     final List<AirbyteMessage> expectedRecords = generateRecords(10);
 
     consumer.start();
     expectedRecords.forEach(m -> {
       try {
-        final var strMessage = Jsons.jsonNode(m).toString();
-        consumer.accept(strMessage, strMessage.getBytes(StandardCharsets.UTF_8).length);
+        consumer.accept(m);
       } catch (final Exception e) {
         throw new RuntimeException(e);
       }
     });
-    final var abMessage = Jsons.jsonNode(new AirbyteMessage()
+    consumer.accept(new AirbyteMessage()
         .withType(Type.STATE)
         .withState(new AirbyteStateMessage()
-            .withData(Jsons.jsonNode(ImmutableMap.of(DB_NAME + "." + STREAM_NAME, 10)))))
-        .toString();
-    consumer.accept(abMessage, abMessage.getBytes(StandardCharsets.UTF_8).length);
+            .withData(Jsons.jsonNode(ImmutableMap.of(DB_NAME + "." + STREAM_NAME, 10)))));
     consumer.close();
 
     final JdbcDatabase database = new DefaultJdbcDatabase(
@@ -133,8 +126,8 @@ public class ClickhouseDestinationTest {
 
     final List<JsonNode> actualRecords = database.bufferedResultSetQuery(
         connection -> connection.createStatement().executeQuery(
-            String.format("SELECT * FROM %s.%s;", "airbyte_internal",
-                StreamId.concatenateRawTableName(DB_NAME, STREAM_NAME))),
+            String.format("SELECT * FROM %s.%s;", DB_NAME,
+                namingResolver.getRawTableName(STREAM_NAME))),
         JdbcUtils.getDefaultSourceOperations()::rowToJson);
 
     assertEquals(

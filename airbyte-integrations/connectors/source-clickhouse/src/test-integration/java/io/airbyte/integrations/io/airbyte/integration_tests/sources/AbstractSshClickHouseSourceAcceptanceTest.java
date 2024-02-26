@@ -31,12 +31,10 @@ import io.airbyte.protocol.models.v0.SyncMode;
 import java.time.Duration;
 import java.util.HashMap;
 import javax.sql.DataSource;
-import org.junit.jupiter.api.Disabled;
 import org.testcontainers.containers.ClickHouseContainer;
 import org.testcontainers.containers.Network;
 import org.testcontainers.containers.wait.strategy.Wait;
 
-@Disabled
 public abstract class AbstractSshClickHouseSourceAcceptanceTest extends SourceAcceptanceTest {
 
   private ClickHouseContainer db;

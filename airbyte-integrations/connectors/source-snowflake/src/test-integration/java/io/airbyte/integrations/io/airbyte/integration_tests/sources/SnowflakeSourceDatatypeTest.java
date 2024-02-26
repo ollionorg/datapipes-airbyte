@@ -18,7 +18,6 @@ import io.airbyte.commons.json.Jsons;
 import io.airbyte.integrations.source.snowflake.SnowflakeSource;
 import io.airbyte.protocol.models.JsonSchemaType;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.util.Map;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.jooq.DSLContext;
@@ -29,7 +28,6 @@ public class SnowflakeSourceDatatypeTest extends AbstractSourceDatabaseTypeTest 
   private static final String SCHEMA_NAME = "SOURCE_DATA_TYPE_TEST_"
       + RandomStringUtils.randomAlphanumeric(4).toUpperCase();
   private static final String INSERT_SEMI_STRUCTURED_SQL = "INSERT INTO %1$s (ID, TEST_COLUMN) SELECT %2$s, %3$s";
-  private static final Duration CONNECTION_TIMEOUT = Duration.ofSeconds(60);
 
   private JsonNode config;
   private Database database;
@@ -59,8 +57,7 @@ public class SnowflakeSourceDatatypeTest extends AbstractSourceDatabaseTypeTest 
         Map.of(
             "role", config.get("role").asText(),
             "warehouse", config.get("warehouse").asText(),
-            JdbcUtils.DATABASE_KEY, config.get(JdbcUtils.DATABASE_KEY).asText()),
-        CONNECTION_TIMEOUT);
+            JdbcUtils.DATABASE_KEY, config.get(JdbcUtils.DATABASE_KEY).asText()));
 
     database = getDatabase();
 
@@ -80,9 +77,13 @@ public class SnowflakeSourceDatatypeTest extends AbstractSourceDatabaseTypeTest 
 
   @Override
   protected void tearDown(final TestDestinationEnv testEnv) throws Exception {
-    final String dropSchemaQuery = String
-        .format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME);
-    database.query(ctx -> ctx.fetch(dropSchemaQuery));
+    try {
+      final String dropSchemaQuery = String
+          .format("DROP SCHEMA IF EXISTS %s", SCHEMA_NAME);
+      database.query(ctx -> ctx.fetch(dropSchemaQuery));
+    } finally {
+      dslContext.close();
+    }
   }
 
   @Override

@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_rocket_chat.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_rocket_chat import SourceRocketChat
 
 if __name__ == "__main__":
-    run()
+    source = SourceRocketChat()
+    launch(source, sys.argv[1:])

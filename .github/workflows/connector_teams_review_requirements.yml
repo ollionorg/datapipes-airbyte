@@ -9,11 +9,9 @@ on:
       - synchronize
     paths:
       - "airbyte-integrations/connectors/source-**"
-      - "airbyte-integrations/connectors/destination-**"
   pull_request_review:
     paths:
       - "airbyte-integrations/connectors/source-**"
-      - "airbyte-integrations/connectors/destination-**"
 jobs:
   check-review-requirements:
     name: "Check if a review is required from Connector teams"

@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_clickup_api.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_clickup_api import SourceClickupApi
 
 if __name__ == "__main__":
-    run()
+    source = SourceClickupApi()
+    launch(source, sys.argv[1:])

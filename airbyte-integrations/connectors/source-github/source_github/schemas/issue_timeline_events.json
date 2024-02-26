@@ -970,7 +970,7 @@
       "$ref": "events/reviewed.json"
     },
     "commented": {
-      "$ref": "events/comment.json"
+      "$ref": "events/commented.json"
     },
     "commit_commented": {
       "$ref": "events/commented.json"

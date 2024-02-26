@@ -1,7 +1,3 @@
----
-products: all
----
-
 # Full Refresh - Append
 
 ## Overview

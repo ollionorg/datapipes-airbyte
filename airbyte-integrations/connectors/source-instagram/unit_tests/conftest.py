@@ -54,16 +54,13 @@ def fb_account_response_fixture(account_id, some_config, requests_mock):
         "json": {
             "data": [
                 {
-                    "access_token": "access_token",
-                    "category": "Software company",
+                    "account_id": account_id,
                     "id": f"act_{account_id}",
-                    "paging": {"cursors": {
-                        "before": "cursor",
-                        "after": "cursor"}},
-                    "summary": {"total_count": 1},
-                    "status_code": 200
-                }]
-        }
+                }
+            ],
+            "paging": {"cursors": {"before": "MjM4NDYzMDYyMTcyNTAwNzEZD", "after": "MjM4NDYzMDYyMTcyNTAwNzEZD"}},
+        },
+        "status_code": 200,
     }
 
 
@@ -96,22 +93,6 @@ def user_insight_data_fixture():
         "name": "impressions",
         "period": "day",
         "values": [{"value": 4, "end_time": "2020-05-04T07:00:00+0000"}, {"value": 66, "end_time": "2020-05-05T07:00:00+0000"}],
-        "title": "Impressions",
-        "description": "Total number of times this profile has been seen",
-        "id": "17841400008460056/insights/impressions/day",
-    }
-
-
-@fixture(name="user_lifetime_insight_data")
-def user_lifetime_insight_data_fixture():
-    return {
-        "name": "impressions",
-        "period": "day",
-        "total_value": {"breakdowns": [
-            {"dimension_keys": ["city"], "results": [{"dimension_values": ["London, England"], "value": 22},
-                                                     {"dimension_values": ["Sydney, New South Wales"], "value": 33}
-                                                     ]}
-        ]},
         "title": "Impressions",
         "description": "Total number of times this profile has been seen",
         "id": "17841400008460056/insights/impressions/day",

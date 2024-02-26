@@ -8,15 +8,11 @@ data:
   icon: dv360.svg
   license: MIT
   name: DV 360
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-dv-360
-  registries: # Removed from registries due to LEGACY STATE
+  registries:
     cloud:
       enabled: false
     oss:
-      enabled: false
+      enabled: true
   releaseStage: alpha
   documentationUrl: https://docs.airbyte.com/integrations/sources/dv-360
   tags:

@@ -15,8 +15,7 @@ from source_recharge.api import (
     Discounts,
     Metafields,
     Onetimes,
-    OrdersDeprecatedApi,
-    OrdersModernApi,
+    Orders,
     Products,
     RechargeStreamDeprecatedAPI,
     RechargeStreamModernAPI,
@@ -46,8 +45,7 @@ class TestCommon:
             (Discounts, "id"),
             (Metafields, "id"),
             (Onetimes, "id"),
-            (OrdersDeprecatedApi, "id"),
-            (OrdersModernApi, "id"),
+            (Orders, "id"),
             (Products, "id"),
             (Shop, ["shop", "store"]),
             (Subscriptions, "id"),
@@ -66,8 +64,7 @@ class TestCommon:
             (Discounts, "incremental", "discounts"),
             (Metafields, "full-refresh", "metafields"),
             (Onetimes, "incremental", "onetimes"),
-            (OrdersDeprecatedApi, "incremental", "orders"),
-            (OrdersModernApi, "incremental", "orders"),
+            (Orders, "incremental", "orders"),
             (Products, "full-refresh", "products"),
             (Shop, "full-refresh", None),
             (Subscriptions, "incremental", "subscriptions"),
@@ -90,8 +87,7 @@ class TestCommon:
             (Discounts, "incremental", "discounts"),
             (Metafields, "full-refresh", "metafields"),
             (Onetimes, "incremental", "onetimes"),
-            (OrdersDeprecatedApi, "incremental", "orders"),
-            (OrdersModernApi, "incremental", "orders"),
+            (Orders, "incremental", "orders"),
             (Products, "full-refresh", "products"),
             (Shop, "full-refresh", "shop"),
             (Subscriptions, "incremental", "subscriptions"),
@@ -138,10 +134,9 @@ class TestFullRefreshStreams:
         [
             (Collections, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
             (Metafields, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
-            (OrdersModernApi, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
             (Products, {}, {"page": 2}),
             (Shop, {}, None),
-            (OrdersDeprecatedApi, {}, {"page": 2}),
+            (Orders, {}, {"page": 2}),
         ],
     )
     def test_next_page_token(self, config, stream_cls, cursor_response, requests_mock, expected):
@@ -235,8 +230,7 @@ class TestIncrementalStreams:
             (Customers, "updated_at"),
             (Discounts, "updated_at"),
             (Onetimes, "updated_at"),
-            (OrdersDeprecatedApi, "updated_at"),
-            (OrdersModernApi, "updated_at"),
+            (Orders, "updated_at"),
             (Subscriptions, "updated_at"),
         ],
     )
@@ -253,8 +247,7 @@ class TestIncrementalStreams:
             (Customers, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
             (Discounts, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
             (Onetimes, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
-            (OrdersDeprecatedApi, {}, {"page": 2}),
-            (OrdersModernApi, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
+            (Orders, {}, {"page": 2}),
             (Subscriptions, {"next_cursor": "some next cursor"}, {"cursor": "some next cursor"}),
         ],
     )
@@ -306,14 +299,7 @@ class TestIncrementalStreams:
                 {"limit": 250, "cursor": "123"},
             ),
             (
-                OrdersDeprecatedApi,
-                None,
-                {},
-                {"start_date": "2020-01-01T00:00:00Z", "end_date": "2020-02-01T00:00:00Z"},
-                {"limit": 250, "updated_at_min": "2020-01-01T00:00:00Z", "updated_at_max": "2020-02-01T00:00:00Z"},
-            ),
-            (
-                OrdersModernApi,
+                Orders,
                 None,
                 {},
                 {"start_date": "2020-01-01T00:00:00Z", "end_date": "2020-02-01T00:00:00Z"},
@@ -341,8 +327,7 @@ class TestIncrementalStreams:
             (Customers, {"updated_at": 3}, {"updated_at": 4}, {"updated_at": 4}),
             (Discounts, {}, {"updated_at": 2}, {"updated_at": 2}),
             (Onetimes, {}, {"updated_at": 2}, {"updated_at": 2}),
-            (OrdersDeprecatedApi, {"updated_at": 5}, {"updated_at": 5}, {"updated_at": 5}),
-            (OrdersModernApi, {"updated_at": 5}, {"updated_at": 5}, {"updated_at": 5}),
+            (Orders, {"updated_at": 5}, {"updated_at": 5}, {"updated_at": 5}),
             (Subscriptions, {"updated_at": 6}, {"updated_at": 7}, {"updated_at": 7}),
         ],
     )
@@ -350,15 +335,3 @@ class TestIncrementalStreams:
         stream = stream_cls(config, authenticator=None)
         result = stream.get_updated_state(current_state, latest_record)
         assert result == expected
-        
-        
-    @pytest.mark.parametrize(
-        "stream_cls, expected",
-        [
-            (Addresses, {'start_date': '2021-08-15 00:00:01', 'end_date': '2021-09-14 00:00:01'}),
-        ],
-    )
-    def test_stream_slices(self, config, stream_cls, expected):
-        stream = stream_cls(config, authenticator=None)
-        result = list(stream.stream_slices(sync_mode=None, cursor_field=stream.cursor_field, stream_state=None))
-        assert result[0] == expected

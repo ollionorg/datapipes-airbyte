@@ -20,10 +20,6 @@ data:
   icon: chartmogul.svg
   license: MIT
   name: Chartmogul
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-chartmogul
   registries:
     cloud:
       enabled: true

@@ -5,14 +5,9 @@
 import functools
 import inspect
 from functools import wraps
-from typing import Any, Callable, Type, TypeVar
+from typing import Any, Callable, Type
 
 import asyncclick as click
-from pipelines.models.ci_requirements import CIRequirements
-
-_AnyCallable = Callable[..., Any]
-FC = TypeVar("FC", bound="_AnyCallable | click.core.Command")
-CI_REQUIREMENTS_OPTION_NAME = "--ci-requirements"
 
 
 def _contains_var_kwarg(f: Callable) -> bool:
@@ -20,11 +15,8 @@ def _contains_var_kwarg(f: Callable) -> bool:
 
 
 def _is_kwarg_of(key: str, f: Callable) -> bool:
-    param = inspect.signature(f).parameters.get(key)
-    if not param:
-        return False
-
-    return bool(param) and (param.kind is inspect.Parameter.KEYWORD_ONLY or param.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD)
+    param = inspect.signature(f).parameters.get(key, False)
+    return param and (param.kind is inspect.Parameter.KEYWORD_ONLY or param.kind is inspect.Parameter.POSITIONAL_OR_KEYWORD)
 
 
 def click_ignore_unused_kwargs(f: Callable) -> Callable:
@@ -39,7 +31,7 @@ def click_ignore_unused_kwargs(f: Callable) -> Callable:
         return f
 
     @functools.wraps(f)
-    def inner(*args: Any, **kwargs: Any) -> Callable:
+    def inner(*args, **kwargs):
         filtered_kwargs = {key: value for key, value in kwargs.items() if _is_kwarg_of(key, f)}
         return f(*args, **filtered_kwargs)
 
@@ -51,7 +43,7 @@ def click_merge_args_into_context_obj(f: Callable) -> Callable:
     Decorator to pass click context and args to children commands.
     """
 
-    def wrapper(*args: Any, **kwargs: Any) -> Callable:
+    def wrapper(*args, **kwargs):
         ctx = click.get_current_context()
         ctx.ensure_object(dict)
         click_obj = ctx.obj
@@ -69,13 +61,13 @@ def click_merge_args_into_context_obj(f: Callable) -> Callable:
     return wrapper
 
 
-def click_append_to_context_object(key: str, value: Callable) -> Callable:
+def click_append_to_context_object(key: str, value: Callable | Any) -> Callable:
     """
     Decorator to append a value to the click context object.
     """
 
-    def decorator(f: Callable) -> Callable:
-        async def wrapper(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+    def decorator(f):
+        async def wrapper(*args, **kwargs):
             ctx = click.get_current_context()
             ctx.ensure_object(dict)
 
@@ -112,7 +104,7 @@ class LazyPassDecorator:
         """
 
         @wraps(f)
-        def decorated_function(*args: Any, **kwargs: Any) -> Any:  # noqa: ANN401
+        def decorated_function(*args: Any, **kwargs: Any) -> Any:
             # Check if the kwargs already contain the arguments being passed by the decorator
             decorator_kwargs = {k: v for k, v in self.kwargs.items() if k not in kwargs}
             # Create an instance of the class
@@ -126,27 +118,3 @@ class LazyPassDecorator:
             return f(*args, **kwargs)
 
         return decorated_function
-
-
-def click_ci_requirements_option() -> Callable[[FC], FC]:
-    """Add a --ci-requirements option to the command.
-
-    Returns:
-        Callable[[FC], FC]: The decorated command.
-    """
-
-    def callback(ctx: click.Context, param: click.Parameter, value: bool) -> None:
-        if value:
-            ci_requirements = CIRequirements()
-            click.echo(ci_requirements.to_json())
-            ctx.exit()
-
-    return click.decorators.option(
-        CI_REQUIREMENTS_OPTION_NAME,
-        is_flag=True,
-        expose_value=False,
-        is_eager=True,
-        flag_value=True,
-        help="Show the CI requirements and exit. It used to make airbyte-ci client define the CI runners it will run on.",
-        callback=callback,
-    )

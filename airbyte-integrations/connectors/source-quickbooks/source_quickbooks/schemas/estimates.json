@@ -1,7 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "type": ["null", "object"],
-  "additionalProperties": true,
   "properties": {
     "BillEmail": {
       "properties": {
@@ -191,11 +190,6 @@
           "DetailType": {
             "type": ["null", "string"]
           },
-          "SubTotalLineDetail": {
-            "type": ["null", "object"],
-            "additionalProperties": true,
-            "properties": {}
-          },
           "Description": {
             "type": ["null", "string"]
           },
@@ -233,8 +227,7 @@
             "type": ["null", "object"]
           }
         },
-        "type": ["null", "object"],
-        "additionalProperties": true
+        "type": ["null", "object"]
       },
       "type": ["null", "array"]
     },

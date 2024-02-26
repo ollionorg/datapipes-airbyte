@@ -11,11 +11,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.annotations.VisibleForTesting;
 import com.mysql.cj.MysqlType;
 import io.airbyte.cdk.db.jdbc.JdbcDatabase;
-import io.airbyte.cdk.integrations.debezium.DebeziumIteratorConstants;
 import io.airbyte.cdk.integrations.source.relationaldb.DbSourceDiscoverUtil;
 import io.airbyte.cdk.integrations.source.relationaldb.TableInfo;
-import io.airbyte.cdk.integrations.source.relationaldb.state.SourceStateIterator;
-import io.airbyte.cdk.integrations.source.relationaldb.state.SourceStateIteratorManager;
 import io.airbyte.commons.stream.AirbyteStreamUtils;
 import io.airbyte.commons.util.AutoCloseableIterator;
 import io.airbyte.commons.util.AutoCloseableIterators;
@@ -183,16 +180,13 @@ public class MySqlInitialLoadHandler {
 
     final Duration syncCheckpointDuration =
         config.get(SYNC_CHECKPOINT_DURATION_PROPERTY) != null ? Duration.ofSeconds(config.get(SYNC_CHECKPOINT_DURATION_PROPERTY).asLong())
-            : DebeziumIteratorConstants.SYNC_CHECKPOINT_DURATION;
+            : MySqlInitialSyncStateIterator.SYNC_CHECKPOINT_DURATION;
     final Long syncCheckpointRecords = config.get(SYNC_CHECKPOINT_RECORDS_PROPERTY) != null ? config.get(SYNC_CHECKPOINT_RECORDS_PROPERTY).asLong()
-        : DebeziumIteratorConstants.SYNC_CHECKPOINT_RECORDS;
-
-    final SourceStateIteratorManager<AirbyteMessage> processor =
-        new MySqlInitialSyncStateIteratorManager(pair, initialLoadStateManager, incrementalState,
-            syncCheckpointDuration, syncCheckpointRecords);
+        : MySqlInitialSyncStateIterator.SYNC_CHECKPOINT_RECORDS;
 
     return AutoCloseableIterators.transformIterator(
-        r -> new SourceStateIterator<>(r, processor),
+        r -> new MySqlInitialSyncStateIterator(r, pair, initialLoadStateManager, incrementalState,
+            syncCheckpointDuration, syncCheckpointRecords),
         recordIterator, pair);
   }
 

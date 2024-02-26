@@ -1,8 +1,5 @@
 {
   "properties": {
-    "account_id": {
-      "type": ["null", "string"]
-    },
     "actor_id": {
       "type": ["null", "string"]
     },

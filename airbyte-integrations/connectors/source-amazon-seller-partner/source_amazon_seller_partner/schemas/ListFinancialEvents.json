@@ -984,10 +984,6 @@
           }
         }
       }
-    },
-    "PostedBefore": {
-      "type": ["null", "string"],
-      "format": "date-time"
     }
   }
 }

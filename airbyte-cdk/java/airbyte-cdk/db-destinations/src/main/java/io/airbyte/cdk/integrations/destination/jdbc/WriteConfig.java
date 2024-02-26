@@ -5,7 +5,8 @@
 package io.airbyte.cdk.integrations.destination.jdbc;
 
 import io.airbyte.protocol.models.v0.DestinationSyncMode;
-import java.time.Instant;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 
 /**
  * Write configuration POJO (plain old java object) for all destinations extending
@@ -19,7 +20,7 @@ public class WriteConfig {
   private final String tmpTableName;
   private final String outputTableName;
   private final DestinationSyncMode syncMode;
-  private final Instant writeDatetime;
+  private final DateTime writeDatetime;
 
   public WriteConfig(final String streamName,
                      final String namespace,
@@ -27,7 +28,7 @@ public class WriteConfig {
                      final String tmpTableName,
                      final String outputTableName,
                      final DestinationSyncMode syncMode) {
-    this(streamName, namespace, outputSchemaName, tmpTableName, outputTableName, syncMode, Instant.now());
+    this(streamName, namespace, outputSchemaName, tmpTableName, outputTableName, syncMode, DateTime.now(DateTimeZone.UTC));
   }
 
   public WriteConfig(final String streamName,
@@ -36,7 +37,7 @@ public class WriteConfig {
                      final String tmpTableName,
                      final String outputTableName,
                      final DestinationSyncMode syncMode,
-                     final Instant writeDatetime) {
+                     final DateTime writeDatetime) {
     this.streamName = streamName;
     this.namespace = namespace;
     this.outputSchemaName = outputSchemaName;
@@ -76,7 +77,7 @@ public class WriteConfig {
     return syncMode;
   }
 
-  public Instant getWriteDatetime() {
+  public DateTime getWriteDatetime() {
     return writeDatetime;
   }
 

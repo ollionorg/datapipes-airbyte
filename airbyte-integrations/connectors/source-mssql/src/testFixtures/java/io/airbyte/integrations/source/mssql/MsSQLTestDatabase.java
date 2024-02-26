@@ -8,10 +8,7 @@ import io.airbyte.cdk.db.factory.DatabaseDriver;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
 import io.airbyte.cdk.testutils.TestDatabase;
 import io.debezium.connector.sqlserver.Lsn;
-import java.io.IOException;
-import java.io.UncheckedIOException;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -27,37 +24,35 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
 
   static public final int MAX_RETRIES = 60;
 
-  public enum BaseImage {
+  public static enum BaseImage {
 
     MSSQL_2022("mcr.microsoft.com/mssql/server:2022-latest"),
     MSSQL_2017("mcr.microsoft.com/mssql/server:2017-latest"),
     ;
 
-    public final String reference;
+    private final String reference;
 
-    BaseImage(final String reference) {
+    private BaseImage(String reference) {
       this.reference = reference;
     }
 
   }
 
-  public enum ContainerModifier {
+  public static enum ContainerModifier {
 
     NETWORK("withNetwork"),
-    AGENT("withAgent"),
-    WITH_SSL_CERTIFICATES("withSslCertificates"),
-    ;
+    AGENT("withAgent");
 
-    public final String methodName;
+    private final String methodName;
 
-    ContainerModifier(final String methodName) {
+    private ContainerModifier(String methodName) {
       this.methodName = methodName;
     }
 
   }
 
-  static public MsSQLTestDatabase in(final BaseImage imageName, final ContainerModifier... methods) {
-    final String[] methodNames = Stream.of(methods).map(im -> im.methodName).toList().toArray(new String[0]);
+  static public MsSQLTestDatabase in(BaseImage imageName, ContainerModifier... methods) {
+    String[] methodNames = Stream.of(methods).map(im -> im.methodName).toList().toArray(new String[0]);
     final var container = new MsSQLContainerFactory().shared(imageName.reference, methodNames);
     final var testdb = new MsSQLTestDatabase(container);
     return testdb
@@ -66,8 +61,16 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
         .initialized();
   }
 
-  public MsSQLTestDatabase(final MSSQLServerContainer<?> container) {
+  public MsSQLTestDatabase(MSSQLServerContainer<?> container) {
     super(container);
+  }
+
+  public MsSQLTestDatabase withSnapshotIsolation() {
+    return with("ALTER DATABASE %s SET ALLOW_SNAPSHOT_ISOLATION ON;", getDatabaseName());
+  }
+
+  public MsSQLTestDatabase withoutSnapshotIsolation() {
+    return with("ALTER DATABASE %s SET ALLOW_SNAPSHOT_ISOLATION OFF;", getDatabaseName());
   }
 
   public MsSQLTestDatabase withCdc() {
@@ -96,11 +99,6 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
     return self();
   }
 
-  public MsSQLTestDatabase withShortenedCapturePollingInterval() {
-    return with("EXEC sys.sp_cdc_change_job @job_type = 'capture', @pollinginterval = %d;",
-        MssqlCdcTargetPosition.MAX_LSN_QUERY_DELAY_TEST.toSeconds());
-  }
-
   private void waitForAgentState(final boolean running) {
     final String expectedValue = running ? "Running." : "Stopped.";
     LOGGER.debug("Waiting for SQLServerAgent state to change to '{}'.", expectedValue);
@@ -112,12 +110,12 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
           return;
         }
         LOGGER.debug("Retrying, SQLServerAgent state {} does not match expected '{}'.", r, expectedValue);
-      } catch (final SQLException e) {
+      } catch (SQLException e) {
         LOGGER.debug("Retrying agent state query after catching exception {}.", e.getMessage());
       }
       try {
         Thread.sleep(1_000); // Wait one second between retries.
-      } catch (final InterruptedException e) {
+      } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
     }
@@ -134,12 +132,12 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
           return self();
         }
         LOGGER.debug("Retrying, max LSN still not available for database {}.", getDatabaseName());
-      } catch (final SQLException e) {
+      } catch (SQLException e) {
         LOGGER.warn("Retrying max LSN query after catching exception {}", e.getMessage());
       }
       try {
         Thread.sleep(1_000); // Wait one second between retries.
-      } catch (final InterruptedException e) {
+      } catch (InterruptedException e) {
         throw new RuntimeException(e);
       }
     }
@@ -185,7 +183,7 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
         String.format("DROP DATABASE %s", getDatabaseName()))));
   }
 
-  public Stream<String> mssqlCmd(final Stream<String> sql) {
+  public Stream<String> mssqlCmd(Stream<String> sql) {
     return Stream.of("/opt/mssql-tools/bin/sqlcmd",
         "-U", getContainer().getUsername(),
         "-P", getContainer().getPassword(),
@@ -203,44 +201,6 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
     return SQLDialect.DEFAULT;
   }
 
-  public static enum CertificateKey {
-
-    CA(true),
-    DUMMY_CA(false),
-    SERVER(true),
-    DUMMY_SERVER(false),
-    SERVER_DUMMY_CA(false),
-    ;
-
-    public final boolean isValid;
-
-    CertificateKey(final boolean isValid) {
-      this.isValid = isValid;
-    }
-
-  }
-
-  private Map<CertificateKey, String> cachedCerts;
-
-  public synchronized String getCertificate(final CertificateKey certificateKey) {
-    if (cachedCerts == null) {
-      final Map<CertificateKey, String> cachedCerts = new HashMap<>();
-      try {
-        for (final CertificateKey key : CertificateKey.values()) {
-          final String command = "cat /tmp/certs/" + key.name().toLowerCase() + ".crt";
-          final String certificate = getContainer().execInContainer("bash", "-c", command).getStdout().trim();
-          cachedCerts.put(key, certificate);
-        }
-      } catch (final IOException e) {
-        throw new UncheckedIOException(e);
-      } catch (final InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-      this.cachedCerts = cachedCerts;
-    }
-    return cachedCerts.get(certificateKey);
-  }
-
   @Override
   public MsSQLConfigBuilder configBuilder() {
     return new MsSQLConfigBuilder(this);
@@ -248,21 +208,19 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
 
   static public class MsSQLConfigBuilder extends ConfigBuilder<MsSQLTestDatabase, MsSQLConfigBuilder> {
 
-    protected MsSQLConfigBuilder(final MsSQLTestDatabase testDatabase) {
-
+    protected MsSQLConfigBuilder(MsSQLTestDatabase testDatabase) {
       super(testDatabase);
-      with(JdbcUtils.JDBC_URL_PARAMS_KEY, "loginTimeout=2");
-
     }
 
     public MsSQLConfigBuilder withCdcReplication() {
-      return with("is_test", true)
-          .with("replication_method", Map.of(
-              "method", "CDC",
-              "initial_waiting_seconds", DEFAULT_CDC_REPLICATION_INITIAL_WAIT.getSeconds()));
+      return with("replication_method", Map.of(
+          "method", "CDC",
+          "data_to_sync", "Existing and New",
+          "initial_waiting_seconds", DEFAULT_CDC_REPLICATION_INITIAL_WAIT.getSeconds(),
+          "snapshot_isolation", "Snapshot"));
     }
 
-    public MsSQLConfigBuilder withSchemas(final String... schemas) {
+    public MsSQLConfigBuilder withSchemas(String... schemas) {
       return with(JdbcUtils.SCHEMAS_KEY, List.of(schemas));
     }
 
@@ -271,24 +229,9 @@ public class MsSQLTestDatabase extends TestDatabase<MSSQLServerContainer<?>, MsS
       return withSsl(Map.of("ssl_method", "unencrypted"));
     }
 
-    @Deprecated
-    public MsSQLConfigBuilder withSsl(final Map<Object, Object> sslMode) {
+    @Override
+    public MsSQLConfigBuilder withSsl(Map<Object, Object> sslMode) {
       return with("ssl_method", sslMode);
-    }
-
-    public MsSQLConfigBuilder withEncrytedTrustServerCertificate() {
-      return withSsl(Map.of("ssl_method", "encrypted_trust_server_certificate"));
-    }
-
-    public MsSQLConfigBuilder withEncrytedVerifyServerCertificate(final String certificate, final String hostnameInCertificate) {
-      if (hostnameInCertificate != null) {
-        return withSsl(Map.of("ssl_method", "encrypted_verify_certificate",
-            "certificate", certificate,
-            "hostNameInCertificate", hostnameInCertificate));
-      } else {
-        return withSsl(Map.of("ssl_method", "encrypted_verify_certificate",
-            "certificate", certificate));
-      }
     }
 
   }

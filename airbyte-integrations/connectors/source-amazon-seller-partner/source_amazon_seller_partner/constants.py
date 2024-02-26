@@ -2,7 +2,6 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
 """
 Country	marketplaceId	Country code
 Canada	A2EUQ1WTGCTBG2	CA

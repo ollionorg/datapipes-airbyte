@@ -16,7 +16,7 @@
       "readOnly": true
     },
     "name": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "List Name",
       "description": "The name of the list."
     },
@@ -26,49 +26,49 @@
       "description": "[Contact information displayed in campaign footers](https://mailchimp.com/help/about-campaign-footers/) to comply with international spam laws.",
       "properties": {
         "company": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Company Name",
           "description": "The company name for the list."
         },
         "address1": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Address",
           "description": "The street address for the list contact."
         },
         "address2": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Address",
           "description": "The street address for the list contact."
         },
         "city": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "City",
           "description": "The city for the list contact."
         },
         "state": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "State",
           "description": "The state for the list contact."
         },
         "zip": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Postal Code",
           "description": "The postal or zip code for the list contact."
         },
         "country": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Country Code",
           "description": "A two-character ISO3166 country code. Defaults to US if invalid."
         },
         "phone": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Phone Number",
           "description": "The phone number for the list contact."
         }
       }
     },
     "permission_reminder": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Permission Reminder",
       "description": "The [permission reminder](https://mailchimp.com/help/edit-the-permission-reminder/) for the list."
     },
@@ -84,35 +84,35 @@
       "description": "[Default values for campaigns](https://mailchimp.com/help/edit-your-emails-subject-preview-text-from-name-or-from-email-address/) created for this list.",
       "properties": {
         "from_name": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Sender's Name",
           "description": "The default from name for campaigns sent to this list."
         },
         "from_email": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Sender's Email Address",
           "description": "The default from email for campaigns sent to this list."
         },
         "subject": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Subject",
           "description": "The default subject line for campaigns sent to this list."
         },
         "language": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Language",
           "description": "The default language for this lists's forms."
         }
       }
     },
     "notify_on_subscribe": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Notify on Subscribe",
       "description": "The email address to send [subscribe notifications](https://mailchimp.com/help/change-subscribe-and-unsubscribe-notifications/) to.",
       "default": false
     },
     "notify_on_unsubscribe": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Notify on Unsubscribe",
       "description": "The email address to send [unsubscribe notifications](https://mailchimp.com/help/change-subscribe-and-unsubscribe-notifications/) to.",
       "default": false
@@ -122,7 +122,6 @@
       "title": "Creation Date",
       "description": "The date and time that this list was created in ISO 8601 format.",
       "format": "date-time",
-      "airbyte_type": "timestamp_with_timezone",
       "readOnly": true
     },
     "list_rating": {
@@ -137,25 +136,25 @@
       "description": "Whether the list supports [multiple formats for emails](https://mailchimp.com/help/change-list-name-and-defaults/). When set to `true`, subscribers can choose whether they want to receive HTML or plain-text emails. When set to `false`, subscribers will receive HTML emails, with a plain-text alternative backup."
     },
     "subscribe_url_short": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Subscribe URL Short",
       "description": "Our [EepURL shortened](https://mailchimp.com/help/share-your-signup-form/) version of this list's subscribe form.",
       "readOnly": true
     },
     "subscribe_url_long": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Subscribe URL Long",
       "description": "The full version of this list's subscribe form (host will vary).",
       "readOnly": true
     },
     "beamer_address": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Beamer Address",
       "description": "The list's [Email Beamer](https://mailchimp.com/help/use-email-beamer-to-create-a-campaign/) address.",
       "readOnly": true
     },
     "visibility": {
-      "type": ["null", "string"],
+      "type": "string",
       "title": "Visibility",
       "enum": ["pub", "prv"],
       "description": "Whether this list is [public or private](https://mailchimp.com/help/about-list-publicity/)."
@@ -184,7 +183,7 @@
       "title": "Modules",
       "description": "Any list-specific modules installed for this list.",
       "items": {
-        "type": ["null", "string"]
+        "type": "string"
       },
       "readOnly": true
     },
@@ -243,12 +242,10 @@
           "readOnly": true
         },
         "campaign_last_sent": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Campaign Last Sent",
           "description": "The date and time the last campaign was sent to this list in ISO 8601 format. This is updated when a campaign is sent to 10 or more recipients.",
-          "readOnly": true,
-          "format": "date-time",
-          "airbyte_type": "timestamp_with_timezone"
+          "readOnly": true
         },
         "merge_field_count": {
           "type": "integer",
@@ -287,20 +284,16 @@
           "readOnly": true
         },
         "last_sub_date": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Date of Last List Subscribe",
           "description": "The date and time of the last time someone subscribed to this list in ISO 8601 format.",
-          "readOnly": true,
-          "format": "date-time",
-          "airbyte_type": "timestamp_with_timezone"
+          "readOnly": true
         },
         "last_unsub_date": {
-          "type": ["null", "string"],
+          "type": "string",
           "title": "Date of Last List Unsubscribe",
           "description": "The date and time of the last time someone unsubscribed from this list in ISO 8601 format.",
-          "readOnly": true,
-          "format": "date-time",
-          "airbyte_type": "timestamp_with_timezone"
+          "readOnly": true
         }
       }
     }

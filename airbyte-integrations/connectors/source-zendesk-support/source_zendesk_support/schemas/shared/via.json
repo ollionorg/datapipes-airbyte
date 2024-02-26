@@ -19,9 +19,6 @@
             "subject": {
               "type": ["null", "string"]
             },
-            "channel": {
-              "type": ["null", "string"]
-            },
             "name": {
               "type": ["null", "string"]
             },

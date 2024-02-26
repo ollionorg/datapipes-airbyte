@@ -8,10 +8,6 @@ data:
   icon: statuspage.svg
   license: MIT
   name: Statuspage
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-statuspage
   registries:
     cloud:
       enabled: false

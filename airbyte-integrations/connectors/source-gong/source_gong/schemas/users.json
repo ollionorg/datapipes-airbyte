@@ -8,9 +8,6 @@
     "emailAddress": {
       "type": ["null", "string"]
     },
-    "trustedEmailAddress": {
-      "type": ["null", "string"]
-    },
     "created": {
       "type": ["null", "string"],
       "format": "date-time"

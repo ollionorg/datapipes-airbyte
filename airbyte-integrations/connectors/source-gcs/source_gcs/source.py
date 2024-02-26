@@ -12,14 +12,13 @@ from source_gcs.spec import SourceGCSSpec
 
 
 class SourceGCS(FileBasedSource):
-    @classmethod
-    def read_config(cls, config_path: str) -> Mapping[str, Any]:
+    def read_config(self, config_path: str) -> Mapping[str, Any]:
         """
         Override the default read_config to transform the legacy config format
         into the new one before validating it against the new spec.
         """
-        config = FileBasedSource.read_config(config_path)
-        if not cls._is_file_based_config(config):
+        config = super().read_config(config_path)
+        if not self._is_file_based_config(config):
             parsed_legacy_config = SourceGCSSpec(**config)
             converted_config = LegacyConfigTransformer.convert(parsed_legacy_config)
             emit_configuration_as_airbyte_control_message(converted_config)

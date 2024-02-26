@@ -13,7 +13,7 @@ import com.mongodb.MongoDriverInformation;
 import com.mongodb.ReadPreference;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
-import io.airbyte.integrations.source.mongodb.cdc.MongoDbDebeziumPropertiesManager;
+import io.airbyte.cdk.integrations.debezium.internals.mongodb.MongoDbDebeziumPropertiesManager;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
@@ -50,7 +50,7 @@ public class MongoConnectionUtils {
   }
 
   private static String buildConnectionString(final MongoDbSourceConfig config) {
-    return MongoDbDebeziumPropertiesManager.buildConnectionString(config.getDatabaseConfig(), true);
+    return MongoDbDebeziumPropertiesManager.buildConnectionString(config.rawConfig(), true);
   }
 
 }

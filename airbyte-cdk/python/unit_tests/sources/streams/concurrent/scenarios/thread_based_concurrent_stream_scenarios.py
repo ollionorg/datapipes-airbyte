@@ -4,7 +4,6 @@
 import logging
 
 from airbyte_cdk.sources.message import InMemoryMessageRepository
-from airbyte_cdk.sources.streams.concurrent.cursor import NoopCursor
 from airbyte_cdk.sources.streams.concurrent.default_stream import DefaultStream
 from airbyte_cdk.sources.streams.concurrent.partitions.record import Record
 from unit_tests.sources.file_based.scenarios.scenario_builder import TestScenarioBuilder
@@ -30,7 +29,6 @@ _id_only_stream = DefaultStream(
     primary_key=[],
     cursor_field=None,
     logger=logging.getLogger("test_logger"),
-    cursor=NoopCursor(),
 )
 
 _id_only_stream_with_slice_logger = DefaultStream(
@@ -48,7 +46,6 @@ _id_only_stream_with_slice_logger = DefaultStream(
     primary_key=[],
     cursor_field=None,
     logger=logging.getLogger("test_logger"),
-    cursor=NoopCursor(),
 )
 
 _id_only_stream_with_primary_key = DefaultStream(
@@ -66,7 +63,6 @@ _id_only_stream_with_primary_key = DefaultStream(
     primary_key=["id"],
     cursor_field=None,
     logger=logging.getLogger("test_logger"),
-    cursor=NoopCursor(),
 )
 
 _id_only_stream_multiple_partitions = DefaultStream(
@@ -87,7 +83,6 @@ _id_only_stream_multiple_partitions = DefaultStream(
     primary_key=[],
     cursor_field=None,
     logger=logging.getLogger("test_logger"),
-    cursor=NoopCursor(),
 )
 
 _id_only_stream_multiple_partitions_concurrency_level_two = DefaultStream(
@@ -108,7 +103,6 @@ _id_only_stream_multiple_partitions_concurrency_level_two = DefaultStream(
     primary_key=[],
     cursor_field=None,
     logger=logging.getLogger("test_logger"),
-    cursor=NoopCursor(),
 )
 
 _stream_raising_exception = DefaultStream(
@@ -126,7 +120,6 @@ _stream_raising_exception = DefaultStream(
     primary_key=[],
     cursor_field=None,
     logger=logging.getLogger("test_logger"),
-    cursor=NoopCursor(),
 )
 
 test_concurrent_cdk_single_stream = (
@@ -253,7 +246,6 @@ test_concurrent_cdk_multiple_streams = (
                     primary_key=[],
                     cursor_field=None,
                     logger=logging.getLogger("test_logger"),
-                    cursor=NoopCursor(),
                 ),
             ]
         )

@@ -28,10 +28,6 @@
     "dataEndTime": {
       "type": ["null", "string"],
       "format": "date"
-    },
-    "queryEndDate": {
-      "type": ["null", "string"],
-      "format": "date"
     }
   }
 }

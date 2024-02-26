@@ -12,12 +12,17 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 import org.testcontainers.utility.MountableFile;
 
-public class PostgresContainerFactory extends ContainerFactory<PostgreSQLContainer<?>> {
+public class PostgresContainerFactory implements ContainerFactory<PostgreSQLContainer<?>> {
 
   @Override
-  protected PostgreSQLContainer<?> createNewContainer(DockerImageName imageName) {
+  public PostgreSQLContainer<?> createNewContainer(DockerImageName imageName) {
     return new PostgreSQLContainer<>(imageName.asCompatibleSubstituteFor("postgres"));
 
+  }
+
+  @Override
+  public Class<?> getContainerClass() {
+    return PostgreSQLContainer.class;
   }
 
   /**

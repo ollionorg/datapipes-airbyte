@@ -30,5 +30,4 @@ class WebflowToAirbyteMapping:
         "RichText": {"type": ["null", "string"]},
         "User": {"type": ["null", "string"]},
         "Video": {"type": ["null", "string"]},
-        "FileRef": {"type": ["null", "object"]},
     }

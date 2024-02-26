@@ -43,8 +43,9 @@ class DefaultFileBasedStream(AbstractFileBasedStream, IncrementalMixin):
     ab_file_name_col = "_ab_source_file_url"
     airbyte_columns = [ab_last_mod_col, ab_file_name_col]
 
-    def __init__(self, **kwargs: Any):
+    def __init__(self, cursor: AbstractFileBasedCursor, **kwargs: Any):
         super().__init__(**kwargs)
+        self._cursor = cursor
 
     @property
     def state(self) -> MutableMapping[str, Any]:
@@ -54,16 +55,6 @@ class DefaultFileBasedStream(AbstractFileBasedStream, IncrementalMixin):
     def state(self, value: MutableMapping[str, Any]) -> None:
         """State setter, accept state serialized by state getter."""
         self._cursor.set_initial_state(value)
-
-    @property
-    def cursor(self) -> Optional[AbstractFileBasedCursor]:
-        return self._cursor
-
-    @cursor.setter
-    def cursor(self, value: AbstractFileBasedCursor) -> None:
-        if self._cursor is not None:
-            raise RuntimeError(f"Cursor for stream {self.name} is already set. This is unexpected. Please contact Support.")
-        self._cursor = value
 
     @property
     def primary_key(self) -> PrimaryKeyType:
@@ -121,14 +112,12 @@ class DefaultFileBasedStream(AbstractFileBasedStream, IncrementalMixin):
             except RecordParseError:
                 # Increment line_no because the exception was raised before we could increment it
                 line_no += 1
-                self.errors_collector.collect(
-                    AirbyteMessage(
-                        type=MessageType.LOG,
-                        log=AirbyteLogMessage(
-                            level=Level.ERROR,
-                            message=f"{FileBasedSourceError.ERROR_PARSING_RECORD.value} stream={self.name} file={file.uri} line_no={line_no} n_skipped={n_skipped}",
-                            stack_trace=traceback.format_exc(),
-                        ),
+                yield AirbyteMessage(
+                    type=MessageType.LOG,
+                    log=AirbyteLogMessage(
+                        level=Level.ERROR,
+                        message=f"{FileBasedSourceError.ERROR_PARSING_RECORD.value} stream={self.name} file={file.uri} line_no={line_no} n_skipped={n_skipped}",
+                        stack_trace=traceback.format_exc(),
                     ),
                 )
 
@@ -173,13 +162,9 @@ class DefaultFileBasedStream(AbstractFileBasedStream, IncrementalMixin):
         try:
             schema = self._get_raw_json_schema()
         except (InvalidSchemaError, NoFilesMatchingError) as config_exception:
-            self.logger.exception(FileBasedSourceError.SCHEMA_INFERENCE_ERROR.value, exc_info=config_exception)
             raise AirbyteTracedException(
-                internal_message="Please check the logged errors for more information.",
-                message=FileBasedSourceError.SCHEMA_INFERENCE_ERROR.value,
-                exception=AirbyteTracedException(exception=config_exception),
-                failure_type=FailureType.config_error,
-            )
+                message=FileBasedSourceError.SCHEMA_INFERENCE_ERROR.value, exception=config_exception, failure_type=FailureType.config_error
+            ) from config_exception
         except Exception as exc:
             raise SchemaInferenceError(FileBasedSourceError.SCHEMA_INFERENCE_ERROR, stream=self.name) from exc
         else:

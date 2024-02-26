@@ -15,6 +15,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
+import io.airbyte.cdk.integrations.source.jdbc.AbstractJdbcSource;
 import io.airbyte.cdk.integrations.source.jdbc.test.JdbcSourceAcceptanceTest;
 import io.airbyte.cdk.integrations.source.relationaldb.RelationalDbQueryUtils;
 import io.airbyte.cdk.integrations.source.relationaldb.models.DbState;
@@ -31,16 +32,15 @@ import io.airbyte.protocol.models.v0.AirbyteMessage.Type;
 import io.airbyte.protocol.models.v0.AirbyteRecordMessage;
 import io.airbyte.protocol.models.v0.AirbyteStateMessage;
 import io.airbyte.protocol.models.v0.AirbyteStateMessage.AirbyteStateType;
-import io.airbyte.protocol.models.v0.AirbyteStreamState;
 import io.airbyte.protocol.models.v0.CatalogHelpers;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
 import io.airbyte.protocol.models.v0.ConnectorSpecification;
 import io.airbyte.protocol.models.v0.DestinationSyncMode;
-import io.airbyte.protocol.models.v0.StreamDescriptor;
 import io.airbyte.protocol.models.v0.SyncMode;
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.JDBCType;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -49,26 +49,20 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Disabled
-class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSource, OracleTestDatabase> {
+class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(OracleJdbcSourceAcceptanceTest.class);
   protected static final String USERNAME_WITHOUT_PERMISSION = "new_user";
   protected static final String PASSWORD_WITHOUT_PERMISSION = "new_password";
-  private static final AirbyteOracleTestContainer ORACLE_DB = new AirbyteOracleTestContainer()
-      .withEnv("NLS_DATE_FORMAT", "YYYY-MM-DD")
-      .withEnv("RELAX_SECURITY", "1")
-      .withUsername("TEST_ORA")
-      .withPassword("oracle")
-      .usingSid()
-      .withEnv("RELAX_SECURITY", "1");
+  private static AirbyteOracleTestContainer ORACLE_DB;
 
   @BeforeAll
   static void init() {
@@ -99,59 +93,34 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
     CREATE_TABLE_WITH_NULLABLE_CURSOR_TYPE_QUERY = "CREATE TABLE %s (%s VARCHAR(20))";
     INSERT_TABLE_WITH_NULLABLE_CURSOR_TYPE_QUERY = "INSERT INTO %s VALUES('Hello world :)')";
     INSERT_TABLE_NAME_AND_TIMESTAMP_QUERY = "INSERT INTO %s (name, timestamp) VALUES ('%s', TO_TIMESTAMP('%s', 'YYYY-MM-DD HH24:MI:SS'))";
-  }
 
-  @AfterAll
-  static void cleanUp() {
-    ORACLE_DB.close();
-  }
-
-  @Override
-  public boolean supportsSchemas() {
-    // See https://www.oratable.com/oracle-user-schema-difference/
-    return true;
-  }
-
-  @Override
-  protected OracleSource source() {
-    return new OracleSource();
-  }
-
-  @Override
-  public JsonNode config() {
-    return Jsons.clone(testdb.configBuilder().build());
-  }
-
-  @Override
-  protected OracleTestDatabase createTestDatabase() {
+    ORACLE_DB = new AirbyteOracleTestContainer()
+        .withEnv("NLS_DATE_FORMAT", "YYYY-MM-DD")
+        .withEnv("RELAX_SECURITY", "1")
+        .withUsername("TEST_ORA")
+        .withPassword("oracle")
+        .usingSid()
+        .withEnv("RELAX_SECURITY", "1");
     ORACLE_DB.start();
-    return new OracleTestDatabase(ORACLE_DB, List.of(SCHEMA_NAME, SCHEMA_NAME2)).initialized();
   }
 
-  @Override
-  public void createSchemas() {
-    // In Oracle, `CREATE USER` creates a schema.
-    // See https://www.oratable.com/oracle-user-schema-difference/
-    if (supportsSchemas()) {
-      for (final String schemaName : TEST_SCHEMAS) {
-        executeOracleStatement(
-            String.format(
-                "CREATE USER %s IDENTIFIED BY password DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS",
-                schemaName));
-      }
-    }
+  @BeforeEach
+  public void setup() throws Exception {
+    config = Jsons.jsonNode(ImmutableMap.builder()
+        .put("host", ORACLE_DB.getHost())
+        .put("port", ORACLE_DB.getFirstMappedPort())
+        .put("sid", ORACLE_DB.getSid())
+        .put("username", ORACLE_DB.getUsername())
+        .put("password", ORACLE_DB.getPassword())
+        .put("schemas", List.of(SCHEMA_NAME, SCHEMA_NAME2))
+        .build());
+
+    // Because Oracle doesn't let me create database easily I need to clean up
+    cleanUpTables();
+
+    super.setup();
   }
 
-  static void cleanUpTablesAndWait() {
-    try {
-      cleanUpTables();
-      Thread.sleep(1000);
-    } catch (final Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  @Override
   protected void incrementalDateCheck() throws Exception {
     // https://stackoverflow.com/questions/47712930/resultset-meta-data-return-timestamp-instead-of-date-oracle-jdbc
     // Oracle DATE is a java.sql.Timestamp (java.sql.Types.TIMESTAMP) as far as JDBC (and the SQL
@@ -163,7 +132,6 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
         Lists.newArrayList(getTestMessages().get(1), getTestMessages().get(2)));
   }
 
-  @Override
   protected AirbyteCatalog getCatalog(final String defaultNamespace) {
     return new AirbyteCatalog().withStreams(List.of(
         CatalogHelpers.createAirbyteStream(
@@ -193,7 +161,20 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
                 List.of(List.of(COL_FIRST_NAME), List.of(COL_LAST_NAME)))));
   }
 
-  static void cleanUpTables() throws SQLException {
+  @AfterEach
+  public void tearDownOracle() throws Exception {
+    // ORA-12519
+    // https://stackoverflow.com/questions/205160/what-can-cause-intermittent-ora-12519-tns-no-appropriate-handler-found-errors
+    // sleep for 1000
+    executeOracleStatement(String.format("DROP TABLE %s", getFullyQualifiedTableName(TABLE_NAME)));
+    executeOracleStatement(
+        String.format("DROP TABLE %s", getFullyQualifiedTableName(TABLE_NAME_WITHOUT_PK)));
+    executeOracleStatement(
+        String.format("DROP TABLE %s", getFullyQualifiedTableName(TABLE_NAME_COMPOSITE_PK)));
+    Thread.sleep(1000);
+  }
+
+  void cleanUpTables() throws SQLException {
     final Connection connection = DriverManager.getConnection(
         ORACLE_DB.getJdbcUrl(),
         ORACLE_DB.getUsername(),
@@ -216,14 +197,14 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
   protected List<AirbyteMessage> getTestMessages() {
     return Lists.newArrayList(
         new AirbyteMessage().withType(Type.RECORD)
-            .withRecord(new AirbyteRecordMessage().withStream(streamName())
+            .withRecord(new AirbyteRecordMessage().withStream(streamName)
                 .withNamespace(getDefaultNamespace())
                 .withData(Jsons.jsonNode(ImmutableMap
                     .of(COL_ID, ID_VALUE_1,
                         COL_NAME, "picard",
                         COL_UPDATED_AT, "2004-10-19T00:00:00.000000")))),
         new AirbyteMessage().withType(Type.RECORD)
-            .withRecord(new AirbyteRecordMessage().withStream(streamName())
+            .withRecord(new AirbyteRecordMessage().withStream(streamName)
                 .withNamespace(getDefaultNamespace())
                 .withData(Jsons.jsonNode(ImmutableMap
                     .of(COL_ID, ID_VALUE_2,
@@ -231,7 +212,7 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
                         COL_UPDATED_AT,
                         "2005-10-19T00:00:00.000000")))),
         new AirbyteMessage().withType(Type.RECORD)
-            .withRecord(new AirbyteRecordMessage().withStream(streamName())
+            .withRecord(new AirbyteRecordMessage().withStream(streamName)
                 .withNamespace(getDefaultNamespace())
                 .withData(Jsons.jsonNode(ImmutableMap
                     .of(COL_ID, ID_VALUE_3,
@@ -249,8 +230,7 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
   }
 
   @Test
-  @Override
-  protected void testReadOneTableIncrementallyTwice() throws Exception {
+  void testReadOneTableIncrementallyTwice() throws Exception {
     final String namespace = getDefaultNamespace();
     final ConfiguredAirbyteCatalog configuredCatalog = getConfiguredCatalogWithOneStream(namespace);
     configuredCatalog.getStreams().forEach(airbyteStream -> {
@@ -260,34 +240,38 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
     });
 
     final DbState state = new DbState()
-        .withStreams(Lists.newArrayList(new DbStreamState().withStreamName(streamName()).withStreamNamespace(namespace)));
+        .withStreams(Lists.newArrayList(new DbStreamState().withStreamName(streamName).withStreamNamespace(namespace)));
     final List<AirbyteMessage> actualMessagesFirstSync = MoreIterators
-        .toList(source().read(config(), configuredCatalog, Jsons.jsonNode(state)));
+        .toList(source.read(config, configuredCatalog, Jsons.jsonNode(state)));
 
     final Optional<AirbyteMessage> stateAfterFirstSyncOptional = actualMessagesFirstSync.stream()
         .filter(r -> r.getType() == Type.STATE).findFirst();
     assertTrue(stateAfterFirstSyncOptional.isPresent());
 
-    testdb.with(String.format("INSERT INTO %s(id, name, updated_at) VALUES (4,'riker', '2006-10-19')",
-        getFullyQualifiedTableName(TABLE_NAME)));
-    testdb.with(String.format("INSERT INTO %s(id, name, updated_at) VALUES (5, 'data', '2006-10-19')",
-        getFullyQualifiedTableName(TABLE_NAME)));
+    database.execute(connection -> {
+      connection.createStatement().execute(
+          String.format("INSERT INTO %s(id, name, updated_at) VALUES (4,'riker', '2006-10-19')",
+              getFullyQualifiedTableName(TABLE_NAME)));
+      connection.createStatement().execute(
+          String.format("INSERT INTO %s(id, name, updated_at) VALUES (5, 'data', '2006-10-19')",
+              getFullyQualifiedTableName(TABLE_NAME)));
+    });
 
     final List<AirbyteMessage> actualMessagesSecondSync = MoreIterators
-        .toList(source().read(config(), configuredCatalog,
+        .toList(source.read(config, configuredCatalog,
             stateAfterFirstSyncOptional.get().getState().getData()));
 
     Assertions.assertEquals(2,
         (int) actualMessagesSecondSync.stream().filter(r -> r.getType() == Type.RECORD).count());
     final List<AirbyteMessage> expectedMessages = new ArrayList<>();
     expectedMessages.add(new AirbyteMessage().withType(Type.RECORD)
-        .withRecord(new AirbyteRecordMessage().withStream(streamName()).withNamespace(namespace)
+        .withRecord(new AirbyteRecordMessage().withStream(streamName).withNamespace(namespace)
             .withData(Jsons.jsonNode(ImmutableMap
                 .of(COL_ID, ID_VALUE_4,
                     COL_NAME, "riker",
                     COL_UPDATED_AT, "2006-10-19T00:00:00.000000")))));
     expectedMessages.add(new AirbyteMessage().withType(Type.RECORD)
-        .withRecord(new AirbyteRecordMessage().withStream(streamName()).withNamespace(namespace)
+        .withRecord(new AirbyteRecordMessage().withStream(streamName).withNamespace(namespace)
             .withData(Jsons.jsonNode(ImmutableMap
                 .of(COL_ID, ID_VALUE_5,
                     COL_NAME, "data",
@@ -295,19 +279,11 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
     expectedMessages.add(new AirbyteMessage()
         .withType(Type.STATE)
         .withState(new AirbyteStateMessage()
-            .withType(AirbyteStateType.STREAM)
-            .withStream(new AirbyteStreamState()
-                .withStreamDescriptor(new StreamDescriptor().withName(streamName()).withNamespace(namespace))
-                .withStreamState(Jsons.jsonNode(new DbStreamState()
-                    .withStreamNamespace(namespace)
-                    .withStreamName(streamName())
-                    .withCursorField(ImmutableList.of(COL_ID))
-                    .withCursor("5")
-                    .withCursorRecordCount(1L))))
+            .withType(AirbyteStateType.LEGACY)
             .withData(Jsons.jsonNode(new DbState()
                 .withCdc(false)
                 .withStreams(Lists.newArrayList(new DbStreamState()
-                    .withStreamName(streamName())
+                    .withStreamName(streamName)
                     .withStreamNamespace(namespace)
                     .withCursorField(ImmutableList.of(COL_ID))
                     .withCursor("5")
@@ -318,6 +294,46 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
     assertArrayEquals(expectedMessages.toArray(), actualMessagesSecondSync.toArray());
     assertTrue(expectedMessages.containsAll(actualMessagesSecondSync));
     assertTrue(actualMessagesSecondSync.containsAll(expectedMessages));
+  }
+
+  @Override
+  public boolean supportsSchemas() {
+    // See https://www.oratable.com/oracle-user-schema-difference/
+    return true;
+  }
+
+  @Override
+  public AbstractJdbcSource<JDBCType> getJdbcSource() {
+    return new OracleSource();
+  }
+
+  @Override
+  public JsonNode getConfig() {
+    return config;
+  }
+
+  @Override
+  public String getDriverClass() {
+    return OracleSource.DRIVER_CLASS;
+  }
+
+  @AfterAll
+  static void cleanUp() {
+    ORACLE_DB.close();
+  }
+
+  @Override
+  public void createSchemas() throws SQLException {
+    // In Oracle, `CREATE USER` creates a schema.
+    // See https://www.oratable.com/oracle-user-schema-difference/
+    if (supportsSchemas()) {
+      for (final String schemaName : TEST_SCHEMAS) {
+        executeOracleStatement(
+            String.format(
+                "CREATE USER %s IDENTIFIED BY password DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS",
+                schemaName));
+      }
+    }
   }
 
   public void executeOracleStatement(final String query) {
@@ -376,7 +392,7 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
 
   @Test
   void testSpec() throws Exception {
-    final ConnectorSpecification actual = source().spec();
+    final ConnectorSpecification actual = source.spec();
     final ConnectorSpecification expected = Jsons.deserialize(MoreResources.readResource("spec.json"), ConnectorSpecification.class);
 
     assertEquals(expected, actual);
@@ -386,11 +402,10 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
   void testCheckIncorrectPasswordFailure() throws Exception {
     // by using a fake password oracle can block user account so we will create separate account for
     // this test
-    final JsonNode config = config();
     executeOracleStatement(String.format("CREATE USER locked_user IDENTIFIED BY password DEFAULT TABLESPACE USERS QUOTA UNLIMITED ON USERS"));
     ((ObjectNode) config).put(JdbcUtils.USERNAME_KEY, "locked_user");
     ((ObjectNode) config).put(JdbcUtils.PASSWORD_KEY, "fake");
-    final AirbyteConnectionStatus status = source().check(config);
+    final AirbyteConnectionStatus status = source.check(config);
 
     Assertions.assertEquals(AirbyteConnectionStatus.Status.FAILED, status.getStatus());
     assertEquals("State code: 72000; Error code: 1017; Message: ORA-01017: invalid username/password; logon denied\n",
@@ -399,38 +414,34 @@ class OracleJdbcSourceAcceptanceTest extends JdbcSourceAcceptanceTest<OracleSour
 
   @Test
   public void testCheckIncorrectUsernameFailure() throws Exception {
-    final JsonNode config = config();
     ((ObjectNode) config).put(JdbcUtils.USERNAME_KEY, "fake");
-    final AirbyteConnectionStatus status = source().check(config);
+    final AirbyteConnectionStatus status = source.check(config);
     Assertions.assertEquals(AirbyteConnectionStatus.Status.FAILED, status.getStatus());
     assertTrue(status.getMessage().contains("State code: 72000; Error code: 1017;"));
   }
 
   @Test
   public void testCheckIncorrectHostFailure() throws Exception {
-    final JsonNode config = config();
     ((ObjectNode) config).put(JdbcUtils.HOST_KEY, "localhost2");
-    final AirbyteConnectionStatus status = source().check(config);
+    final AirbyteConnectionStatus status = source.check(config);
     Assertions.assertEquals(AirbyteConnectionStatus.Status.FAILED, status.getStatus());
     assertTrue(status.getMessage().contains("State code: 08006; Error code: 17002;"));
   }
 
   @Test
   public void testCheckIncorrectPortFailure() throws Exception {
-    final JsonNode config = config();
     ((ObjectNode) config).put(JdbcUtils.PORT_KEY, "0000");
-    final AirbyteConnectionStatus status = source().check(config);
+    final AirbyteConnectionStatus status = source.check(config);
     Assertions.assertEquals(AirbyteConnectionStatus.Status.FAILED, status.getStatus());
     assertTrue(status.getMessage().contains("State code: 08006; Error code: 17002;"));
   }
 
   @Test
   public void testUserHasNoPermissionToDataBase() throws Exception {
-    final JsonNode config = config();
     executeOracleStatement(String.format("CREATE USER %s IDENTIFIED BY %s", USERNAME_WITHOUT_PERMISSION, PASSWORD_WITHOUT_PERMISSION));
     ((ObjectNode) config).put(JdbcUtils.USERNAME_KEY, USERNAME_WITHOUT_PERMISSION);
     ((ObjectNode) config).put(JdbcUtils.PASSWORD_KEY, PASSWORD_WITHOUT_PERMISSION);
-    final AirbyteConnectionStatus status = source().check(config);
+    final AirbyteConnectionStatus status = source.check(config);
     Assertions.assertEquals(AirbyteConnectionStatus.Status.FAILED, status.getStatus());
     assertTrue(status.getMessage().contains("State code: 72000; Error code: 1045;"));
   }

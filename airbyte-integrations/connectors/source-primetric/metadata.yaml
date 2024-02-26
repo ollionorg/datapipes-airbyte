@@ -8,10 +8,6 @@ data:
   icon: primetric.svg
   license: MIT
   name: Primetric
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-primetric
   registries:
     cloud:
       enabled: false

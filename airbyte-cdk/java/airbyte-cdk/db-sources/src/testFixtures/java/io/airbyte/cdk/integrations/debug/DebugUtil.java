@@ -26,12 +26,7 @@ public class DebugUtil {
   public static void debug(final Source debugSource) throws Exception {
     final JsonNode debugConfig = DebugUtil.getConfig();
     final ConfiguredAirbyteCatalog configuredAirbyteCatalog = DebugUtil.getCatalog();
-    JsonNode state;
-    try {
-      state = DebugUtil.getState();
-    } catch (final Exception e) {
-      state = null;
-    }
+    final JsonNode state = DebugUtil.getState();
 
     debugSource.check(debugConfig);
     debugSource.discover(debugConfig);

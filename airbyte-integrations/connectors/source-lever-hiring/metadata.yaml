@@ -8,10 +8,6 @@ data:
   icon: leverhiring.svg
   license: MIT
   name: Lever Hiring
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-lever-hiring
   registries:
     cloud:
       enabled: true

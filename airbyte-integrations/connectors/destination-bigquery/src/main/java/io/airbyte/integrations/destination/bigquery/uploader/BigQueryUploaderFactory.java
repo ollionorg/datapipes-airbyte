@@ -4,13 +4,15 @@
 
 package io.airbyte.integrations.destination.bigquery.uploader;
 
+import static software.amazon.awssdk.http.HttpStatusCode.FORBIDDEN;
+import static software.amazon.awssdk.http.HttpStatusCode.NOT_FOUND;
+
 import com.fasterxml.jackson.databind.JsonNode;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.bigquery.FormatOptions;
 import com.google.cloud.bigquery.JobId;
 import com.google.cloud.bigquery.JobInfo;
-import com.google.cloud.bigquery.JobInfo.WriteDisposition;
 import com.google.cloud.bigquery.Schema;
 import com.google.cloud.bigquery.TableDataWriteChannel;
 import com.google.cloud.bigquery.TableId;
@@ -29,9 +31,6 @@ import org.slf4j.LoggerFactory;
 public class BigQueryUploaderFactory {
 
   private static final Logger LOGGER = LoggerFactory.getLogger(BigQueryUploaderFactory.class);
-
-  private static final int HTTP_STATUS_CODE_FORBIDDEN = 403;
-  private static final int HTTP_STATUS_CODE_NOT_FOUND = 404;
 
   private static final String CONFIG_ERROR_MSG = """
                                                     Failed to write to destination schema.
@@ -57,11 +56,13 @@ public class BigQueryUploaderFactory {
     final Schema bigQuerySchema = recordFormatter.getBigQuerySchema();
 
     final TableId targetTable = TableId.of(dataset, uploaderConfig.getTargetTableName());
+    final TableId tmpTable = TableId.of(dataset, uploaderConfig.getTmpTableName());
 
     BigQueryUtils.createSchemaAndTableIfNeeded(
         uploaderConfig.getBigQuery(),
         existingDatasets,
         dataset,
+        tmpTable,
         datasetLocation,
         bigQuerySchema);
 
@@ -71,6 +72,7 @@ public class BigQueryUploaderFactory {
     return getBigQueryDirectUploader(
         uploaderConfig.getConfig(),
         targetTable,
+        tmpTable,
         uploaderConfig.getBigQuery(),
         syncMode,
         datasetLocation,
@@ -80,8 +82,9 @@ public class BigQueryUploaderFactory {
   private static BigQueryDirectUploader getBigQueryDirectUploader(
                                                                   final JsonNode config,
                                                                   final TableId targetTable,
+                                                                  final TableId tmpTable,
                                                                   final BigQuery bigQuery,
-                                                                  final WriteDisposition syncMode,
+                                                                  final JobInfo.WriteDisposition syncMode,
                                                                   final String datasetLocation,
                                                                   final BigQueryRecordFormatter formatter) {
     // https://cloud.google.com/bigquery/docs/loading-data-local#loading_data_from_a_local_data_source
@@ -104,7 +107,7 @@ public class BigQueryUploaderFactory {
     try {
       writer = bigQuery.writer(job, writeChannelConfiguration);
     } catch (final BigQueryException e) {
-      if (e.getCode() == HTTP_STATUS_CODE_FORBIDDEN || e.getCode() == HTTP_STATUS_CODE_NOT_FOUND) {
+      if (e.getCode() == FORBIDDEN || e.getCode() == NOT_FOUND) {
         throw new ConfigErrorException(CONFIG_ERROR_MSG + e);
       } else {
         throw new BigQueryException(e.getCode(), e.getMessage());
@@ -120,6 +123,7 @@ public class BigQueryUploaderFactory {
 
     return new BigQueryDirectUploader(
         targetTable,
+        tmpTable,
         new BigQueryTableWriter(writer),
         syncMode,
         bigQuery,

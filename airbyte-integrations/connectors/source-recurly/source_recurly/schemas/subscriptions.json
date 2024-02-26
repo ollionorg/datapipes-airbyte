@@ -6,48 +6,20 @@
       "type": ["null", "string"],
       "maxLength": 13
     },
-    "object": {
-      "type": ["null", "string"]
-    },
     "uuid": {
       "type": ["null", "string"],
       "maxLength": 32
     },
     "account": {
-      "type": ["null", "object"],
+      "type": "object",
       "properties": {
         "id": {
           "type": ["null", "string"],
           "maxLength": 13
         },
-        "object": {
-          "type": ["null", "string"]
-        },
         "code": {
           "type": ["null", "string"],
           "maxLength": 256
-        },
-        "email": {
-          "type": ["null", "string"],
-          "maxLength": 256
-        },
-        "first_name": {
-          "type": ["null", "string"]
-        },
-        "last_name": {
-          "type": ["null", "string"]
-        },
-        "company": {
-          "type": ["null", "string"]
-        },
-        "parent_account_id": {
-          "type": ["null", "string"]
-        },
-        "bill_to": {
-          "type": ["null", "string"]
-        },
-        "dunning_campaign_id": {
-          "type": ["null", "string"]
         }
       }
     },
@@ -58,15 +30,9 @@
           "type": ["null", "string"],
           "maxLength": 13
         },
-        "object": {
-          "type": ["null", "string"]
-        },
         "code": {
           "type": ["null", "string"],
           "maxLength": 256
-        },
-        "name": {
-          "type": ["null", "string"]
         }
       }
     },
@@ -77,11 +43,16 @@
     "shipping": {
       "type": ["null", "object"],
       "properties": {
-        "object": {
-          "type": ["null", "string"]
-        },
         "address": {
-          "$ref": "shipping_addresses.json"
+          "type": ["null", "object"],
+          "properties": {
+            "id": {
+              "type": "string",
+              "title": "Shipping Address ID",
+              "maxLength": 13,
+              "readOnly": true
+            }
+          }
         },
         "method": {
           "type": ["null", "object"],
@@ -91,15 +62,6 @@
               "title": "Shipping Method ID",
               "readOnly": true,
               "maxLength": 13
-            },
-            "object": {
-              "type": ["null", "string"]
-            },
-            "code": {
-              "type": ["null", "string"]
-            },
-            "name": {
-              "type": ["null", "string"]
             }
           }
         },
@@ -108,7 +70,6 @@
         }
       }
     },
-    "coupon_redemptions": { "$ref": "coupon_redemptions.json" },
     "pending_change": {
       "type": ["null", "object"],
       "title": "Subscription Change",
@@ -192,31 +153,6 @@
     "auto_renew": {
       "type": ["null", "boolean"]
     },
-    "ramp_intervals": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "object"],
-        "properties": {
-          "starting_billing_cycle": {
-            "type": ["null", "integer"]
-          },
-          "remaining_billing_cycles": {
-            "type": ["null", "integer"]
-          },
-          "starting_on": {
-            "type": ["null", "string"],
-            "format": "date-time"
-          },
-          "ending_on": {
-            "type": ["null", "string"],
-            "format": "date-time"
-          },
-          "unit_amount": {
-            "type": ["null", "number"]
-          }
-        }
-      }
-    },
     "paused_at": {
       "type": ["null", "string"],
       "format": "date-time"
@@ -234,9 +170,6 @@
     },
     "unit_amount": {
       "type": ["null", "number"]
-    },
-    "tax_inclusive": {
-      "type": ["null", "boolean"]
     },
     "quantity": {
       "type": ["null", "number"]
@@ -273,7 +206,61 @@
       "type": ["null", "number"]
     },
     "tax_info": {
-      "$ref": "tax_info.json"
+      "type": ["null", "object"],
+      "title": "Tax info",
+      "properties": {
+        "type": {
+          "type": "string",
+          "title": "Type",
+          "description": "Provides the tax type as \"vat\" for EU VAT, \"usst\" for U.S. Sales Tax, or the 2 letter country code for country level tax types like Canada, Australia, New Zealand, Israel, and all non-EU European countries.",
+          "maxLength": 256
+        },
+        "region": {
+          "type": "string",
+          "title": "Region",
+          "description": "Provides the tax region applied on an invoice. For U.S. Sales Tax, this will be the 2 letter state code. For EU VAT this will be the 2 letter country code. For all country level tax types, this will display the regional tax, like VAT, GST, or PST.",
+          "maxLength": 256
+        },
+        "rate": {
+          "type": "number",
+          "format": "float",
+          "title": "Rate"
+        },
+        "tax_details": {
+          "type": ["null", "array"],
+          "description": "Provides additional tax details for Canadian Sales Tax when there is tax applied at both the country and province levels. This will only be populated for the Invoice response when fetching a single invoice and not for the InvoiceList or LineItem.",
+          "items": {
+            "type": "object",
+            "title": "Tax detail",
+            "properties": {
+              "type": {
+                "type": "string",
+                "title": "Type",
+                "description": "Provides the tax type for the region. For Canadian Sales Tax, this will be GST, HST, QST or PST.",
+                "maxLength": 256
+              },
+              "region": {
+                "type": "string",
+                "title": "Region",
+                "description": "Provides the tax region applied on an invoice. For Canadian Sales Tax, this will be either the 2 letter province code or country code.",
+                "maxLength": 256
+              },
+              "rate": {
+                "type": "number",
+                "format": "float",
+                "title": "Rate",
+                "description": "Provides the tax rate for the region."
+              },
+              "tax": {
+                "type": "number",
+                "format": "float",
+                "title": "Tax",
+                "description": "The total tax applied for this tax type."
+              }
+            }
+          }
+        }
+      }
     },
     "total": {
       "type": ["null", "number"]
@@ -289,9 +276,6 @@
     "net_terms": {
       "type": ["null", "number"]
     },
-    "net_terms_type": {
-      "type": ["null", "string"]
-    },
     "terms_and_conditions": {
       "type": ["null", "string"],
       "maxLength": 16384
@@ -303,20 +287,6 @@
     "expiration_reason": {
       "type": ["null", "string"],
       "maxLength": 1024
-    },
-    "custom_fields": {
-      "type": ["null", "array"],
-      "items": {
-        "type": ["null", "object"],
-        "properties": {
-          "name": {
-            "type": ["null", "string"]
-          },
-          "value": {
-            "type": ["null", "string"]
-          }
-        }
-      }
     },
     "created_at": {
       "type": ["null", "string"],
@@ -349,20 +319,6 @@
     "billing_info_id": {
       "type": ["null", "string"],
       "maxLength": 13
-    },
-    "active_invoice_id": {
-      "type": ["null", "string"]
-    },
-    "started_with_gift": {
-      "type": ["null", "boolean"]
-    },
-    "converted_at": {
-      "type": ["null", "string"],
-      "format": "date-time"
-    },
-    "action_result": {
-      "type": ["null", "object"],
-      "additionalProperties": true
     }
   }
 }

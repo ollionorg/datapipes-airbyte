@@ -42,24 +42,20 @@
     },
     "timestamp_signup": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_with_timezone"
+      "format": "date-time"
     },
     "ip_opt": {
       "type": ["null", "string"]
     },
     "timestamp_opt": {
-      "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_with_timezone"
+      "type": ["null", "string"]
     },
     "member_rating": {
       "type": ["null", "integer"]
     },
     "last_changed": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_with_timezone"
+      "format": "date-time"
     },
     "language": {
       "type": ["null", "string"]
@@ -101,8 +97,7 @@
         },
         "created_at": {
           "type": ["null", "string"],
-          "format": "date-time",
-          "airbyte_type": "timestamp_with_timezone"
+          "format": "date-time"
         },
         "created_by": {
           "type": ["null", "string"]

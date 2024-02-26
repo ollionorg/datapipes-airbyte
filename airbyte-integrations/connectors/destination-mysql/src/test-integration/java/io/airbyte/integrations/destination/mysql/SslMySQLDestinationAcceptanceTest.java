@@ -14,7 +14,6 @@ import io.airbyte.cdk.db.factory.DSLContextFactory;
 import io.airbyte.cdk.db.jdbc.JdbcUtils;
 import io.airbyte.cdk.integrations.base.JavaBaseConstants;
 import io.airbyte.cdk.integrations.destination.StandardNameTransformer;
-import io.airbyte.cdk.integrations.util.HostPortResolver;
 import io.airbyte.commons.json.Jsons;
 import io.airbyte.protocol.models.v0.AirbyteConnectionStatus;
 import java.sql.SQLException;
@@ -24,20 +23,22 @@ import java.util.stream.Collectors;
 import org.jooq.DSLContext;
 import org.jooq.SQLDialect;
 import org.junit.jupiter.api.Test;
+import org.testcontainers.containers.MySQLContainer;
 
 public class SslMySQLDestinationAcceptanceTest extends MySQLDestinationAcceptanceTest {
 
+  private MySQLContainer<?> db;
   private DSLContext dslContext;
   private final StandardNameTransformer namingResolver = new MySQLNameTransformer();
 
   @Override
   protected JsonNode getConfig() {
     return Jsons.jsonNode(ImmutableMap.builder()
-        .put(JdbcUtils.HOST_KEY, HostPortResolver.resolveHost(db))
+        .put(JdbcUtils.HOST_KEY, db.getHost())
         .put(JdbcUtils.USERNAME_KEY, db.getUsername())
         .put(JdbcUtils.PASSWORD_KEY, db.getPassword())
         .put(JdbcUtils.DATABASE_KEY, db.getDatabaseName())
-        .put(JdbcUtils.PORT_KEY, HostPortResolver.resolvePort(db))
+        .put(JdbcUtils.PORT_KEY, db.getFirstMappedPort())
         .put(JdbcUtils.SSL_KEY, true)
         .build());
   }
@@ -45,11 +46,11 @@ public class SslMySQLDestinationAcceptanceTest extends MySQLDestinationAcceptanc
   @Override
   protected JsonNode getFailCheckConfig() {
     return Jsons.jsonNode(ImmutableMap.builder()
-        .put(JdbcUtils.HOST_KEY, HostPortResolver.resolveHost(db))
+        .put(JdbcUtils.HOST_KEY, db.getHost())
         .put(JdbcUtils.USERNAME_KEY, db.getUsername())
         .put(JdbcUtils.PASSWORD_KEY, "wrong password")
         .put(JdbcUtils.DATABASE_KEY, db.getDatabaseName())
-        .put(JdbcUtils.PORT_KEY, HostPortResolver.resolvePort(db))
+        .put(JdbcUtils.PORT_KEY, db.getFirstMappedPort())
         .put(JdbcUtils.SSL_KEY, false)
         .build());
   }
@@ -85,7 +86,8 @@ public class SslMySQLDestinationAcceptanceTest extends MySQLDestinationAcceptanc
 
   @Override
   protected void setup(final TestDestinationEnv testEnv, final HashSet<String> TEST_SCHEMAS) {
-    super.setup(testEnv, TEST_SCHEMAS);
+    db = new MySQLContainer<>("mysql:8.0");
+    db.start();
 
     dslContext = DSLContextFactory.create(
         db.getUsername(),
@@ -96,6 +98,10 @@ public class SslMySQLDestinationAcceptanceTest extends MySQLDestinationAcceptanc
             db.getFirstMappedPort(),
             db.getDatabaseName()),
         SQLDialect.DEFAULT);
+
+    setLocalInFileToTrue();
+    revokeAllPermissions();
+    grantCorrectPermissions();
   }
 
   @Override
@@ -145,7 +151,6 @@ public class SslMySQLDestinationAcceptanceTest extends MySQLDestinationAcceptanc
     }
   }
 
-  @Override
   @Test
   public void testUserHasNoPermissionToDataBase() {
     executeQuery("create user '" + USERNAME_WITHOUT_PERMISSION + "'@'%' IDENTIFIED BY '" + PASSWORD_WITHOUT_PERMISSION + "';\n");

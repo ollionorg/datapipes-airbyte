@@ -65,6 +65,11 @@ public abstract class S3DestinationAcceptanceTest extends DestinationAcceptanceT
   }
 
   @Override
+  protected String getImageName() {
+    return "airbyte/destination-s3:dev";
+  }
+
+  @Override
   protected JsonNode getConfig() {
     return configJson;
   }

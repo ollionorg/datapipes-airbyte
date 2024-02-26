@@ -12,18 +12,16 @@ import java.util.concurrent.CompletableFuture;
 
 public class FutureUtils {
 
-  private static final int DEFAULT_TD_THREAD_COUNT = 8;
-
   /**
-   * Allow for configuring the number of typing and deduping threads via an environment variable in
+   * Allow for configuring the number of typing and deduping threads via an enviornment variable in
    * the destination container.
    *
    * @return the number of threads to use in the typing and deduping pool
    */
-  public static int getCountOfTypeAndDedupeThreads() {
+  public static int countOfTypingDedupingThreads(final int defaultThreads) {
     return Optional.ofNullable(System.getenv("TD_THREADS"))
         .map(Integer::valueOf)
-        .orElse(DEFAULT_TD_THREAD_COUNT);
+        .orElse(defaultThreads);
   }
 
   /**

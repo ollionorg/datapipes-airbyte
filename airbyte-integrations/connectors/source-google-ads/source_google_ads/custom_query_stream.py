@@ -2,14 +2,11 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
 from functools import lru_cache
 from typing import Any, Dict, Mapping
 
 from .streams import GoogleAdsStream, IncrementalGoogleAdsStream
 from .utils import GAQL
-
-DATE_TYPES = ("segments.date", "segments.month", "segments.quarter", "segments.week")
 
 
 class CustomQueryMixin:
@@ -69,8 +66,7 @@ class CustomQueryMixin:
             google_data_type = node.data_type.name
             field_value = {"type": [google_datatype_mapping.get(google_data_type, "string"), "null"]}
 
-            # Google Ads doesn't differentiate between DATE and DATETIME, so we need to manually check for fields with known type
-            if google_data_type == "DATE" and field in DATE_TYPES:
+            if google_data_type == "DATE":
                 field_value["format"] = "date"
 
             if google_data_type == "ENUM":

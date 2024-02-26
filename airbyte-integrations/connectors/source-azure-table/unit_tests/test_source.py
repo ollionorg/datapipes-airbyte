@@ -2,12 +2,38 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
+import logging
+from unittest import mock
+
+import pytest
 from airbyte_cdk.models import AirbyteCatalog, SyncMode
+from source_azure_table.source import SourceAzureTable
 from source_azure_table.streams import AzureTableStream
+
+source = SourceAzureTable()
+logger = logging.getLogger()
+
+
+# Fixtures
+@pytest.fixture
+def config():
+    return {"storage_account_name": "dummy-value", "storage_access_key": "dummy-value", "storage_endpoint_suffix": "dummy-value"}
+
+
+@pytest.fixture
+def tables():
+    table1 = mock.Mock()
+    table1.name = "AzureTable1"
+    table2 = mock.Mock()
+    table2.name = "AzureTable2"
+
+    tables = mock.MagicMock()
+    tables.__iter__.return_value = [table1, table2]
+    return tables
 
 
 # Tests
-def test_discover(mocker, config, tables, source, logger):
+def test_discover(mocker, config, tables):
     mocker.patch(
         "source_azure_table.azure_table.AzureTableReader.get_tables",
         return_value=tables,
@@ -21,7 +47,6 @@ def test_discover(mocker, config, tables, source, logger):
     assert stream.json_schema == {
         "$schema": "http://json-schema.org/draft-07/schema#",
         "type": "object",
-        "additionalProperties": True,
         "properties": {"PartitionKey": {"type": "string"}},
     }
     assert stream.supported_sync_modes == [SyncMode.full_refresh, SyncMode.incremental]
@@ -29,7 +54,7 @@ def test_discover(mocker, config, tables, source, logger):
     assert stream.default_cursor_field == ["PartitionKey"]
 
 
-def test_streams(mocker, config, tables, source, logger):
+def test_streams(mocker, config, tables):
     mocker.patch(
         "source_azure_table.azure_table.AzureTableReader.get_tables",
         return_value=tables,

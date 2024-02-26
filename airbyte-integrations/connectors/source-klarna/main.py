@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_klarna.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_klarna import SourceKlarna
 
 if __name__ == "__main__":
-    run()
+    source = SourceKlarna()
+    launch(source, sys.argv[1:])

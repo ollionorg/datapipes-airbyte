@@ -6,29 +6,26 @@
     "id": {
       "type": ["null", "string"]
     },
-    "replyToId": {
+    "reply_to_id": {
       "type": ["null", "string"]
     },
     "etag": {
       "type": ["null", "string"]
     },
-    "messageType": {
+    "message_type": {
       "type": ["null", "string"]
     },
-    "createdDateTime": {
+    "created_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "lastModifiedDateTime": {
+    "lastModified_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
-    "deletedDateTime": {
+    "deleted_date_time": {
       "type": ["null", "string"],
-      "format": "date-time",
-      "airbyte_type": "timestamp_without_timezone"
+      "format": "date-time"
     },
     "subject": {
       "type": ["null", "string"]
@@ -36,7 +33,7 @@
     "summary": {
       "type": ["null", "string"]
     },
-    "chatId": {
+    "chat_id": {
       "type": ["null", "string"]
     },
     "importance": {
@@ -45,10 +42,10 @@
     "locale": {
       "type": ["null", "string"]
     },
-    "webUrl": {
+    "web_url": {
       "type": ["null", "string"]
     },
-    "policyViolation": {
+    "policy_violation": {
       "type": ["null", "string"]
     },
     "from": {
@@ -71,10 +68,10 @@
             "id": {
               "type": ["null", "string"]
             },
-            "displayName": {
+            "display_name": {
               "type": ["null", "string"]
             },
-            "userIdentityType": {
+            "user_identity_type": {
               "type": ["null", "string"]
             }
           }
@@ -85,7 +82,7 @@
       "type": ["null", "object"],
       "additionalProperties": true,
       "properties": {
-        "contentType": {
+        "content_type": {
           "type": ["null", "string"]
         },
         "content": {
@@ -93,14 +90,14 @@
         }
       }
     },
-    "channelIdentity": {
+    "channel_identity": {
       "type": ["null", "object"],
       "additionalProperties": true,
       "properties": {
         "teamId": {
           "type": ["null", "string"]
         },
-        "channelId": {
+        "channel_id": {
           "type": ["null", "string"]
         }
       }
@@ -116,10 +113,10 @@
               "id": {
                 "type": ["null", "string"]
               },
-              "contentType": {
+              "content_type": {
                 "type": ["null", "string"]
               },
-              "contentUrl": {
+              "content_url": {
                 "type": ["null", "string"]
               },
               "content": {
@@ -128,7 +125,7 @@
               "name": {
                 "type": ["null", "string"]
               },
-              "thumbnailUrl": {
+              "thumbnail_url": {
                 "type": ["null", "string"]
               }
             }
@@ -150,7 +147,7 @@
               "id": {
                 "type": ["null", "integer"]
               },
-              "mentionText": {
+              "mention_text": {
                 "type": ["null", "string"]
               },
               "mentioned": {
@@ -173,10 +170,10 @@
                       "id": {
                         "type": ["null", "string"]
                       },
-                      "displayName": {
+                      "display_name": {
                         "type": ["null", "string"]
                       },
-                      "userIdentityType": {
+                      "userIdentity_type": {
                         "type": ["null", "string"]
                       }
                     }
@@ -199,10 +196,10 @@
             "type": ["null", "object"],
             "additionalProperties": true,
             "properties": {
-              "reactionType": {
+              "reaction_type": {
                 "type": ["null", "string"]
               },
-              "createdDateTime": {
+              "created_date_time": {
                 "type": ["null", "string"],
                 "format": "date-time"
               },
@@ -226,10 +223,10 @@
                       "id": {
                         "type": ["null", "string"]
                       },
-                      "displayName": {
+                      "display_name": {
                         "type": ["null", "string"]
                       },
-                      "userIdentityType": {
+                      "user_identity_type": {
                         "type": ["null", "string"]
                       }
                     }

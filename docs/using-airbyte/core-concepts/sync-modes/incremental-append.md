@@ -1,7 +1,3 @@
----
-products: all
----
-
 # Incremental Sync - Append
 
 ## Overview

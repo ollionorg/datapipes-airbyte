@@ -4,13 +4,16 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "max-length": 100
     },
     "name": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "max-length": 50
     },
     "invoice_name": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "max-length": 100
     },
     "discount_type": {
       "type": ["string", "null"]
@@ -22,7 +25,8 @@
       "type": ["integer", "null"]
     },
     "currency_code": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "max-length": 3
     },
     "duration_type": {
       "type": ["string", "null"]
@@ -67,10 +71,8 @@
       "type": ["integer", "null"]
     },
     "invoice_notes": {
-      "type": ["string", "null"]
-    },
-    "object": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "max-length": 2000
     },
     "item_constraints": {
       "type": ["array", "null"],
@@ -114,7 +116,18 @@
       }
     },
     "custom_fields": {
-      "$ref": "_definitions.json#/definitions/custom_fields"
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "name": {
+            "type": ["null", "string"]
+          },
+          "value": {
+            "type": ["null", "string"]
+          }
+        }
+      }
     }
   }
 }

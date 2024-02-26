@@ -60,18 +60,6 @@
     },
     "confition": {
       "type": ["null", "string"]
-    },
-    "metadata": {
-      "type": ["null", "object"],
-      "properties": {
-        "collection_key": {
-          "type": ["null", "string"]
-        },
-        "item_key": {
-          "type": ["null", "string"]
-        }
-      },
-      "additionalProperties": true
     }
   }
 }

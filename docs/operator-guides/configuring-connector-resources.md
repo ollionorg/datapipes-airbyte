@@ -1,7 +1,3 @@
----
-products: oss-*
----
-
 # Configuring Connector Resources
 
 As noted in [Workers & Jobs](../understanding-airbyte/jobs.md), there are four different types of jobs.

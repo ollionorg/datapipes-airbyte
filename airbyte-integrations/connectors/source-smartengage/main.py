@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_smartengage.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_smartengage import SourceSmartengage
 
 if __name__ == "__main__":
-    run()
+    source = SourceSmartengage()
+    launch(source, sys.argv[1:])

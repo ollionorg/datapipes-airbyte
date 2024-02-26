@@ -13,7 +13,6 @@ import io.airbyte.cdk.integrations.base.SerializedAirbyteMessageConsumer;
 import io.airbyte.cdk.integrations.base.TypingAndDedupingFlag;
 import io.airbyte.cdk.integrations.destination.NamingConventionTransformer;
 import io.airbyte.cdk.integrations.destination.jdbc.AbstractJdbcDestination;
-import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcDestinationHandler;
 import io.airbyte.cdk.integrations.destination.jdbc.typing_deduping.JdbcSqlGenerator;
 import io.airbyte.cdk.integrations.destination.staging.StagingConsumerFactory;
 import io.airbyte.commons.json.Jsons;
@@ -100,17 +99,17 @@ public class SnowflakeInternalStagingDestination extends AbstractJdbcDestination
       sqlOperations.attemptWriteToStage(outputSchema, stageName, database);
     } finally {
       // drop created tmp stage
-      sqlOperations.dropStageIfExists(database, stageName, null);
+      sqlOperations.dropStageIfExists(database, stageName);
     }
   }
 
   @Override
-  public DataSource getDataSource(final JsonNode config) {
+  protected DataSource getDataSource(final JsonNode config) {
     return SnowflakeDatabase.createDataSource(config, airbyteEnvironment);
   }
 
   @Override
-  public JdbcDatabase getDatabase(final DataSource dataSource) {
+  protected JdbcDatabase getDatabase(final DataSource dataSource) {
     return SnowflakeDatabase.getDatabase(dataSource);
   }
 
@@ -127,11 +126,6 @@ public class SnowflakeInternalStagingDestination extends AbstractJdbcDestination
 
   @Override
   protected JdbcSqlGenerator getSqlGenerator() {
-    throw new UnsupportedOperationException("Snowflake does not yet use the native JDBC DV2 interface");
-  }
-
-  @Override
-  protected JdbcDestinationHandler getDestinationHandler(String databaseName, JdbcDatabase database) {
     throw new UnsupportedOperationException("Snowflake does not yet use the native JDBC DV2 interface");
   }
 
@@ -162,14 +156,16 @@ public class SnowflakeInternalStagingDestination extends AbstractJdbcDestination
     final SnowflakeV1V2Migrator migrator = new SnowflakeV1V2Migrator(getNamingResolver(), database, databaseName);
     final SnowflakeV2TableMigrator v2TableMigrator = new SnowflakeV2TableMigrator(database, databaseName, sqlGenerator, snowflakeDestinationHandler);
     final boolean disableTypeDedupe = config.has(DISABLE_TYPE_DEDUPE) && config.get(DISABLE_TYPE_DEDUPE).asBoolean(false);
+    final int defaultThreadCount = 8;
     if (disableTypeDedupe) {
-      typerDeduper = new NoOpTyperDeduperWithV1V2Migrations(sqlGenerator, snowflakeDestinationHandler, parsedCatalog, migrator, v2TableMigrator);
+      typerDeduper = new NoOpTyperDeduperWithV1V2Migrations<>(sqlGenerator, snowflakeDestinationHandler, parsedCatalog, migrator, v2TableMigrator,
+          defaultThreadCount);
     } else {
       typerDeduper =
-          new DefaultTyperDeduper(sqlGenerator, snowflakeDestinationHandler, parsedCatalog, migrator, v2TableMigrator);
+          new DefaultTyperDeduper<>(sqlGenerator, snowflakeDestinationHandler, parsedCatalog, migrator, v2TableMigrator, defaultThreadCount);
     }
 
-    return StagingConsumerFactory.builder(
+    return new StagingConsumerFactory().createAsync(
         outputRecordCollector,
         database,
         new SnowflakeInternalStagingSqlOperations(getNamingResolver()),
@@ -181,16 +177,8 @@ public class SnowflakeInternalStagingDestination extends AbstractJdbcDestination
         typerDeduper,
         parsedCatalog,
         defaultNamespace,
-        true)
-        .setBufferMemoryLimit(Optional.of(getSnowflakeBufferMemoryLimit()))
-        .setOptimalBatchSizeBytes(
-            // The per stream size limit is following recommendations from:
-            // https://docs.snowflake.com/en/user-guide/data-load-considerations-prepare.html#general-file-sizing-recommendations
-            // "To optimize the number of parallel operations for a load,
-            // we recommend aiming to produce data files roughly 100-250 MB (or larger) in size compressed."
-            200 * 1024 * 1024)
-        .build()
-        .createAsync();
+        true,
+        Optional.of(getSnowflakeBufferMemoryLimit()));
   }
 
   private static long getSnowflakeBufferMemoryLimit() {

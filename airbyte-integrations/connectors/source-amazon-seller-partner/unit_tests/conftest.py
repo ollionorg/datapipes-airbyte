@@ -2,13 +2,9 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-
-import os
 from typing import Any, Dict
 
 import pytest
-
-os.environ["DEPLOYMENT_MODE"] = "testing"
 
 
 @pytest.fixture
@@ -21,8 +17,3 @@ def report_init_kwargs() -> Dict[str, Any]:
         "report_options": None,
         "replication_end_date": None,
     }
-
-
-@pytest.fixture
-def http_mocker() -> None:
-    """This fixture is needed to pass http_mocker parameter from the @HttpMocker decorator to a test"""

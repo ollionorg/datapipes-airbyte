@@ -4,13 +4,16 @@
   "type": "object",
   "properties": {
     "id": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 100
     },
     "name": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 50
     },
     "description": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 500
     },
     "status": {
       "type": ["string", "null"]
@@ -22,7 +25,8 @@
       "type": ["integer", "null"]
     },
     "item_family_id": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 100
     },
     "type": {
       "type": ["string", "null"]
@@ -34,7 +38,8 @@
       "type": ["boolean", "null"]
     },
     "redirect_url": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 500
     },
     "enabled_for_checkout": {
       "type": ["boolean", "null"]
@@ -49,10 +54,12 @@
       "type": ["string", "null"]
     },
     "gift_claim_redirect_url": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 500
     },
     "unit": {
-      "type": ["string", "null"]
+      "type": ["string", "null"],
+      "maxLength": 30
     },
     "metered": {
       "type": ["boolean", "null"]
@@ -67,16 +74,14 @@
       "type": ["object", "null"],
       "properties": {}
     },
-    "external_name": {
-      "type": ["string", "null"]
-    },
     "applicable_items": {
       "type": ["array", "null"],
       "items": {
         "type": ["object", "null"],
         "properties": {
           "id": {
-            "type": ["string", "null"]
+            "type": ["string", "null"],
+            "maxLength": 100
           }
         }
       }
@@ -88,7 +93,18 @@
       "type": ["string", "null"]
     },
     "custom_fields": {
-      "$ref": "_definitions.json#/definitions/custom_fields"
+      "type": ["null", "array"],
+      "items": {
+        "type": ["null", "object"],
+        "properties": {
+          "name": {
+            "type": ["null", "string"]
+          },
+          "value": {
+            "type": ["null", "string"]
+          }
+        }
+      }
     }
   }
 }

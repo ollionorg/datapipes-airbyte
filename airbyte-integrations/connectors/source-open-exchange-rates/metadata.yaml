@@ -2,10 +2,6 @@ data:
   allowedHosts:
     hosts:
       - openexchangerates.org
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-open-exchange-rates
   registries:
     oss:
       enabled: true
@@ -25,5 +21,5 @@ data:
   supportLevel: community
   documentationUrl: https://docs.airbyte.com/integrations/sources/open-exchange-rates
   tags:
-    - language:low-code
+    - language:lowcode
 metadataSpecVersion: "1.0"

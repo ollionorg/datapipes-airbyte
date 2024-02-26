@@ -4,24 +4,24 @@
   "properties": {
     "type": { "type": ["null", "string"] },
     "eventID": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "tags": {
-      "type": ["array", "null"],
+      "type": "array",
       "items": {
-        "type": ["object", "null"],
+        "type": "object",
         "properties": {
           "value": {
-            "type": ["string", "null"]
+            "type": "string"
           },
           "key": {
-            "type": ["string", "null"]
+            "type": "string"
           }
         }
       }
     },
     "dateCreated": {
-      "type": ["string", "null"],
+      "type": "string",
       "format": "date-time"
     },
     "user": {
@@ -43,32 +43,32 @@
           "type": ["null", "object"],
           "properties": {
             "isStaff": {
-              "type": ["boolean", "null"]
+              "type": "boolean"
             }
           }
         },
         "id": {
-          "type": ["string", "null"]
+          "type": "string"
         }
       }
     },
     "message": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "id": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "platform": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "event.type": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "groupID": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "title": {
-      "type": ["string", "null"]
+      "type": "string"
     },
     "_meta": {
       "type": ["null", "object"],
@@ -95,7 +95,7 @@
         "length": { "type": ["null", "integer"] },
         "results": {
           "type": ["null", "array"],
-          "items": { "type": ["integer", "null"] }
+          "items": { "type": "integer" }
         },
         "session": {
           "type": ["null", "object"],

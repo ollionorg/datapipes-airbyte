@@ -30,9 +30,6 @@
     "email": {
       "type": ["null", "string"]
     },
-    "userId": {
-      "type": ["null", "string"]
-    },
     "profileUpdatedAt": {
       "type": ["null", "string"],
       "format": "date-time"

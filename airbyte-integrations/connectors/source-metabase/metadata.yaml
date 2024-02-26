@@ -15,10 +15,6 @@ data:
   icon: metabase.svg
   license: MIT
   name: Metabase
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-metabase
   registries:
     cloud:
       enabled: true

@@ -10,9 +10,6 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
-        "always_active": {
-          "type": ["null", "boolean"]
-        },
         "avatar_hash": {
           "type": "string"
         },
@@ -35,13 +32,6 @@
           "type": "string"
         },
         "email": {
-          "type": "string"
-        },
-        "fields": {
-          "type": ["null", "object"],
-          "additionalProperties": true
-        },
-        "huddle_state": {
           "type": "string"
         },
         "image_24": {
@@ -85,18 +75,6 @@
         },
         "skype": {
           "type": "string"
-        },
-        "status_emoji_display_info": {
-          "type": ["null", "array"],
-          "items": {
-            "type": ["null", "string"]
-          }
-        },
-        "status_expiration": {
-          "type": ["null", "integer"]
-        },
-        "status_text_canonical": {
-          "type": ["null", "string"]
         }
       }
     },

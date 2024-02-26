@@ -4,6 +4,7 @@
 
 import json
 import logging
+import time
 from typing import Any, Dict, Mapping
 
 import pytest
@@ -55,7 +56,12 @@ def teardown(config: Mapping):
 def client_fixture(config) -> Client:
     client = get_client(config=config)
     resp = client.create_index("_airbyte", {"primaryKey": "_ab_pk"})
-    client.wait_for_task(_handle_breaking_wait_for_task(resp))
+    while True:
+        time.sleep(0.2)
+        task = client.get_task(resp["taskUid"])
+        status = task["status"]
+        if status == "succeeded" or status == "failed":
+            break
     return client
 
 
@@ -79,13 +85,6 @@ def _record(stream: str, str_value: str, int_value: int) -> AirbyteMessage:
     return AirbyteMessage(
         type=Type.RECORD, record=AirbyteRecordMessage(stream=stream, data={"str_col": str_value, "int_col": int_value}, emitted_at=0)
     )
-
-
-def _handle_breaking_wait_for_task(task: Any) -> int:
-    if type(task) is dict:
-        return task["taskUid"]
-    else:
-        return task.task_uid
 
 
 def records_count(client: Client) -> int:

@@ -1,8 +1,4 @@
 data:
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-outbrain-amplify
   registries:
     cloud:
       enabled: true

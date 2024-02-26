@@ -33,21 +33,18 @@ public class DestinationConfigTest {
     assertThrows(IllegalStateException.class, DestinationConfig::getInstance);
 
     // good initialization
-    DestinationConfig.initialize(NODE, true);
+    DestinationConfig.initialize(NODE);
     assertNotNull(DestinationConfig.getInstance());
     assertEquals(NODE, DestinationConfig.getInstance().root);
-    assertEquals(true, DestinationConfig.getInstance().getIsV2Destination());
 
     // initializing again doesn't change the config
     final JsonNode nodeUnused = Jsons.deserialize("{}");
-    DestinationConfig.initialize(nodeUnused, false);
+    DestinationConfig.initialize(nodeUnused);
     assertEquals(NODE, DestinationConfig.getInstance().root);
-    assertEquals(true, DestinationConfig.getInstance().getIsV2Destination());
   }
 
   @Test
   public void testValues() {
-    DestinationConfig.clearInstance();
     DestinationConfig.initialize(NODE);
 
     assertEquals("bar", DestinationConfig.getInstance().getTextValue("foo"));
@@ -63,8 +60,6 @@ public class DestinationConfigTest {
     assertEquals(Jsons.deserialize("\"bar\""), DestinationConfig.getInstance().getNodeValue("foo"));
     assertEquals(Jsons.deserialize("true"), DestinationConfig.getInstance().getNodeValue("baz"));
     assertNull(DestinationConfig.getInstance().getNodeValue("blah"));
-
-    assertEquals(false, DestinationConfig.getInstance().getIsV2Destination());
   }
 
 }

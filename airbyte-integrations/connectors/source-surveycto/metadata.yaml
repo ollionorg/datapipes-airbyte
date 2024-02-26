@@ -8,10 +8,6 @@ data:
   icon: surveycto.svg
   license: MIT
   name: SurveyCTO
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-surveycto
   registries:
     cloud:
       enabled: false

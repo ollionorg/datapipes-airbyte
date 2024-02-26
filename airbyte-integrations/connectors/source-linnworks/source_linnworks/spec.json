@@ -5,7 +5,7 @@
     "title": "Linnworks Spec",
     "type": "object",
     "required": ["application_id", "application_secret", "token", "start_date"],
-    "additionalProperties": true,
+    "additionalProperties": false,
     "properties": {
       "application_id": {
         "title": "Application ID.",
@@ -20,8 +20,7 @@
       },
       "token": {
         "title": "API Token",
-        "type": "string",
-        "airbyte_secret": true
+        "type": "string"
       },
       "start_date": {
         "title": "Start Date",

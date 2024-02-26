@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import io.airbyte.cdk.integrations.standardtest.source.TestDestinationEnv;
 import io.airbyte.commons.features.FeatureFlags;
 import io.airbyte.commons.features.FeatureFlagsWrapper;
+import java.util.Map;
 
 public class CloudDeploymentSslEnabledMssqlSourceAcceptanceTest extends MssqlSourceAcceptanceTest {
 
@@ -37,7 +38,7 @@ public class CloudDeploymentSslEnabledMssqlSourceAcceptanceTest extends MssqlSou
   @Override
   protected JsonNode getConfig() {
     return testdb.integrationTestConfigBuilder()
-        .withEncrytedTrustServerCertificate()
+        .withSsl(Map.of("ssl_method", "encrypted_trust_server_certificate"))
         .build();
   }
 

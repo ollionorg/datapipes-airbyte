@@ -6,32 +6,32 @@
     "id": {
       "type": ["null", "string"]
     },
-    "groupId": {
+    "group_id": {
       "type": ["null", "string"]
     },
-    "channelId": {
+    "channel_id": {
       "type": ["null", "string"]
     },
-    "displayName": {
+    "display_name": {
       "type": ["null", "string"]
     },
-    "webUrl": {
+    "web_url": {
       "type": ["null", "string"]
     },
-    "sortOrderIndex": {
+    "sort_order_index": {
       "type": ["null", "string"]
     },
-    "teamsApp": {
+    "teams_app": {
       "type": ["null", "object"],
       "additionalProperties": true,
       "properties": {
         "id": {
           "type": ["null", "string"]
         },
-        "displayName": {
+        "display_name": {
           "type": ["null", "string"]
         },
-        "distributionMethod": {
+        "distribution_method": {
           "type": ["null", "string"]
         }
       }
@@ -40,25 +40,25 @@
       "type": ["null", "object"],
       "additionalProperties": true,
       "properties": {
-        "entityId": {
+        "entity_id": {
           "type": ["null", "string"]
         },
-        "contentUrl": {
+        "content_url": {
           "type": ["null", "string"]
         },
-        "removeUrl": {
+        "remove_url": {
           "type": ["null", "string"]
         },
-        "websiteUrl": {
+        "website_url": {
           "type": ["null", "string"]
         },
-        "wikiTabId": {
+        "wiki_tab_id": {
           "type": ["null", "integer"]
         },
-        "wikiDefaultTab": {
+        "wiki_default_tab": {
           "type": ["null", "boolean"]
         },
-        "hasContent": {
+        "has_content": {
           "type": ["null", "boolean"]
         }
       }

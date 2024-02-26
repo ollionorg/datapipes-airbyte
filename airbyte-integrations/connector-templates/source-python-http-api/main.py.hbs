@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_{{snakeCase name}}.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_{{snakeCase name}} import Source{{properCase name}}
 
 if __name__ == "__main__":
-    run()
+    source = Source{{properCase name}}()
+    launch(source, sys.argv[1:])

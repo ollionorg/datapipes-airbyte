@@ -89,6 +89,7 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
 
   private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJdbcSource.class);
 
+  protected final String driverClass;
   protected final Supplier<JdbcStreamingQueryConfig> streamingQueryConfigProvider;
   protected final JdbcCompatibleSourceOperations<Datatype> sourceOperations;
 
@@ -98,7 +99,7 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
   public AbstractJdbcSource(final String driverClass,
                             final Supplier<JdbcStreamingQueryConfig> streamingQueryConfigProvider,
                             final JdbcCompatibleSourceOperations<Datatype> sourceOperations) {
-    super(driverClass);
+    this.driverClass = driverClass;
     this.streamingQueryConfigProvider = streamingQueryConfigProvider;
     this.sourceOperations = sourceOperations;
   }
@@ -426,20 +427,14 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
 
   @Override
   public JdbcDatabase createDatabase(final JsonNode sourceConfig) throws SQLException {
-    return createDatabase(sourceConfig, JdbcDataSourceUtils.DEFAULT_JDBC_PARAMETERS_DELIMITER);
-  }
-
-  public JdbcDatabase createDatabase(final JsonNode sourceConfig, String delimiter) throws SQLException {
     final JsonNode jdbcConfig = toDatabaseConfig(sourceConfig);
-    Map<String, String> connectionProperties = JdbcDataSourceUtils.getConnectionProperties(sourceConfig, delimiter);
     // Create the data source
     final DataSource dataSource = DataSourceFactory.create(
         jdbcConfig.has(JdbcUtils.USERNAME_KEY) ? jdbcConfig.get(JdbcUtils.USERNAME_KEY).asText() : null,
         jdbcConfig.has(JdbcUtils.PASSWORD_KEY) ? jdbcConfig.get(JdbcUtils.PASSWORD_KEY).asText() : null,
-        driverClassName,
+        driverClass,
         jdbcConfig.get(JdbcUtils.JDBC_URL_KEY).asText(),
-        connectionProperties,
-        getConnectionTimeout(connectionProperties));
+        JdbcDataSourceUtils.getConnectionProperties(sourceConfig));
     // Record the data source so that it can be closed.
     dataSources.add(dataSource);
 

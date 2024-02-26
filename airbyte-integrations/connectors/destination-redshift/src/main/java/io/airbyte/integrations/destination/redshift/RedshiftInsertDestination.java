@@ -22,9 +22,6 @@ import io.airbyte.commons.json.Jsons;
 import io.airbyte.integrations.destination.redshift.operations.RedshiftSqlOperations;
 import io.airbyte.integrations.destination.redshift.typing_deduping.RedshiftDestinationHandler;
 import io.airbyte.integrations.destination.redshift.typing_deduping.RedshiftSqlGenerator;
-import io.airbyte.integrations.destination.redshift.util.RedshiftUtil;
-import java.time.Duration;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import javax.sql.DataSource;
@@ -57,13 +54,7 @@ public class RedshiftInsertDestination extends AbstractJdbcDestination {
         jdbcConfig.has(JdbcUtils.PASSWORD_KEY) ? jdbcConfig.get(JdbcUtils.PASSWORD_KEY).asText() : null,
         RedshiftInsertDestination.DRIVER_CLASS,
         jdbcConfig.get(JdbcUtils.JDBC_URL_KEY).asText(),
-        getDefaultConnectionProperties(config),
-        Duration.ofMinutes(2));
-  }
-
-  @Override
-  protected void destinationSpecificTableOperations(final JdbcDatabase database) throws Exception {
-    RedshiftUtil.checkSvvTableAccess(database);
+        SSL_JDBC_PARAMETERS);
   }
 
   @Override
@@ -77,18 +68,7 @@ public class RedshiftInsertDestination extends AbstractJdbcDestination {
 
   @Override
   protected Map<String, String> getDefaultConnectionProperties(final JsonNode config) {
-    // The following properties can be overriden through jdbcUrlParameters in the config.
-    final Map<String, String> connectionOptions = new HashMap<>();
-    // Redshift properties
-    // https://docs.aws.amazon.com/redshift/latest/mgmt/jdbc20-configuration-options.html#jdbc20-connecttimeout-option
-    // connectTimeout is different from Hikari pool's connectionTimout, driver defaults to 10seconds so
-    // increase it to match hikari's default
-    connectionOptions.put("connectTimeout", "120");
-    // HikariPool properties
-    // https://github.com/brettwooldridge/HikariCP?tab=readme-ov-file#frequently-used
-    // TODO: Change data source factory to configure these properties
-    connectionOptions.putAll(SSL_JDBC_PARAMETERS);
-    return connectionOptions;
+    return SSL_JDBC_PARAMETERS;
   }
 
   public static JsonNode getJdbcConfig(final JsonNode redshiftConfig) {

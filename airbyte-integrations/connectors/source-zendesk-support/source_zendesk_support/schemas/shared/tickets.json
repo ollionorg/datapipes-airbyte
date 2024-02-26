@@ -128,9 +128,6 @@
     "ticket_form_id": {
       "type": ["null", "integer"]
     },
-    "deleted_ticket_form_id": {
-      "type": ["null", "integer"]
-    },
     "satisfaction_rating": {
       "type": ["null", "object", "string"],
       "properties": {

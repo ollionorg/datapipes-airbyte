@@ -29,7 +29,9 @@ public class FillPostgresTestDbScriptTest extends AbstractSourceFillDbWithTestDa
   }
 
   @Override
-  protected void tearDown(final TestDestinationEnv testEnv) {}
+  protected void tearDown(final TestDestinationEnv testEnv) {
+    dslContext.close();
+  }
 
   @Override
   protected String getImageName() {

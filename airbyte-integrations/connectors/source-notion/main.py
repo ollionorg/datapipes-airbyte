@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_notion.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_notion import SourceNotion
 
 if __name__ == "__main__":
-    run()
+    source = SourceNotion()
+    launch(source, sys.argv[1:])

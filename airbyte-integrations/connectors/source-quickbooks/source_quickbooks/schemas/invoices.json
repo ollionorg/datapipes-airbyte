@@ -80,13 +80,9 @@
       "properties": {
         "value": {
           "type": ["null", "string"]
-        },
-        "name": {
-          "type": ["null", "string"]
         }
       },
-      "type": ["null", "object"],
-      "additionalProperties": true
+      "type": ["null", "object"]
     },
     "AllowIPNPayment": {
       "type": ["null", "boolean"]
@@ -161,11 +157,6 @@
     "Line": {
       "items": {
         "properties": {
-          "SubTotalLineDetail": {
-            "type": ["null", "object"],
-            "additionalProperties": true,
-            "properties": {}
-          },
           "LinkedTxn": {
             "items": {
               "properties": {
@@ -263,8 +254,7 @@
             "type": ["null", "string"]
           }
         },
-        "type": ["null", "object"],
-        "additionalProperties": true
+        "type": ["null", "object"]
       },
       "type": ["null", "array"]
     },

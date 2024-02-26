@@ -41,7 +41,6 @@ public class BigQuerySQLNameTransformer extends StandardNameTransformer {
     return normalizedName;
   }
 
-  @Deprecated
   public String getTmpTableName(final String streamName, final String randomSuffix) {
     return convertStreamName("_airbyte_tmp" + "_" + randomSuffix + "_" + streamName);
   }

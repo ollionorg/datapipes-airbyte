@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_datascope.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_datascope import SourceDatascope
 
 if __name__ == "__main__":
-    run()
+    source = SourceDatascope()
+    launch(source, sys.argv[1:])

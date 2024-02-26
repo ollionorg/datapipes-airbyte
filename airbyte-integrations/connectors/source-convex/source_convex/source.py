@@ -31,7 +31,7 @@ ConvexState = TypedDict(
     },
 )
 
-CONVEX_CLIENT_VERSION = "0.4.0"
+CONVEX_CLIENT_VERSION = "0.3.0"
 
 
 # Source
@@ -153,8 +153,7 @@ class ConvexStream(HttpStream, IncrementalMixin):
         else:
             self._delta_cursor_value = resp_json["cursor"]
             self._delta_has_more = resp_json["hasMore"]
-        has_more = self._snapshot_has_more or self._delta_has_more
-        return cast(ConvexState, self.state) if has_more else None
+        return cast(ConvexState, self.state) if self._delta_has_more else None
 
     def path(
         self,

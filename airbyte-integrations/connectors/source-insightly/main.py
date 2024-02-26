@@ -2,7 +2,12 @@
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
 
-from source_insightly.run import run
+
+import sys
+
+from airbyte_cdk.entrypoint import launch
+from source_insightly import SourceInsightly
 
 if __name__ == "__main__":
-    run()
+    source = SourceInsightly()
+    launch(source, sys.argv[1:])

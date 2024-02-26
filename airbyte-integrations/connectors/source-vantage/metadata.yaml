@@ -8,10 +8,6 @@ data:
   icon: vantage.svg
   license: MIT
   name: Vantage
-  remoteRegistries:
-    pypi:
-      enabled: true
-      packageName: airbyte-source-vantage
   registries:
     cloud:
       enabled: true

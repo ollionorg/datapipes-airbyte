@@ -46,9 +46,6 @@
     },
     "email": {
       "type": ["null", "string"]
-    },
-    "userId": {
-      "type": ["null", "string"]
     }
   },
   "type": ["null", "object"]

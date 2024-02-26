@@ -23,9 +23,6 @@
     "email": {
       "type": ["null", "string"]
     },
-    "userId": {
-      "type": ["null", "string"]
-    },
     "data": {
       "type": ["null", "object"]
     }
