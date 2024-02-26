@@ -56,6 +56,7 @@ class SalesforceStream(HttpStream, ABC):
         sobject_options: Mapping[str, Any] = None,
         schema: dict = None,
         start_date=None,
+        end_date=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -65,6 +66,7 @@ class SalesforceStream(HttpStream, ABC):
         self.schema: Mapping[str, Any] = schema  # type: ignore[assignment]
         self.sobject_options = sobject_options
         self.start_date = self.format_start_date(start_date)
+        self.end_date = self.format_start_date(end_date)
 
     @staticmethod
     def format_start_date(start_date: Optional[str]) -> Optional[str]:
@@ -700,7 +702,7 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, ABC):
         self, *, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
     ) -> Iterable[Optional[Mapping[str, Any]]]:
         start, end = (None, None)
-        now = pendulum.now(tz="UTC")
+        now = pendulum.parse(self.end_date, tz="UTC") if self.end_date else pendulum.now(tz="UTC")
         assert LOOKBACK_SECONDS is not None and LOOKBACK_SECONDS >= 0
         initial_date = self.get_start_date_from_state(stream_state) - timedelta(seconds=LOOKBACK_SECONDS)
 
@@ -709,6 +711,7 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, ABC):
             start = initial_date.add(days=(slice_number - 1) * self.STREAM_SLICE_STEP)
             end = min(now, initial_date.add(days=slice_number * self.STREAM_SLICE_STEP))
             self._slice = {"start_date": start.isoformat(timespec="milliseconds"), "end_date": end.isoformat(timespec="milliseconds")}
+            self.logger.info(f"Processing stream slices for {self.name} stream_slices: {self._slice}")
             yield {"start_date": start.isoformat(timespec="milliseconds"), "end_date": end.isoformat(timespec="milliseconds")}
             slice_number = slice_number + 1
 
