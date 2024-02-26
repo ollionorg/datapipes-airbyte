@@ -26,7 +26,7 @@ from airbyte_cdk.sources import Source
 from airbyte_cdk.utils import AirbyteTracedException, is_cloud_environment
 from airbyte_cdk.utils.stream_status_utils import as_airbyte_message as stream_status_as_airbyte_message
 
-from .client import Client
+from .client import Client, ConfigurationError
 from .utils import LOCAL_STORAGE_NAME, dropbox_force_download
 
 
@@ -90,22 +90,19 @@ class SourceFile(Source):
             try:
                 config["reader_options"] = json.loads(config["reader_options"])
                 if not isinstance(config["reader_options"], dict):
-                    message = (
+                    raise ConfigurationError(
                         "Field 'reader_options' is not a valid JSON object. "
                         "Please provide key-value pairs, See field description for examples."
                     )
-                    raise AirbyteTracedException(message=message, internal_message=message, failure_type=FailureType.config_error)
             except ValueError:
-                message = "Field 'reader_options' is not valid JSON object. https://www.json.org/"
-                raise AirbyteTracedException(message=message, internal_message=message, failure_type=FailureType.config_error)
+                raise ConfigurationError("Field 'reader_options' is not valid JSON object. https://www.json.org/")
         else:
             config["reader_options"] = {}
         config["url"] = dropbox_force_download(config["url"])
 
         parse_result = urlparse(config["url"])
         if parse_result.netloc == "docs.google.com" and parse_result.path.lower().startswith("/spreadsheets/"):
-            message = f'Failed to load {config["url"]}: please use the Official Google Sheets Source connector'
-            raise AirbyteTracedException(message=message, internal_message=message, failure_type=FailureType.config_error)
+            raise ConfigurationError(f'Failed to load {config["url"]}: please use the Official Google Sheets Source connector')
         return config
 
     def spec(self, logger: logging.Logger) -> ConnectorSpecification:
@@ -126,16 +123,21 @@ class SourceFile(Source):
         Check involves verifying that the specified file is reachable with
         our credentials.
         """
-        config = self._validate_and_transform(config)
+        try:
+            config = self._validate_and_transform(config)
+        except ConfigurationError as e:
+            logger.error(str(e))
+            return AirbyteConnectionStatus(status=Status.FAILED, message=str(e))
+
         client = self._get_client(config)
         source_url = client.reader.full_url
         try:
             list(client.streams(empty_schema=True))
             return AirbyteConnectionStatus(status=Status.SUCCEEDED)
-        except (TypeError, ValueError, AirbyteTracedException) as err:
+        except (TypeError, ValueError, ConfigurationError) as err:
             reason = f"Failed to load {source_url}. Please check File Format and Reader Options are set correctly."
             logger.error(f"{reason}\n{repr(err)}")
-            raise AirbyteTracedException(message=reason, internal_message=reason, failure_type=FailureType.config_error)
+            return AirbyteConnectionStatus(status=Status.FAILED, message=reason)
         except Exception as err:
             reason = f"Failed to load {source_url}. You could have provided an invalid URL, please verify it: {repr(err)}."
             logger.error(reason)
@@ -206,6 +208,6 @@ class SourceFile(Source):
         for configured_stream in catalog.streams:
             fields = configured_stream.stream.json_schema["properties"].keys()
             if config["reader_options"].get("header", {}) is None:
-                fields = [int(str_col_idx) for str_col_idx in fields]
+                fields = [str_col_idx for str_col_idx in fields]
 
             yield from fields

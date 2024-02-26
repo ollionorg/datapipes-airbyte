@@ -11,7 +11,7 @@ import tempfile
 import traceback
 import urllib
 import zipfile
-from os import environ
+from os import environ, getcwd
 from typing import Iterable
 from urllib.parse import urlparse
 from zipfile import BadZipFile
@@ -22,6 +22,7 @@ import botocore
 import google
 import numpy as np
 import pandas as pd
+import pyarrow.parquet as pq
 import smart_open
 import smart_open.ssh
 from airbyte_cdk.entrypoint import logger
@@ -35,15 +36,26 @@ from openpyxl import load_workbook
 from openpyxl.utils.exceptions import InvalidFileException
 from pandas.errors import ParserError
 from paramiko import SSHException
+from smart_open import open as s_open
 from urllib3.exceptions import ProtocolError
+from pandas.api.types import is_datetime64_any_dtype as is_datetime
+from pandas.api.types import is_timedelta64_dtype as is_timedelta
 from yaml import safe_load
-
+from .encryption_client.pgp import Pgp
 from .utils import LOCAL_STORAGE_NAME, backoff_handler
 
 SSH_TIMEOUT = 60
 
 # Force the log level of the smart-open logger to ERROR - https://github.com/airbytehq/airbyte/pull/27157
 logging.getLogger("smart_open").setLevel(logging.ERROR)
+
+
+class ConfigurationError(Exception):
+    """Client mis-configured"""
+
+
+class PermissionsError(Exception):
+    """User don't have enough permissions"""
 
 
 class URLFile:
@@ -112,6 +124,12 @@ class URLFile:
             raise FileNotFoundError(self.url) from err
         return self
 
+    def create_temp_file(self, prefix: str, content: str) -> str:
+        private_ssh_key_path = f"{getcwd()}/{prefix}"
+        with open(private_ssh_key_path, "w") as t:
+            t.write(content)
+        return private_ssh_key_path
+
     def _open(self):
         storage = self.storage_scheme
         url = self.url
@@ -141,6 +159,9 @@ class URLFile:
                 raise ValueError(f"{_port_value} is not a valid integer for the port") from err
             # Explicitly turn off ssh keys stored in ~/.ssh
             transport_params = {"connect_kwargs": {"look_for_keys": False}, "timeout": SSH_TIMEOUT}
+            if "auth_ssh_key" in self._provider:
+                private_key_path = self.create_temp_file("private_key", self._provider["auth_ssh_key"])
+                transport_params["connect_kwargs"]["key_filename"] = private_key_path
             if "password" in self._provider:
                 password = urllib.parse.quote(self._provider["password"])
                 uri = f"{storage}{user}:{password}@{host}:{port}/{url}"
@@ -225,8 +246,12 @@ class URLFile:
         if use_aws_account:
             aws_access_key_id = self._provider.get("aws_access_key_id", "")
             aws_secret_access_key = self._provider.get("aws_secret_access_key", "")
-            url = f"{self.storage_scheme}{aws_access_key_id}:{aws_secret_access_key}@{self.url}"
-            result = smart_open.open(url, **self.args)
+            aws_region = self._provider.get("region", None)
+
+            client = boto3.client(
+                "s3", aws_access_key_id=aws_access_key_id, aws_secret_access_key=aws_secret_access_key, region_name=aws_region
+            )
+            result = smart_open.open(self._url, transport_params=dict(client=client), **self.args)
         else:
             config = botocore.client.Config(signature_version=botocore.UNSIGNED)
             params = {"client": boto3.client("s3", config=config)}
@@ -255,17 +280,23 @@ class Client:
     """Class that manages reading and parsing data from streams"""
 
     CSV_CHUNK_SIZE = 10_000
+    PARQUET_BATCH_SIZE = 1000
+    reader_class = URLFile
     binary_formats = {"excel", "excel_binary", "feather", "parquet", "orc", "pickle"}
 
-    def __init__(self, dataset_name: str, url: str, provider: dict, format: str = None, reader_options: dict = None):
+    def __init__(
+            self, dataset_name: str, url: str, provider: dict, format: str = None, reader_options: dict = None,
+            encryption_options: dict = None
+    ):
         self._dataset_name = dataset_name
         self._url = url
         self._provider = provider
         self._reader_format = format or "csv"
         self._reader_options = reader_options or {}
         self._is_zip = url.endswith(".zip")
-        self.binary_source = self._reader_format in self.binary_formats or self._is_zip
+        self.binary_source = self._reader_format in self.binary_formats or encryption_options
         self.encoding = self._reader_options.get("encoding")
+        self.encryption_options = encryption_options
 
     @property
     def reader_class(self):
@@ -276,18 +307,14 @@ class Client:
 
     @property
     def stream_name(self) -> str:
-        if self._dataset_name:
-            return self._dataset_name
-        return f"file_{self._provider['storage']}.{self._reader_format}"
+        file = urlparse(self._url)
+        return f"file_{self._provider['storage']}_{file.path.split('/')[-1]}"
 
     def load_nested_json_schema(self, fp) -> dict:
         # Use Genson Library to take JSON objects and generate schemas that describe them,
         builder = SchemaBuilder()
-        if self._reader_format == "jsonl":
-            for o in self.read():
-                builder.add_object(o)
-        else:
-            builder.add_object(json.load(fp))
+        for o in self.read():
+            builder.add_object(o)
 
         result = builder.to_schema()
         if "items" in result:
@@ -308,6 +335,8 @@ class Client:
             result = json.load(fp)
             if not isinstance(result, list):
                 result = [result]
+        # for json and jsonl
+        result = [{**d, '_ab_source_file_url': self._url} for d in result]
         return result
 
     def load_yaml(self, fp):
@@ -334,7 +363,7 @@ class Client:
             "excel_binary": pd.read_excel,
             "fwf": pd.read_fwf,
             "feather": pd.read_feather,
-            "parquet": pd.read_parquet,
+            "parquet": pq.ParquetFile,
             "orc": pd.read_orc,
             "pickle": pd.read_pickle,
         }
@@ -344,9 +373,10 @@ class Client:
         except KeyError as err:
             error_msg = f"Reader {self._reader_format} is not supported."
             logger.error(f"{error_msg}\n{traceback.format_exc()}")
-            raise AirbyteTracedException(message=error_msg, internal_message=error_msg, failure_type=FailureType.config_error) from err
+            raise ConfigurationError(error_msg) from err
 
         reader_options = {**self._reader_options}
+
         try:
             if self._reader_format == "csv":
                 bytes_read = 0
@@ -362,15 +392,17 @@ class Client:
             elif self._reader_format == "excel_binary":
                 reader_options["engine"] = "pyxlsb"
                 yield reader(fp, **reader_options)
-            elif self._reader_format == "parquet":
-                reader_options["engine"] = "fastparquet"
-                yield reader(fp, **reader_options)
             elif self._reader_format == "excel":
                 # Use openpyxl to read new-style Excel (xlsx) file; return to pandas for others
                 try:
                     yield from self.openpyxl_chunk_reader(fp, **reader_options)
                 except (InvalidFileException, BadZipFile):
                     yield reader(fp, **reader_options)
+            elif self._reader_format == "parquet":
+                if "batch_size" not in reader_options:
+                    reader_options["engine"] = "fastparquet"
+                    reader_options["batch_size"] = self.CSV_CHUNK_SIZE
+                yield from reader(fp).iter_batches(batch_size=reader_options["batch_size"])
             else:
                 yield reader(fp, **reader_options)
         except ParserError as err:
@@ -383,7 +415,7 @@ class Client:
                 f"Please check provided Format and Reader Options. {repr(err)}."
             )
             logger.error(f"{error_msg}\n{traceback.format_exc()}")
-            raise AirbyteTracedException(message=error_msg, internal_message=error_msg, failure_type=FailureType.config_error) from err
+            raise ConfigurationError(error_msg) from err
 
     @staticmethod
     def dtype_to_json_type(current_type: str, dtype) -> str:
@@ -393,15 +425,18 @@ class Client:
         :param dtype: Pandas Dataframe type
         :return: Corresponding Airbyte Type
         """
-        number_types = ("int64", "float64")
+        number_types = ("double", "float64")
+        integer_types = ("int32", "int64", "int96")
         if current_type == "string":
             # previous column values was of the string type, no sense to look further
             return current_type
         if dtype == object:
             return "string"
-        if dtype in number_types and (not current_type or current_type == "number"):
+        if str(dtype).lower() in number_types:
             return "number"
-        if dtype == "bool" and (not current_type or current_type == "boolean"):
+        if str(dtype).lower() in integer_types:
+            return "integer" if not current_type else current_type
+        if str(dtype).lower() == "bool" and (not current_type or current_type == "boolean"):
             return "boolean"
         if dtype == "datetime64[ns]":
             return "date-time"
@@ -416,6 +451,11 @@ class Client:
         """Read data from the stream"""
         with self.reader.open() as fp:
             try:
+                file_path = ""
+                if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
+                    file_path = f"/tmp/plain.{self._reader_format}"
+                    Pgp(**self.encryption_options).decrypt(fp, file_path)
+                    fp = s_open(file_path, 'r')
                 if self._reader_format in ["json", "jsonl"]:
                     yield from self.load_nested_json(fp)
                 elif self._reader_format == "yaml":
@@ -425,13 +465,17 @@ class Client:
                     df = df.where(pd.notnull(df), None)
                     yield from df[list(columns)].to_dict(orient="records")
                 else:
-                    fields = set(fields) if fields else None
-                    if self.binary_source:
-                        fp = self._cache_stream(fp)
-                    if self._is_zip:
-                        fp = self._unzip(fp)
-                    for df in self.load_dataframes(fp):
-                        columns = fields.intersection(set(df.columns)) if fields else df.columns
+                    fields = frozenset(fields) if fields else None
+                    # if self.binary_source:
+                    #     fp = self._cache_stream(fp)
+                    # if self._is_zip:
+                    #     fp = self._unzip(fp)
+                    for batch in self.load_dataframes(fp):
+                        df = batch.to_pandas() if self._reader_format == "parquet" else batch
+                        # for parquet files
+                        df['_ab_source_file_url'] = self._url
+                        df_cols = list(df.columns)
+                        columns = [x for x in df_cols if x in fields] if fields else df.columns
                         df.replace({np.nan: None}, inplace=True)
                         yield from df[list(columns)].to_dict(orient="records")
             except ConnectionResetError:
@@ -442,7 +486,15 @@ class Client:
                     f"File {fp} can not be opened due to connection issues on provider side. Please check provided links and options"
                 )
                 logger.error(f"{error_msg}\n{traceback.format_exc()}")
-                raise AirbyteTracedException(message=error_msg, internal_message=error_msg, failure_type=FailureType.config_error) from err
+                raise ConfigurationError(error_msg) from err
+            except ParserError as err:
+                error_msg = f"File {fp} can not be parsed. Please check your reader_options. https://pandas.pydata.org/pandas-docs/stable/user_guide/io.html"
+                logger.error(f"{error_msg}\n{traceback.format_exc()}")
+                raise ConfigurationError(error_msg) from err
+            finally:
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+                    logger.info(f"The file at {file_path} has been deleted.")
 
     def _unzip(self, fp):
         tmp_dir = tempfile.TemporaryDirectory()
@@ -468,40 +520,64 @@ class Client:
         empty_schema param is used to check connectivity, i.e. we only read a header and do not produce stream properties
         read_sample_chunk is used to determine if just one chunk should be read to generate schema
         """
+        row_count = 0
         if self._reader_format == "yaml":
             df_list = [self.load_yaml(fp)]
         else:
-            if self.binary_source:
-                fp = self._cache_stream(fp)
-            if self._is_zip:
-                fp = self._unzip(fp)
+            # if self.binary_source:
+            #     fp = self._cache_stream(fp)
+            #     logger.info("Cache stream successs")
+            # if self._is_zip:
+            #     fp = self._unzip(fp)
             df_list = self.load_dataframes(fp, skip_data=empty_schema, read_sample_chunk=read_sample_chunk)
         fields = {}
         for df in df_list:
+            df = df.to_pandas() if self._reader_format == "parquet" else df
             for col in df.columns:
+                if df[col].isnull().values.all():
+                    if not fields.get(col):
+                        fields[col] = {"type": None}
+                    continue
                 # if data type of the same column differs in dataframes, we choose the broadest one
-                prev_frame_column_type = fields.get(col)
-                df_type = df[col].dtype
-                fields[col] = self.dtype_to_json_type(prev_frame_column_type, df_type)
-        return {
-            field: (
-                {"type": ["string", "null"], "format": "date-time"} if fields[field] == "date-time" else {"type": [fields[field], "null"]}
-            )
-            for field in fields
-        }
+                prev_frame_column_type = fields.get(col, {}).get("type")
+                fields[col] = {"type": self.dtype_to_json_type(prev_frame_column_type, df[col].dtype), "dtype": df[col].dtype}
+
+                if is_timedelta(df[col]):
+                    fields[col]["format"] = "date-time"
+                    fields[col]["airbyte_type"] = "timestamp_with_timezone"
+                elif is_datetime(df[col]):
+                    fields[col]["format"] = "date-time"
+
+        stream = {}
+        fields['_ab_source_file_url'] = {'type': 'string'}
+        for field in fields:
+            stream[field] = {"type": [fields[field]["type"] if fields[field]["type"] else "string", "null"]}
+            if "format" in fields[field]:
+                stream[field]["format"] = fields[field]["format"]
+        return {"stream": stream, "row_count": row_count}
 
     def streams(self, empty_schema: bool = False) -> Iterable:
         """Discovers available streams"""
         # TODO handle discovery of directories of multiple files instead
         with self.reader.open() as fp:
+            file_path = ""
+            if self.encryption_options and self.encryption_options["encryption_method"] == "PGP":
+                file_path = f"/tmp/plain.{self._reader_format}"
+                Pgp(**self.encryption_options).decrypt(fp, file_path)
+                fp = s_open(file_path, 'r')
             if self._reader_format in ["json", "jsonl"]:
                 json_schema = self.load_nested_json_schema(fp)
             else:
+                stream_property = self._stream_properties(fp)
                 json_schema = {
                     "$schema": "http://json-schema.org/draft-07/schema#",
                     "type": "object",
-                    "properties": self._stream_properties(fp, empty_schema=empty_schema, read_sample_chunk=True),
+                    "properties": stream_property["stream"],
+                    "row_count": stream_property["row_count"],
                 }
+            if os.path.exists(file_path):
+                os.remove(file_path)
+                logger.info(f"The file at {file_path} has been deleted.")
         yield AirbyteStream(name=self.stream_name, json_schema=json_schema, supported_sync_modes=[SyncMode.full_refresh])
 
     def openpyxl_chunk_reader(self, file, **kwargs):
