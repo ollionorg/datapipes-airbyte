@@ -4,23 +4,12 @@
 
 package io.airbyte.integrations.base.destination.typing_deduping;
 
-import java.time.Instant;
-import java.util.Optional;
+import java.util.List;
 
-public interface DestinationHandler<DialectTableDefinition> {
+public interface DestinationHandler {
 
-  Optional<DialectTableDefinition> findExistingTable(StreamId id) throws Exception;
+  void execute(final Sql sql) throws Exception;
 
-  boolean isFinalTableEmpty(StreamId id) throws Exception;
-
-  /**
-   * Returns the highest timestamp such that all records with _airbyte_extracted equal to or earlier
-   * than that timestamp have non-null _airbyte_loaded_at.
-   * <p>
-   * If the raw table is empty or does not exist, return an empty optional.
-   */
-  Optional<Instant> getMinTimestampForSync(StreamId id) throws Exception;
-
-  void execute(final String sql) throws Exception;
+  List<DestinationInitialState> gatherInitialState(List<StreamConfig> streamConfigs) throws Exception;
 
 }
