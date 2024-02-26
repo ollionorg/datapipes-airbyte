@@ -5,6 +5,7 @@
 import json
 import logging
 from copy import deepcopy
+from unittest.mock import PropertyMock
 
 import jsonschema
 import pytest
@@ -43,7 +44,7 @@ def test_csv_with_utf16_encoding(absolute_path, test_files):
     config_local_csv_utf16 = {
         "dataset_name": "AAA",
         "format": "csv",
-        "reader_options": '{"encoding":"utf_16", "parse_dates": ["header5"]}',
+        "reader_options": '{"encoding":"utf_16", "parse_dates": [\"header5\"]}',
         "url": f"{absolute_path}/{test_files}/test_utf16.csv",
         "provider": {"storage": "local"},
     }
@@ -51,12 +52,13 @@ def test_csv_with_utf16_encoding(absolute_path, test_files):
         "$schema": "http://json-schema.org/draft-07/schema#",
         "properties": {
             "header1": {"type": ["string", "null"]},
-            "header2": {"type": ["number", "null"]},
+            "header2": {"type": ["integer", "null"]},
             "header3": {"type": ["number", "null"]},
             "header4": {"type": ["boolean", "null"]},
             "header5": {"type": ["string", "null"], "format": "date-time"},
         },
         "type": "object",
+        "row_count": 0
     }
 
     catalog = SourceFile().discover(logger=logger, config=config_local_csv_utf16)
@@ -135,8 +137,9 @@ def test_check_invalid_config(source, invalid_config):
 
 
 def test_check_invalid_reader_options(source, invalid_reader_options_config):
-    with pytest.raises(AirbyteTracedException, match="Field 'reader_options' is not a valid JSON object. Please provide key-value pairs"):
-        source.check(logger=logger, config=invalid_reader_options_config)
+    expected = AirbyteConnectionStatus(status=Status.FAILED)
+    actual = source.check(logger=logger, config=invalid_reader_options_config)
+    assert actual.status == expected.status
 
 
 def test_discover_dropbox_link(source, config_dropbox_link):
@@ -150,20 +153,25 @@ def test_discover(source, config, client):
     for schema in schemas:
         jsonschema.Draft7Validator.check_schema(schema)
 
+    type(client).streams = PropertyMock(side_effect=Exception)
+
+    with pytest.raises(Exception):
+        source.discover(logger=logger, config=config)
+
 
 def test_check_wrong_reader_options(source, config):
     config["reader_options"] = '{encoding":"utf_16"}'
-    with pytest.raises(AirbyteTracedException, match="Field 'reader_options' is not valid JSON object. https://www.json.org/"):
-        source.check(logger=logger, config=config)
+    assert source.check(logger=logger, config=config) == AirbyteConnectionStatus(
+        status=Status.FAILED, message="Field 'reader_options' is not valid JSON object. https://www.json.org/"
+    )
 
 
 def test_check_google_spreadsheets_url(source, config):
     config["url"] = "https://docs.google.com/spreadsheets/d/"
-    with pytest.raises(
-        AirbyteTracedException,
-        match="Failed to load https://docs.google.com/spreadsheets/d/: please use the Official Google Sheets Source connector",
-    ):
-        source.check(logger=logger, config=config)
+    assert source.check(logger=logger, config=config) == AirbyteConnectionStatus(
+        status=Status.FAILED,
+        message="Failed to load https://docs.google.com/spreadsheets/d/: please use the Official Google Sheets Source connector",
+    )
 
 
 def test_pandas_header_not_none(absolute_path, test_files):
