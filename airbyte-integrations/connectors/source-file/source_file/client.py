@@ -314,11 +314,8 @@ class Client:
     def load_nested_json_schema(self, fp) -> dict:
         # Use Genson Library to take JSON objects and generate schemas that describe them,
         builder = SchemaBuilder()
-        if self._reader_format == "jsonl":
-            for o in self.read():
-                builder.add_object(o)
-        else:
-            builder.add_object(json.load(fp))
+        for o in self.read():
+            builder.add_object(o)
 
         result = builder.to_schema()
         if "items" in result:
@@ -473,6 +470,7 @@ class Client:
                     #     fp = self._cache_stream(fp)
                     # if self._is_zip:
                     #     fp = self._unzip(fp)
+
                     for batch in self.load_dataframes(fp):
                         df = batch.to_pandas() if self._reader_format == "parquet" else batch
                         # for parquet files
@@ -509,6 +507,7 @@ class Client:
         fp_tmp = open(final_file, "r")
         return fp_tmp
 
+
     def _cache_stream(self, fp):
         """cache stream to file"""
         fp_tmp = tempfile.NamedTemporaryFile(mode="w+b")
@@ -531,6 +530,7 @@ class Client:
             #     logger.info("Cache stream successs")
             # if self._is_zip:
             #     fp = self._unzip(fp)
+
             df_list = self.load_dataframes(fp, skip_data=False)
         fields = {}
         for df in df_list:

@@ -139,8 +139,9 @@ def test_check_invalid_config(source, invalid_config):
 
 
 def test_check_invalid_reader_options(source, invalid_reader_options_config):
-    with pytest.raises(AirbyteTracedException, match="Field 'reader_options' is not a valid JSON object. Please provide key-value pairs"):
-        source.check(logger=logger, config=invalid_reader_options_config)
+    expected = AirbyteConnectionStatus(status=Status.FAILED)
+    actual = source.check(logger=logger, config=invalid_reader_options_config)
+    assert actual.status == expected.status
 
 
 def test_discover_dropbox_link(source, config_dropbox_link):
@@ -162,17 +163,17 @@ def test_discover(source, config, client):
 
 def test_check_wrong_reader_options(source, config):
     config["reader_options"] = '{encoding":"utf_16"}'
-    with pytest.raises(AirbyteTracedException, match="Field 'reader_options' is not valid JSON object. https://www.json.org/"):
-        source.check(logger=logger, config=config)
+    assert source.check(logger=logger, config=config) == AirbyteConnectionStatus(
+        status=Status.FAILED, message="Field 'reader_options' is not valid JSON object. https://www.json.org/"
+    )
 
 
 def test_check_google_spreadsheets_url(source, config):
     config["url"] = "https://docs.google.com/spreadsheets/d/"
-    with pytest.raises(
-        AirbyteTracedException,
-        match="Failed to load https://docs.google.com/spreadsheets/d/: please use the Official Google Sheets Source connector",
-    ):
-        source.check(logger=logger, config=config)
+    assert source.check(logger=logger, config=config) == AirbyteConnectionStatus(
+        status=Status.FAILED,
+        message="Failed to load https://docs.google.com/spreadsheets/d/: please use the Official Google Sheets Source connector",
+    )
 
 
 def test_pandas_header_not_none(absolute_path, test_files):
