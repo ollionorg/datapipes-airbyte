@@ -64,6 +64,7 @@ class SalesforceStream(HttpStream, ABC):
         sobject_options: Mapping[str, Any] = None,
         schema: dict = None,
         start_date=None,
+        end_date=None,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -73,6 +74,7 @@ class SalesforceStream(HttpStream, ABC):
         self.schema: Mapping[str, Any] = schema  # type: ignore[assignment]
         self.sobject_options = sobject_options
         self.start_date = self.format_start_date(start_date)
+        self.end_date = self.format_start_date(end_date)
         self._http_client = HttpClient(
             self.stream_name,
             self.logger,
@@ -712,18 +714,19 @@ class IncrementalRestSalesforceStream(RestSalesforceStream, CheckpointMixin, ABC
     def stream_slices(
         self, *, sync_mode: SyncMode, cursor_field: List[str] = None, stream_state: Mapping[str, Any] = None
     ) -> Iterable[Optional[Mapping[str, Any]]]:
-        if not self._stream_slicer_cursor:
-            raise ValueError("Cursor should be set at this point")
+        start, end = (None, None)
+        now = pendulum.parse(self.end_date, tz="UTC") if self.end_date else pendulum.now(tz="UTC")
+        assert LOOKBACK_SECONDS is not None and LOOKBACK_SECONDS >= 0
+        initial_date = self.get_start_date_from_state(stream_state) - timedelta(seconds=LOOKBACK_SECONDS)
 
-        for slice_start, slice_end in self._stream_slicer_cursor.generate_slices():
-            yield {
-                "start_date": slice_start.isoformat(timespec="milliseconds"),
-                "end_date": slice_end.isoformat(timespec="milliseconds"),
-            }
-
-    @property
-    def stream_slice_step(self) -> pendulum.Duration:
-        return pendulum.parse(self._stream_slice_step)
+        slice_number = 1
+        while not end == now:
+            start = initial_date.add(days=(slice_number - 1) * self.STREAM_SLICE_STEP)
+            end = min(now, initial_date.add(days=slice_number * self.STREAM_SLICE_STEP))
+            self._slice = {"start_date": start.isoformat(timespec="milliseconds"), "end_date": end.isoformat(timespec="milliseconds")}
+            self.logger.info(f"Processing stream slices for {self.name} stream_slices: {self._slice}")
+            yield {"start_date": start.isoformat(timespec="milliseconds"), "end_date": end.isoformat(timespec="milliseconds")}
+            slice_number = slice_number + 1
 
     def request_params(
         self,

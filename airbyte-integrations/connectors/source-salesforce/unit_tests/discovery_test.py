@@ -5,6 +5,8 @@
 from unittest.mock import Mock
 
 import pytest
+
+from source_salesforce import SourceSalesforce
 from source_salesforce.api import DATE_TYPES, LOOSE_TYPES, NUMBER_TYPES, STRING_TYPES, Salesforce
 from source_salesforce.exceptions import TypeSalesforceException
 
@@ -96,3 +98,17 @@ def test_convert_sf_types(sf_types, json_type, with_raise):
                 Salesforce.field_to_property_schema({"type": sf_type})
         else:
             assert json_type in Salesforce.field_to_property_schema({"type": sf_type})["type"]
+
+
+@pytest.mark.parametrize(
+    "config,stream_name,output",
+    (
+            ({}, "", None),
+            ({}, "Account", None),
+            ({"table_time_frame": [{"stream_name": "Account", "end_date": "2015-08-31"}, {"stream_name": "Contact", "end_date": "2015-08-31"}]}, "Account", "2015-08-31"),
+            ({"table_time_frame": [{"stream_name": "Account", "end_date": "2015-08-31"}, {"stream_name": "Contact", "end_date": "2015-08-31"}]}, "account", "2015-08-31"),
+            ({"table_time_frame": [{"stream_name": "Account", "end_date": "2015-08-31"}]}, "Contact", None),
+    ),
+)
+def test_get_stream_end_date(config, stream_name, output):
+    assert SourceSalesforce.get_stream_end_date(stream_name, config) == output
