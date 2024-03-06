@@ -1,13 +1,11 @@
 documentationUrl: https://docsurl.com
 connectionSpecification:
   $schema: http://json-schema.org/draft-07/schema#
-  title: Third Spec
+  title: Brightspace connector
   type: object
   required:
     - api_key
     - version
-    - plugin_id
-    - file_path
     - url_base
   properties:
     url_base:
@@ -24,7 +22,17 @@ connectionSpecification:
         - "1.46"
     plugin_id:
       type: string
-      description: plugin_id
+      description: plugin_id which present in these URL - /d2l/api/lp/(version)/dataExport/bds/download/(pluginid)
+      airbyte_optional: true  # Mark as optional for Airbyte UI
     file_path:
       type: string
       description: file_path to download file, it will automatically deleted. It will be a temparay space(file path should end with '/')
+      airbyte_optional: true  # Mark as optional for Airbyte UI
+    export_job_id:
+      type: string
+      description: Export job id which present in these URL - /d2l/api/lp/(version)/dataExport/download/(exportJobId)
+      airbyte_optional: true  # Mark as optional for Airbyte UI
+    schema_id:
+      type: string
+      description: schema id which present in these URL - /d2l/api/lp/(version)/datasets/bds/(schemaId)/plugins/(pluginId)/extracts/(extractId)
+      airbyte_optional: true  # Mark as optional for Airbyte UI
