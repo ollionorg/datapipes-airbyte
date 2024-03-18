@@ -302,7 +302,7 @@ connectionSpecification:
           format: date-time
         roles:
           type: integer
-    course_offering_enrolments:
+    course_offering_enrollments:
       type: object
       required:
         - org_unit_id

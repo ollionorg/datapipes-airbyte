@@ -586,7 +586,7 @@ class SurveyResultsStream(ADSStream, ABC):
         return self.bs_api.create_export_job(payload=payload)
     
 
-class CourseOfferingEnrolmentsStream(ADSStream, ABC):
+class CourseOfferingEnrollmentsStream(ADSStream, ABC):
     def __init__(
             self, org_unit_id: str, start_date: str, end_date: str, **kwargs
     ):
