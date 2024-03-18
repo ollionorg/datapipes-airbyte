@@ -147,7 +147,7 @@ class FinalGradesStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return "Final Grades"
+        return ""
 
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
@@ -179,7 +179,7 @@ class EnrollmentsAndWithdrawlsStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -218,7 +218,7 @@ class AllGradesStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -259,7 +259,7 @@ class LearnerUsageStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -302,7 +302,7 @@ class CLOEStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -339,7 +339,7 @@ class InstructorUsageStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -383,7 +383,7 @@ class AwardsIssuedStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -423,7 +423,7 @@ class RubricAssessmentsStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -464,7 +464,7 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -508,7 +508,7 @@ class ContentProgressStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -553,7 +553,7 @@ class SurveyResultsStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -597,7 +597,7 @@ class CourseOfferingEnrollmentsStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
@@ -638,7 +638,7 @@ class AttendanceStream(ADSStream, ABC):
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
-        return "User Id"
+        return ""
 
     @property
     def name(self) -> str:
