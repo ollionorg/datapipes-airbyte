@@ -168,7 +168,7 @@ class FinalGradesStream(ADSStream, ABC):
         return self.bs_api.create_export_job(payload=payload)
 
 
-class EnrolmentsAndWithdrawlsStream(ADSStream, ABC):
+class EnrollmentsAndWithdrawlsStream(ADSStream, ABC):
     def __init__(
             self, org_unit_id: str, start_date: str, end_date: str, **kwargs
     ):
@@ -183,7 +183,7 @@ class EnrolmentsAndWithdrawlsStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return "Enrolments And Withdrawls"
+        return "Enrollments And Withdrawls"
     
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()

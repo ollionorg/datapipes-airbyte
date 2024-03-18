@@ -33,7 +33,7 @@ connectionSpecification:
             - "2021-07-25"
             - "2021-07-25T00:00:00Z"
           format: date-time
-    enrolments_and_withdrawals:
+    enrollments_and_withdrawals:
       type: object
       required:
         - org_unit_id
