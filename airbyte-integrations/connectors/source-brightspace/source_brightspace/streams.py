@@ -168,4 +168,504 @@ class FinalGradesStream(ADSStream, ABC):
         return self.bs_api.create_export_job(payload=payload)
 
 
-class SandeepStream(ADSStream, ABC):
+class EnrolmentsAndWithdrawlsStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Enrolments And Withdrawls"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+class AllGradesStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "All Grades"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class LearnerUsageStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.roles = roles
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Learner Usage"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+                {
+                    "name": "roles",
+                    "value": self.roles
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class CLOEStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, roles: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.roles = roles
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "CLOE"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "roles",
+                    "value": self.roles
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class InstructorUsageStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.roles = roles
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Instructor Usage"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+                {
+                    "name": "roles",
+                    "value": self.roles
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class AwardsIssuedStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Awards Issued"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class RubricAssessmentsStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Rubric Assessments"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, include_not_achieved_learners: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.include_not_achieved_learners = include_not_achieved_learners
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Programme Learning Outcome Evaluation"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+                {
+                    "name": "includeNotAchievedLearners",
+                    "value": self.include_not_achieved_learners
+                },
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+class ContentProgressStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.roles = roles
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Content Progress"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+                {
+                    "name": "roles",
+                    "value": self.roles
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class SurveyResultsStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.roles = roles
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Survey Results"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+                {
+                    "name": "roles",
+                    "value": self.roles
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class CourseOfferingEnrolmentsStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Course Offering Enrolments Stream"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+    
+
+class AttendanceStream(ADSStream, ABC):
+    def __init__(
+            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.org_unit_id = org_unit_id
+        self.start_date = start_date
+        self.end_date = end_date
+        self.roles = roles
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Attendance"
+    
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "parentOrgUnitId",
+                    "value": self.org_unit_id
+                },
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                },
+                {
+                    "name": "roles",
+                    "value": self.roles
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
