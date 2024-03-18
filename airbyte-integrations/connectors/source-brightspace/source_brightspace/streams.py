@@ -1,0 +1,171 @@
+import io
+import math
+import time
+from abc import ABC, abstractmethod
+from functools import lru_cache
+from typing import Mapping, Optional, Any, Iterable, Union, List, Tuple
+import zipfile
+import pendulum
+import requests
+from airbyte_cdk.sources.streams import Stream
+from airbyte_cdk.sources.streams.http import HttpStream
+from airbyte_protocol.models import SyncMode
+from pendulum import DateTime
+import pandas as pd
+from numpy import nan
+
+from source_brightspace.api import BrightspaceClient, BSExportJob, ExportJobStatus
+
+
+class ADSStream(Stream, ABC):
+    DEFAULT_WAIT_TIMEOUT_SECONDS = 60 * 60 * 12  # 12-hour job running time
+    MAX_CHECK_INTERVAL_SECONDS = 2.0
+    MAX_RETRY_NUMBER = 3  # maximum number of retries for creating successful jobs
+
+    def __init__(
+            self, bs_api: BrightspaceClient, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.bs_api = bs_api
+
+    @abstractmethod
+    def create_export_job(self) -> BSExportJob:
+        pass
+
+    @property
+    def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
+        return None
+
+    # def path(
+    #         self,
+    #         *,
+    #         stream_state: Optional[Mapping[str, Any]] = None,
+    #         stream_slice: Optional[Mapping[str, Any]] = None,
+    #         next_page_token: Optional[Mapping[str, Any]] = None,
+    # ) -> str:
+    #     return ""
+    #
+    # @property
+    # def url_base(self) -> str:
+    #     return f"{self.bs_api.instance_url}/d2l/api/lp/{self.bs_api.version}"
+    #
+    # def next_page_token(self, last_record: Mapping[str, Any]) -> Optional[Mapping[str, Any]]:
+    #     return None
+    #
+    # def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
+    #     return super().parse_response(response, **kwargs)
+
+    def read_records(
+            self,
+            sync_mode: SyncMode,
+            cursor_field: List[str] = None,
+            stream_slice: Mapping[str, Any] = None,
+            stream_state: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping[str, Any]]:
+        export_job, job_status = self.execute_job()
+        zip_file_stream = self.bs_api.download_export_job(export_job_id=export_job.export_job_id)
+        for record in self.read_with_chunks(zip_file_stream):
+            yield record
+
+    def execute_job(self) -> Tuple[Optional[BSExportJob], Optional[ExportJobStatus]]:
+        job_status = ExportJobStatus.Error
+        export_job = None
+        for i in range(0, self.MAX_RETRY_NUMBER):
+            export_job = self.create_export_job()
+            if not export_job:
+                return None, job_status
+            job_status = self.wait_for_job(export_job.export_job_id)
+            if job_status in [ExportJobStatus.Complete, ExportJobStatus.Error]:
+                break
+
+        if job_status in [ExportJobStatus.Error, ExportJobStatus.Deleted]:
+            return None, job_status
+        return export_job, job_status
+
+    def wait_for_job(self, export_job_id: str) -> ExportJobStatus:
+        expiration_time: DateTime = pendulum.now().add(seconds=self.DEFAULT_WAIT_TIMEOUT_SECONDS)
+        job_status = ExportJobStatus.Processing
+        delay_timeout = 0.0
+        delay_cnt = 0
+        job_info = None
+        # minimal starting delay is 0.5 seconds.
+        # this value was received empirically
+        time.sleep(0.5)
+        while pendulum.now() < expiration_time:
+            job_info = self.bs_api.get_export_job_details(export_job_id)
+            job_status = job_info.status
+            if job_status in [ExportJobStatus.Complete, ExportJobStatus.Error, ExportJobStatus.Deleted]:
+                if job_status != ExportJobStatus.Complete:
+                    self.logger.error(f"JobStatus: {self.name}/{job_status}'")
+
+                return job_status
+
+            if delay_timeout < self.MAX_CHECK_INTERVAL_SECONDS:
+                delay_timeout = 0.5 + math.exp(delay_cnt) / 1000.0
+                delay_cnt += 1
+
+            time.sleep(delay_timeout)
+            job_id = job_info.export_job_id
+            self.logger.info(
+                f"Sleeping {delay_timeout} seconds while waiting for Job: {self.name}/{job_id} to complete. Current state: {job_status}"
+            )
+
+        self.logger.warning(f"Not wait the {self.name} data for {self.DEFAULT_WAIT_TIMEOUT_SECONDS} seconds, data: {job_info}!!")
+        return job_status
+
+    def read_with_chunks(self, response_content, chunk_size: int = 100) -> Iterable[Tuple[int, Mapping[str, Any]]]:
+        try:
+            with io.BytesIO(response_content) as response_stream:
+                with zipfile.ZipFile(response_stream) as zipped_data_set:
+                    files = zipped_data_set.namelist()
+                    csv_name = files[0]
+
+                    with zipped_data_set.open(csv_name) as csv_file:
+                        chunks = pd.read_csv(csv_file, chunksize=chunk_size, iterator=True, dialect="unix", dtype=object)
+                        for chunk in chunks:
+                            chunk = chunk.replace({nan: None}).to_dict(orient="records")
+                            for row in chunk:
+                                # print(row)
+                                yield row
+        except pd.errors.EmptyDataError as e:
+            self.logger.info(f"Empty data received. {e}")
+            yield from []
+
+
+class FinalGradesStream(ADSStream, ABC):
+
+    def __init__(
+            self, start_date: str, end_date: str, **kwargs
+    ):
+        super().__init__(**kwargs)
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
+        return "User Id"
+
+    @property
+    def name(self) -> str:
+        return "Final Grades"
+
+    def create_export_job(self) -> BSExportJob:
+        data_sets = self.bs_api.get_list_of_data_set()
+        data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
+        payload = {
+            "DataSetId": data_set.data_set_id,
+            "Filters": [
+                {
+                    "name": "startDate",
+                    "value": self.start_date
+                },
+                {
+                    "name": "endDate",
+                    "value": self.end_date
+                }
+            ]
+        }
+        return self.bs_api.create_export_job(payload=payload)
+
+
+class SandeepStream(ADSStream, ABC):
