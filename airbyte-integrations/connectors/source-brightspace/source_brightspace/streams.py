@@ -1,18 +1,16 @@
 import io
 import math
 import time
-from abc import ABC, abstractmethod
-from functools import lru_cache
-from typing import Mapping, Optional, Any, Iterable, Union, List, Tuple
 import zipfile
-import pendulum
-import requests
-from airbyte_cdk.sources.streams import Stream
-from airbyte_cdk.sources.streams.http import HttpStream
-from airbyte_protocol.models import SyncMode
-from pendulum import DateTime
+from abc import ABC, abstractmethod
+from typing import Mapping, Optional, Any, Iterable, Union, List, Tuple
+
 import pandas as pd
+import pendulum
+from airbyte_cdk.sources.streams import Stream
+from airbyte_protocol.models import SyncMode
 from numpy import nan
+from pendulum import DateTime
 
 from source_brightspace.api import BrightspaceClient, BSExportJob, ExportJobStatus
 
@@ -35,25 +33,6 @@ class ADSStream(Stream, ABC):
     @property
     def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
         return None
-
-    # def path(
-    #         self,
-    #         *,
-    #         stream_state: Optional[Mapping[str, Any]] = None,
-    #         stream_slice: Optional[Mapping[str, Any]] = None,
-    #         next_page_token: Optional[Mapping[str, Any]] = None,
-    # ) -> str:
-    #     return ""
-    #
-    # @property
-    # def url_base(self) -> str:
-    #     return f"{self.bs_api.instance_url}/d2l/api/lp/{self.bs_api.version}"
-    #
-    # def next_page_token(self, last_record: Mapping[str, Any]) -> Optional[Mapping[str, Any]]:
-    #     return None
-    #
-    # def parse_response(self, response: requests.Response, **kwargs) -> Iterable[Mapping]:
-    #     return super().parse_response(response, **kwargs)
 
     def read_records(
             self,
@@ -147,7 +126,7 @@ class FinalGradesStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return ""
+        return "Final Grades"
 
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
@@ -168,7 +147,7 @@ class FinalGradesStream(ADSStream, ABC):
         return self.bs_api.create_export_job(payload=payload)
 
 
-class EnrollmentsAndWithdrawlsStream(ADSStream, ABC):
+class EnrollmentsAndWithdrawalsStream(ADSStream, ABC):
     def __init__(
             self, org_unit_id: str, start_date: str, end_date: str, **kwargs
     ):
@@ -183,8 +162,9 @@ class EnrollmentsAndWithdrawlsStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return "Enrollments And Withdrawls"
-    
+        # don't change typo here because D2L Brightspace has misspelled this
+        return "Enrolments and Withdrawals"
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -206,7 +186,8 @@ class EnrollmentsAndWithdrawlsStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
+
 class AllGradesStream(ADSStream, ABC):
     def __init__(
             self, org_unit_id: str, start_date: str, end_date: str, **kwargs
@@ -223,7 +204,7 @@ class AllGradesStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "All Grades"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -245,7 +226,7 @@ class AllGradesStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class LearnerUsageStream(ADSStream, ABC):
     def __init__(
@@ -264,7 +245,7 @@ class LearnerUsageStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Learner Usage"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -290,7 +271,7 @@ class LearnerUsageStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class CLOEStream(ADSStream, ABC):
     def __init__(
@@ -307,7 +288,7 @@ class CLOEStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "CLOE"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -325,7 +306,7 @@ class CLOEStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class InstructorUsageStream(ADSStream, ABC):
     def __init__(
@@ -344,7 +325,7 @@ class InstructorUsageStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Instructor Usage"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -370,7 +351,7 @@ class InstructorUsageStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class AwardsIssuedStream(ADSStream, ABC):
     def __init__(
@@ -388,7 +369,7 @@ class AwardsIssuedStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Awards Issued"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -410,7 +391,7 @@ class AwardsIssuedStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class RubricAssessmentsStream(ADSStream, ABC):
     def __init__(
@@ -428,7 +409,7 @@ class RubricAssessmentsStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Rubric Assessments"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -450,7 +431,7 @@ class RubricAssessmentsStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
     def __init__(
@@ -469,7 +450,7 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Programme Learning Outcome Evaluation"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -495,7 +476,8 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
+
 class ContentProgressStream(ADSStream, ABC):
     def __init__(
             self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
@@ -513,7 +495,7 @@ class ContentProgressStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Content Progress"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -539,7 +521,7 @@ class ContentProgressStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class SurveyResultsStream(ADSStream, ABC):
     def __init__(
@@ -558,7 +540,7 @@ class SurveyResultsStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Survey Results"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -584,7 +566,7 @@ class SurveyResultsStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class CourseOfferingEnrollmentsStream(ADSStream, ABC):
     def __init__(
@@ -601,8 +583,8 @@ class CourseOfferingEnrollmentsStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return "Course Offering Enrolments Stream"
-    
+        return "Course Offering Enrolments"
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)
@@ -624,7 +606,7 @@ class CourseOfferingEnrollmentsStream(ADSStream, ABC):
             ]
         }
         return self.bs_api.create_export_job(payload=payload)
-    
+
 
 class AttendanceStream(ADSStream, ABC):
     def __init__(
@@ -643,7 +625,7 @@ class AttendanceStream(ADSStream, ABC):
     @property
     def name(self) -> str:
         return "Attendance"
-    
+
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_data_set()
         data_set = next(filter(lambda x: x.name == self.name, data_sets), None)

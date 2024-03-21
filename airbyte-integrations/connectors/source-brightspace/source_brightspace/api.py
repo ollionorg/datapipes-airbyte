@@ -1,17 +1,14 @@
 import json
 import logging
+from enum import Enum
 from functools import lru_cache, wraps
 from typing import Any, List
 
-from airbyte_cdk.utils import AirbyteTracedException
-from airbyte_protocol.models import FailureType
+import requests
 from pydantic import BaseModel, Field
 from requests import adapters as request_adapters
-from requests.exceptions import HTTPError, RequestException
 from requests import codes
-from enum import Enum
-
-import requests
+from requests.exceptions import HTTPError
 
 
 class BrightspaceDatasetType(Enum):
@@ -49,6 +46,10 @@ def handle_http_errors(func):
             if error.response.status_code in [codes.TOO_MANY_REQUESTS]:
                 message = "API call-rate limit exceeded."
                 args[0].logger.error(message)
+            if error.response.status_code == codes.UNAUTHORIZED:
+                # message = error.response.me"API call-rate limit"
+                # args[0].logger.error(message)
+                raise error
             else:
                 raise error
         return None
@@ -59,7 +60,6 @@ def handle_http_errors(func):
 class BrightspaceClient:
     logger = logging.getLogger("airbyte")
     version = "1.43"
-    parallel_tasks_size = 100
 
     def __init__(
             self,
@@ -68,20 +68,19 @@ class BrightspaceClient:
             token: str = None,
             client_id: str = None,
             client_secret: str = None,
+            access_token: str = None,
             **kwargs: Any,
     ) -> None:
         self.refresh_token = refresh_token
         self.token = token
         self.client_id = client_id
         self.client_secret = client_secret
-        self.access_token = None
+        self.access_token = access_token
         self.instance_url = instance_url
         self.session = requests.Session()
         # Change the connection pool size. Default value is not enough for parallel tasks
-        adapter = request_adapters.HTTPAdapter(pool_connections=self.parallel_tasks_size, pool_maxsize=self.parallel_tasks_size)
+        adapter = request_adapters.HTTPAdapter()
         self.session.mount("https://", adapter)
-        # remove
-        self.access_token = "eyJhbGciOiJSUzI1NiIsImtpZCI6IjJkMjEwZjk1LTY4NmItNGFjYy04OWE3LWVlMGE2NDUzYmU1NyIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE3MTA0MjA0MzQsImV4cCI6MTcxMDQyNDAzNCwiaXNzIjoiaHR0cHM6Ly9hcGkuYnJpZ2h0c3BhY2UuY29tL2F1dGgiLCJhdWQiOiJodHRwczovL2FwaS5icmlnaHRzcGFjZS5jb20vYXV0aC90b2tlbiIsInN1YiI6IjY1NDY1IiwidGVuYW50aWQiOiIyMjk2YmQ5Mi1jMWUzLTQ5MzQtOTg0NC03MjkxMTcyNjFiMDIiLCJhenAiOiI3Zjk3NWI1ZC1jZDllLTQ1ODctYjg3OC1lMDMwMzNkYmUzNTUiLCJzY29wZSI6ImRhdGFodWI6ZGF0YWV4cG9ydHM6ZG93bmxvYWQscmVhZCBkYXRhc2V0czpiZHM6bGlzdCxyZWFkIHJlcG9ydGluZzpkYXRhc2V0OmZldGNoLGxpc3QgcmVwb3J0aW5nOmpvYjpjcmVhdGUsZG93bmxvYWQsZmV0Y2gsbGlzdCIsImp0aSI6IjQ4MGQ3MDE5LWM1YmUtNDMwOC05YzlmLTlhZDY2Yzg4MDNlYSJ9.SC2EYtJH1t8nb4SctLVA9KvdJhGf8bOcP8_sBuFVJedpS1-55984t03DsxgVX3eSsWvxUjUJBp2Vs0tCXJWUgg3zwpvkHWBvXdzQLDu5da7ie8O0KmwG57WKlYxIbk__eMuyXIYh1lUWXCRiPG7AkVOMWkvuCuEbR-oanXZmACU6LBUiGpSvliueo6_N1a9diASC7JHLuMwV8oj0N1JTgrzQjvOqpiVeE1h58tW_KFa59EvlhWWwL3aIZDw_DR9E02EUcI7--O5mWwTLXgiFvt_-nU6ECrNzgywACtu_ZLmGziFr2lGb_Zekp3X4RkkyJcADK1LvErANdAvA3BlBlQ"
 
     @property
     def url_base(self) -> str:

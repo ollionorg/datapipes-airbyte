@@ -2,55 +2,46 @@
   "$schema" : "http://json-schema.org/draft-07/schema#",
   "type" : "object",
   "properties" : {
-    "OrgUnitId" : {
+    "Log Id" : {
       "type" : "string"
     },
-    "OrgUnitName" : {
+    "Org Unit Id" : {
       "type" : "string"
     },
-    "OrgUnitCode" : {
+    "Org Unit Name" : {
       "type" : "string"
     },
-    "Program" : {
+    "Org Unit Code" : {
       "type" : "string"
     },
-    "OutcomeId" : {
+    "Org Unit Type" : {
       "type" : "string"
     },
-    "OutcomeType" : {
+    "User Id" : {
       "type" : "string"
     },
-    "OutcomeName" : {
+    "First Name" : {
       "type" : "string"
     },
-    "OutcomeStatus" : {
+    "Last Name" : {
       "type" : "string"
     },
-    "FirstName" : {
+    "Username" : {
       "type" : "string"
     },
-    "LastName" : {
+    "Org Defined Id" : {
       "type" : "string"
     },
-    "UserName" : {
+    "Role Id" : {
       "type" : "string"
     },
-    "OrgDefinedId" : {
+    "Role Name" : {
       "type" : "string"
     },
-    "UserId" : {
+    "Log Event" : {
       "type" : "string"
     },
-    "RoleName" : {
-      "type" : "string"
-    },
-    "RoleId" : {
-      "type" : "string"
-    },
-    "IsAchieved" : {
-      "type" : "string"
-    },
-    "AchievementDateTime" : {
+    "Log Date" : {
       "type" : "string"
     }
   }
