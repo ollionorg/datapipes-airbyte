@@ -1,0 +1,69 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "AwardId" : {
+      "type" : "string"
+    },
+    "Name" : {
+      "type" : "string"
+    },
+    "Type" : {
+      "type" : "string"
+    },
+    "Credits" : {
+      "type" : "string"
+    },
+    "UserId" : {
+      "type" : "string"
+    },
+    "UserName" : {
+      "type" : "string"
+    },
+    "FirstName" : {
+      "type" : "string"
+    },
+    "LastName" : {
+      "type" : "string"
+    },
+    "OrgDefinedId" : {
+      "type" : "string"
+    },
+    "IssuedBy" : {
+      "type" : "string"
+    },
+    "IssuerUserName" : {
+      "type" : "string"
+    },
+    "IssuerFirstName" : {
+      "type" : "string"
+    },
+    "IssuerLastName" : {
+      "type" : "string"
+    },
+    "IssueDate" : {
+      "type" : "string"
+    },
+    "RevokedId" : {
+      "type" : "string"
+    },
+    "Criteria" : {
+      "type" : "string"
+    },
+    "Evidence" : {
+      "type" : "string"
+    },
+    "ExpiryDate" : {
+      "type" : "string"
+    },
+    "OrgUnitId" : {
+      "type" : "string"
+    },
+    "OrgUnitName" : {
+      "type" : "string"
+    },
+    "OrgUnitCode" : {
+      "type" : "string"
+    }
+  }
+}

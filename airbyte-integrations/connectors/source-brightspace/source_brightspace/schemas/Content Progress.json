@@ -1,0 +1,75 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Course Offering ID" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Course Section ID" : {
+      "type" : "string"
+    },
+    "Course Section Code" : {
+      "type" : "string"
+    },
+    "Course Section Name" : {
+      "type" : "string"
+    },
+    "Semester ID" : {
+      "type" : "string"
+    },
+    "Semester Code" : {
+      "type" : "string"
+    },
+    "Semester Name" : {
+      "type" : "string"
+    },
+    "User ID" : {
+      "type" : "string"
+    },
+    "User Name" : {
+      "type" : "string"
+    },
+    "Org Defined ID" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Role ID" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Content Topic ID" : {
+      "type" : "string"
+    },
+    "Content Topic Name" : {
+      "type" : "string"
+    },
+    "Module ID" : {
+      "type" : "string"
+    },
+    "Module Name" : {
+      "type" : "string"
+    },
+    "Content Topic Visits" : {
+      "type" : "string"
+    },
+    "Total Time Spent" : {
+      "type" : "string"
+    },
+    "Last Visited Date" : {
+      "type" : "string"
+    }
+  }
+}

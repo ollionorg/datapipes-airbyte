@@ -1,0 +1,48 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Log Id" : {
+      "type" : "string"
+    },
+    "Org Unit Id" : {
+      "type" : "string"
+    },
+    "Org Unit Name" : {
+      "type" : "string"
+    },
+    "Org Unit Code" : {
+      "type" : "string"
+    },
+    "Org Unit Type" : {
+      "type" : "string"
+    },
+    "User Id" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Log Event" : {
+      "type" : "string"
+    },
+    "Log Date" : {
+      "type" : "string"
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "User Id" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Attendance Register Id" : {
+      "type" : "string"
+    },
+    "Attendance Register Name" : {
+      "type" : "string"
+    },
+    "Attendance Session Id" : {
+      "type" : "string"
+    },
+    "Attendance Session Name" : {
+      "type" : "string"
+    },
+    "Scheme Symbol Id" : {
+      "type" : "string"
+    },
+    "Symbol Name" : {
+      "type" : "string"
+    },
+    "Symbol Value" : {
+      "type" : "string"
+    },
+    "Percentage" : {
+      "type" : "string"
+    },
+    "Last Modified" : {
+      "type" : "string"
+    },
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Course Section Id" : {
+      "type" : "string"
+    },
+    "Course Section Code" : {
+      "type" : "string"
+    },
+    "Course Section Name" : {
+      "type" : "string"
+    },
+    "Parent Department Name" : {
+      "type" : "string"
+    },
+    "Semester Name" : {
+      "type" : "string"
+    }
+  }
+}
