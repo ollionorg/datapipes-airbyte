@@ -1,0 +1,78 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Username" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "User Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Is Active" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Number of Content Topics Visited" : {
+      "type" : "string"
+    },
+    "Last Access to Course Offering Content" : {
+      "type" : "string"
+    },
+    "Number of Assignments" : {
+      "type" : "string"
+    },
+    "Number of Assignment Submissions Commented on" : {
+      "type" : "string"
+    },
+    "Number of Grade Items" : {
+      "type" : "string"
+    },
+    "Number of Graded Grade Items" : {
+      "type" : "string"
+    },
+    "Last Modification of a Grade Item" : {
+      "type" : "string"
+    },
+    "Number of Discussion Posts" : {
+      "type" : "string"
+    },
+    "Number of Discussion Posts Authored" : {
+      "type" : "string"
+    },
+    "Last Discussion Post Date" : {
+      "type" : "string"
+    },
+    "Last Access to Course Offering" : {
+      "type" : "string"
+    },
+    "Number of Logins to the System" : {
+      "type" : "string"
+    },
+    "Last Sent Mail Date" : {
+      "type" : "string"
+    }
+  }
+}

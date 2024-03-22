@@ -1,0 +1,105 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Course Org Unit Id" : {
+      "type" : "string"
+    },
+    "Course Name" : {
+      "type" : "string"
+    },
+    "Course Code" : {
+      "type" : "string"
+    },
+    "Parent Department Name" : {
+      "type" : "string"
+    },
+    "Parent Semester Name" : {
+      "type" : "string"
+    },
+    "Parent Course Template Name" : {
+      "type" : "string"
+    },
+    "Course Section Id" : {
+      "type" : "string"
+    },
+    "Course Section Name" : {
+      "type" : "string"
+    },
+    "Course Section Code" : {
+      "type" : "string"
+    },
+    "Rubric Id" : {
+      "type" : "string"
+    },
+    "Rubric Name" : {
+      "type" : "string"
+    },
+    "Activity Id" : {
+      "type" : "string"
+    },
+    "Activity Type" : {
+      "type" : "string"
+    },
+    "Activity Name" : {
+      "type" : "string"
+    },
+    "User Id" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Criterion Id" : {
+      "type" : "string"
+    },
+    "Criterion" : {
+      "type" : "string"
+    },
+    "Level" : {
+      "type" : "string"
+    },
+    "Points" : {
+      "type" : "string"
+    },
+    "Overall Level Achieved" : {
+      "type" : "string"
+    },
+    "Is Score Overridden" : {
+      "type" : "string"
+    },
+    "Evaluation Date" : {
+      "type" : "string"
+    },
+    "Assessor User Id" : {
+      "type" : "string"
+    },
+    "Assessor First Name" : {
+      "type" : "string"
+    },
+    "Assessor Last Name" : {
+      "type" : "string"
+    },
+    "Assessor Username" : {
+      "type" : "string"
+    },
+    "Assessor Org Defined Id" : {
+      "type" : "string"
+    }
+  }
+}

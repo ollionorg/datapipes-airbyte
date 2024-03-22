@@ -1,0 +1,111 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Parent Department Name" : {
+      "type" : "string"
+    },
+    "Parent Department Code" : {
+      "type" : "string"
+    },
+    "Semester Id" : {
+      "type" : "string"
+    },
+    "Semester Code" : {
+      "type" : "string"
+    },
+    "Semester Name" : {
+      "type" : "string"
+    },
+    "User Id" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Is Active" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Content Completed" : {
+      "type" : "string"
+    },
+    "Content Required" : {
+      "type" : "string"
+    },
+    "Checklist Completed" : {
+      "type" : "string"
+    },
+    "Quiz Completed" : {
+      "type" : "string"
+    },
+    "Total Quiz Attempts" : {
+      "type" : "string"
+    },
+    "Discussion Post Created" : {
+      "type" : "string"
+    },
+    "Discussion Post Replies" : {
+      "type" : "string"
+    },
+    "Discussion Post Read" : {
+      "type" : "string"
+    },
+    "Last Discussion Post Date" : {
+      "type" : "string"
+    },
+    "Number Of Assignment Submissions" : {
+      "type" : "string"
+    },
+    "Last Assignment Submission Date" : {
+      "type" : "string"
+    },
+    "Total Time Spent In Content" : {
+      "type" : "string"
+    },
+    "Last Visited Date" : {
+      "type" : "string"
+    },
+    "Last System Login" : {
+      "type" : "string"
+    },
+    "Number Of Logins To The System" : {
+      "type" : "string"
+    },
+    "Auditor Name" : {
+      "type" : "string"
+    },
+    "Last Quiz Attempt Date" : {
+      "type" : "string"
+    },
+    "Last Scorm Completion Date" : {
+      "type" : "string"
+    },
+    "Last Scorm Visit Date" : {
+      "type" : "string"
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Program Enrollment" : {
+      "type" : "string"
+    },
+    "Org Unit Id" : {
+      "type" : "string"
+    },
+    "Org Unit Name" : {
+      "type" : "string"
+    },
+    "Org Unit Code" : {
+      "type" : "string"
+    },
+    "Org Unit Type Id" : {
+      "type" : "string"
+    },
+    "Org Unit Type Name" : {
+      "type" : "string"
+    },
+    "Outcome Id" : {
+      "type" : "string"
+    },
+    "Outcome Type" : {
+      "type" : "string"
+    },
+    "Outcome Name" : {
+      "type" : "string"
+    },
+    "Ready For Evaluation" : {
+      "type" : "string"
+    },
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Semester Name" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "User Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Activity Id" : {
+      "type" : "string"
+    },
+    "Activity Type" : {
+      "type" : "string"
+    },
+    "Activity Name" : {
+      "type" : "string"
+    },
+    "Assessment Type" : {
+      "type" : "string"
+    },
+    "Rubric Id" : {
+      "type" : "string"
+    },
+    "Rubric Name" : {
+      "type" : "string"
+    },
+    "Rubric Measurement" : {
+      "type" : "string"
+    },
+    "Assessment Threshold" : {
+      "type" : "string"
+    },
+    "Assessment Threshold Criteria" : {
+      "type" : "string"
+    },
+    "Rubric Level Achieved" : {
+      "type" : "string"
+    },
+    "Rubric Points" : {
+      "type" : "string"
+    },
+    "Activity Grade Points" : {
+      "type" : "string"
+    },
+    "Activity Grade Max Points" : {
+      "type" : "string"
+    },
+    "Activity Grade Percent" : {
+      "type" : "string"
+    },
+    "Activity Threshold Achieved" : {
+      "type" : "string"
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "User Id" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Is Active" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Course Section Id" : {
+      "type" : "string"
+    },
+    "Course Section Code" : {
+      "type" : "string"
+    },
+    "Course Section Name" : {
+      "type" : "string"
+    },
+    "Grade Item Category Id" : {
+      "type" : "string"
+    },
+    "Grade Item Category Name" : {
+      "type" : "string"
+    },
+    "Grade Item Id" : {
+      "type" : "string"
+    },
+    "Grade Item Name" : {
+      "type" : "string"
+    },
+    "Grade Item Weight" : {
+      "type" : "string"
+    },
+    "Grade Item Start Date" : {
+      "type" : "string"
+    },
+    "Grade Item End Date" : {
+      "type" : "string"
+    },
+    "Points Numerator" : {
+      "type" : "string"
+    },
+    "Points Denominator" : {
+      "type" : "string"
+    },
+    "Grade Value" : {
+      "type" : "string"
+    },
+    "Grade Last Modified" : {
+      "type" : "string"
+    },
+    "Grade Comments" : {
+      "type" : "string"
+    },
+    "Grader User Id" : {
+      "type" : "string"
+    },
+    "Grader Org Defined Id" : {
+      "type" : "string"
+    },
+    "Grader Username" : {
+      "type" : "string"
+    },
+    "Grader First Name" : {
+      "type" : "string"
+    },
+    "Grader Last Name" : {
+      "type" : "string"
+    },
+    "Exclude From Final Grade" : {
+      "type" : "string"
+    },
+    "Grade Object Type" : {
+      "type" : "string"
+    }
+  }
+}

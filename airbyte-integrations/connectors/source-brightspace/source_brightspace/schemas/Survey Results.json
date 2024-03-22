@@ -1,0 +1,60 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "Survey Id" : {
+      "type" : "string"
+    },
+    "Survey Name" : {
+      "type" : "string"
+    },
+    "Attempt Id" : {
+      "type" : "string"
+    },
+    "Active Status" : {
+      "type" : "string"
+    },
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Parent Department Name" : {
+      "type" : "string"
+    },
+    "Parent Department Code" : {
+      "type" : "string"
+    },
+    "Respondent User Id" : {
+      "type" : "string"
+    },
+    "Respondent Username" : {
+      "type" : "string"
+    },
+    "Respondent First Name" : {
+      "type" : "string"
+    },
+    "Respondent Last Name" : {
+      "type" : "string"
+    },
+    "Category Name" : {
+      "type" : "string"
+    },
+    "Submission Date" : {
+      "type" : "string"
+    },
+    "Question Number" : {
+      "type" : "string"
+    },
+    "Question" : {
+      "type" : "string"
+    },
+    "Answer" : {
+      "type" : "string"
+    }
+  }
+}

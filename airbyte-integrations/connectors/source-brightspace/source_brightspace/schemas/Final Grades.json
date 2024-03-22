@@ -1,0 +1,72 @@
+{
+  "$schema" : "http://json-schema.org/draft-07/schema#",
+  "type" : "object",
+  "properties" : {
+    "User Id" : {
+      "type" : "string"
+    },
+    "Org Defined Id" : {
+      "type" : "string"
+    },
+    "Username" : {
+      "type" : "string"
+    },
+    "First Name" : {
+      "type" : "string"
+    },
+    "Last Name" : {
+      "type" : "string"
+    },
+    "Role Id" : {
+      "type" : "string"
+    },
+    "Role Name" : {
+      "type" : "string"
+    },
+    "Term Id" : {
+      "type" : "string"
+    },
+    "Semester Name" : {
+      "type" : "string"
+    },
+    "Semester Code" : {
+      "type" : "string"
+    },
+    "Course Offering Id" : {
+      "type" : "string"
+    },
+    "Course Offering Code" : {
+      "type" : "string"
+    },
+    "Course Offering Name" : {
+      "type" : "string"
+    },
+    "Course Section Name" : {
+      "type" : "string"
+    },
+    "Final Calculated Grade (Percentage)" : {
+      "type" : "string"
+    },
+    "Final Calculated Grade Last Modified Date" : {
+      "type" : "string"
+    },
+    "Final Calculated Comments" : {
+      "type" : "string"
+    },
+    "Final Adjusted Grade (Percentage)" : {
+      "type" : "string"
+    },
+    "Final Adjusted Last Modified Date" : {
+      "type" : "string"
+    },
+    "Final Adjusted Comments" : {
+      "type" : "string"
+    },
+    "Final Adjusted Grade Is Released?" : {
+      "type" : "string"
+    },
+    "Final Adjusted Last Modified By" : {
+      "type" : "string"
+    }
+  }
+}
