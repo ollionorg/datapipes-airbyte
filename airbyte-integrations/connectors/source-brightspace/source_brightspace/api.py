@@ -52,7 +52,6 @@ def handle_http_errors(func):
                 raise error
             else:
                 raise error
-        return None
 
     return wrapper
 
@@ -113,7 +112,6 @@ class BrightspaceClient:
             access_token: str = None,
             **kwargs: Any,
     ) -> None:
-        self._scopes = "datahub:dataexports:download,read datasets:bds:read,list reporting:dataset:fetch,list reporting:job:create,download,fetch,list"
         self._refresh_endpoint = "https://auth.brightspace.com/core/connect/token"
         self.refresh_token = refresh_token
         self.token = token
