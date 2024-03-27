@@ -57,13 +57,57 @@ def handle_http_errors(func):
     return wrapper
 
 
+def token_manager(func):
+    """Decorator to manage tokens for API access."""
+
+    @wraps(func)
+    def wrapper(self, *args, **kwargs):
+        # Check if access token exists
+        if not self.access_token or not self.valid_token():
+            # Generate a new token if it doesn't exist or is invalid
+            self.get_token()
+            self.logger.info("Generated a new access token.")
+
+        # Call the original function with updated token
+        return func(self, *args, **kwargs)
+
+    return wrapper
+
+
 class BrightspaceClient:
     logger = logging.getLogger("airbyte")
     version = "1.43"
 
+    def valid_token(self) -> bool:
+        try:
+            url = f"{self.url_base}/dataExport/list"
+            headers = {"Authorization": "Bearer {}".format(self.access_token)}
+            _ = self._make_request(http_method="GET", url=url, headers=headers)
+        except HTTPError as error:
+            # if error.response.status_code == codes.UNAUTHORIZED:
+            self.logger.info(f"Unauthorized token received. Access token is invalid.")
+            return False
+            # raise error
+        return True
+
+    def get_token(self):
+        payload = {
+            'source_id': self.source_id,
+            'refresh_endpoint': self._refresh_endpoint,
+            'scopes': self._scopes
+        }
+        try:
+            resp = self._make_request("POST", self.airflow_get_token, body=payload)
+        except HTTPError as err:
+            raise err
+        auth = resp.json()
+        self.access_token = auth["access_token"]
+
     def __init__(
             self,
             instance_url: str,
+            source_id: str,
+            airflow_get_token: str,
             refresh_token: str = None,
             token: str = None,
             client_id: str = None,
@@ -71,8 +115,12 @@ class BrightspaceClient:
             access_token: str = None,
             **kwargs: Any,
     ) -> None:
+        self._scopes = "datahub:dataexports:download,read datasets:bds:read,list reporting:dataset:fetch,list reporting:job:create,download,fetch,list"
+        self._refresh_endpoint = "https://auth.brightspace.com/core/connect/token"
         self.refresh_token = refresh_token
         self.token = token
+        self.source_id = source_id
+        self.airflow_get_token = airflow_get_token
         self.client_id = client_id
         self.client_secret = client_secret
         self.access_token = access_token
@@ -98,33 +146,14 @@ class BrightspaceClient:
             if http_method == "GET":
                 resp = self.session.get(url, headers=headers, stream=stream, params=params)
             elif http_method == "POST":
-                resp = self.session.post(url, headers=headers, data=json.dumps(body))
+                resp = self.session.post(url, headers=headers, json=body)
             resp.raise_for_status()
         except HTTPError as err:
             self.logger.warning(f"http error body: {err.response.text}")
             raise
         return resp
 
-    def login(self):
-        login_url = f"https://auth.brightspace.com/core/connect/token"
-        login_body = {
-            "grant_type": "refresh_token",
-            "client_id": self.client_id,
-            "client_secret": self.client_secret,
-            "refresh_token": self.refresh_token,
-        }
-        try:
-            resp = self._make_request("POST", login_url, body=login_body, headers={"Content-Type": "application/x-www-form-urlencoded"})
-        except HTTPError as err:
-            # if err.response.status_code == requests.codes.BAD_REQUEST:
-                # if error_message := AUTHENTICATION_ERROR_MESSAGE_MAPPING.get(err.response.json().get("error_description")):
-                # raise AirbyteTracedException(message=err.response.json().get("error_description"), failure_type=FailureType.config_error)
-            raise err
-        auth = resp.json()
-        self.access_token = auth["access_token"]
-        self.instance_url = auth["instance_url"]
-
-    @lru_cache(maxsize=None)
+    @token_manager
     @handle_http_errors
     def get_list_of_data_set(self) -> List[BSDataSet]:
         url = f"{self.url_base}/dataExport/list"
@@ -134,6 +163,7 @@ class BrightspaceClient:
         datasets = [BSDataSet(**dataset_data) for dataset_data in data]
         return datasets
 
+    @token_manager
     @handle_http_errors
     def create_export_job(self, payload: dict) -> BSExportJob:
         url = f"{self.url_base}/dataExport/create"
@@ -141,6 +171,7 @@ class BrightspaceClient:
         response = self._make_request(http_method="POST", url=url, headers=headers, body=payload)
         return BSExportJob(**response.json())
 
+    @token_manager
     @handle_http_errors
     def get_export_job_details(self, export_job_id: str) -> BSExportJob:
         url = f"{self.url_base}/dataExport/jobs/{export_job_id}"
@@ -148,6 +179,7 @@ class BrightspaceClient:
         response = self._make_request(http_method="GET", url=url, headers=headers)
         return BSExportJob(**response.json())
 
+    @token_manager
     @handle_http_errors
     def download_export_job(self, export_job_id: str):
         url = f"{self.url_base}/dataExport/download/{export_job_id}"
