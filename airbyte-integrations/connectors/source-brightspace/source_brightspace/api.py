@@ -92,9 +92,8 @@ class BrightspaceClient:
 
     def get_token(self):
         payload = {
-            'source_id': self.source_id,
-            'refresh_endpoint': self._refresh_endpoint,
-            'scopes': self._scopes
+            'client_auth_type': "CREDENTIALS_IN_BODY",
+            'token_url': self._refresh_endpoint,
         }
         try:
             resp = self._make_request("POST", self.airflow_get_token, body=payload)
@@ -106,7 +105,6 @@ class BrightspaceClient:
     def __init__(
             self,
             instance_url: str,
-            source_id: str,
             airflow_get_token: str,
             refresh_token: str = None,
             token: str = None,
@@ -119,7 +117,6 @@ class BrightspaceClient:
         self._refresh_endpoint = "https://auth.brightspace.com/core/connect/token"
         self.refresh_token = refresh_token
         self.token = token
-        self.source_id = source_id
         self.airflow_get_token = airflow_get_token
         self.client_id = client_id
         self.client_secret = client_secret
