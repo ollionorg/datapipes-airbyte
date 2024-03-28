@@ -1,7 +1,6 @@
-import json
 import logging
 from enum import Enum
-from functools import lru_cache, wraps
+from functools import wraps
 from typing import Any, List
 
 import requests
@@ -46,10 +45,6 @@ def handle_http_errors(func):
             if error.response.status_code in [codes.TOO_MANY_REQUESTS]:
                 message = "API call-rate limit exceeded."
                 args[0].logger.error(message)
-            if error.response.status_code == codes.UNAUTHORIZED:
-                # message = error.response.me"API call-rate limit"
-                # args[0].logger.error(message)
-                raise error
             else:
                 raise error
 
@@ -61,14 +56,21 @@ def token_manager(func):
 
     @wraps(func)
     def wrapper(self, *args, **kwargs):
-        # Check if access token exists
-        if not self.access_token or not self.valid_token():
-            # Generate a new token if it doesn't exist or is invalid
-            self.get_token()
-            self.logger.info("Generated a new access token.")
+        try:
+            # Check if access token exists
+            if not self.access_token:
+                # Generate a new token if it doesn't exist
+                self.get_token()
+                self.logger.info("Generated a new access token.")
 
-        # Call the original function with updated token
-        return func(self, *args, **kwargs)
+            # Call the original function with updated token
+            return func(self, *args, **kwargs)
+        except HTTPError as error:
+            if error.response.status_code == codes.UNAUTHORIZED:
+                self.logger.info("Unauthorized access token caught.")
+                self.get_token()
+                self.logger.info("Generated a new access token.")
+                return func(self, *args, **kwargs)
 
     return wrapper
 
@@ -76,18 +78,6 @@ def token_manager(func):
 class BrightspaceClient:
     logger = logging.getLogger("airbyte")
     version = "1.43"
-
-    def valid_token(self) -> bool:
-        try:
-            url = f"{self.url_base}/dataExport/list"
-            headers = {"Authorization": "Bearer {}".format(self.access_token)}
-            _ = self._make_request(http_method="GET", url=url, headers=headers)
-        except HTTPError as error:
-            # if error.response.status_code == codes.UNAUTHORIZED:
-            self.logger.info(f"Unauthorized token received. Access token is invalid.")
-            return False
-            # raise error
-        return True
 
     def get_token(self):
         payload = {
@@ -97,7 +87,8 @@ class BrightspaceClient:
         }
         try:
             resp = self._make_request("POST", self.airflow_get_token, body=payload)
-        except HTTPError as err:
+        except Exception as err:
+            self.logger.error("Get token failed: %s", err)
             raise err
         auth = resp.json()
         self.access_token = auth["access_token"]
