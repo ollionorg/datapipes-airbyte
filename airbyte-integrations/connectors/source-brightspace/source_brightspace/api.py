@@ -93,6 +93,7 @@ class BrightspaceClient:
         payload = {
             'client_auth_type': "CREDENTIALS_IN_BODY",
             'token_url': self._refresh_endpoint,
+            'ingestor_source_update_url': self.ingestor_source_update_url,
         }
         try:
             resp = self._make_request("POST", self.airflow_get_token, body=payload)
@@ -105,6 +106,7 @@ class BrightspaceClient:
             self,
             instance_url: str,
             airflow_get_token: str,
+            ingestor_source_update_url: str,
             refresh_token: str = None,
             token: str = None,
             client_id: str = None,
@@ -116,6 +118,7 @@ class BrightspaceClient:
         self.refresh_token = refresh_token
         self.token = token
         self.airflow_get_token = airflow_get_token
+        self.ingestor_source_update_url = ingestor_source_update_url
         self.client_id = client_id
         self.client_secret = client_secret
         self.access_token = access_token
