@@ -1,4 +1,5 @@
 import logging
+import time
 from enum import Enum
 from functools import wraps
 from typing import Any, List
@@ -79,19 +80,27 @@ class BrightspaceClient:
     logger = logging.getLogger("airbyte")
     version = "1.43"
 
-    def get_token(self):
-        payload = {
-            'client_auth_type': "CREDENTIALS_IN_BODY",
-            'token_url': self._refresh_endpoint,
-            'ingestor_source_update_url': self.ingestor_source_update_url,
-        }
-        try:
-            resp = self._make_request("POST", self.airflow_get_token, body=payload)
-        except Exception as err:
-            self.logger.error("Get token failed: %s", err)
-            raise err
-        auth = resp.json()
-        self.access_token = auth["access_token"]
+    def get_token(self, max_retries=3, retry_delay=10):
+        error = None
+        for attempt in range(max_retries):
+            try:
+                payload = {
+                    'client_auth_type': "CREDENTIALS_IN_BODY",
+                    'token_url': self._refresh_endpoint,
+                    'ingestor_source_update_url': self.ingestor_source_update_url,
+                }
+                resp = self._make_request("POST", self.airflow_get_token, body=payload)
+                auth = resp.json()
+                self.access_token = auth["access_token"]
+                return  # Token successfully retrieved, exit the loop
+            except HTTPError as err:
+                error = err
+                self.logger.error("Get token failed (Attempt %d): %s", attempt + 1, err.response.text)
+                if attempt < max_retries - 1:
+                    self.logger.info("Retrying in %d seconds...", retry_delay)
+                    time.sleep(retry_delay)
+        # If all attempts failed, raise the last exception
+        raise error
 
     def __init__(
             self,
