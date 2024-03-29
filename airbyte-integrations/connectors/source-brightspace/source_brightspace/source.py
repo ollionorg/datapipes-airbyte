@@ -12,7 +12,6 @@ class SourceBrightspace(AbstractSource):
     @staticmethod
     def _get_bs_object(config: Mapping[str, Any]) -> BrightspaceClient:
         bs = BrightspaceClient(**config)
-        # sf.login()
         return bs
 
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, Optional[Any]]:
@@ -23,7 +22,8 @@ class SourceBrightspace(AbstractSource):
             if error.response.status_code == codes.UNAUTHORIZED:
                 error_res = json.loads(error.response.content) or {}
                 return False, f"{error_res.get('detail', 'UNAUTHORIZED')}, No permission -- see authorization schemes"
-            raise error
+            else:
+                return False, f"{error.response.text}"
         return True, None
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:

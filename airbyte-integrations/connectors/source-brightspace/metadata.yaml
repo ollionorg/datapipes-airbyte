@@ -15,7 +15,7 @@ data:
   connectorSubtype: api
   connectorType: source
   definitionId: 694710ca-8933-4661-8db9-c38cb60411b0
-  dockerImageTag: 0.0.0
+  dockerImageTag: 0.1.1
   dockerRepository: datapipes-airbyte/source-brightspace
   githubIssueLabel: source-brightspace
   icon: brightspace.svg
