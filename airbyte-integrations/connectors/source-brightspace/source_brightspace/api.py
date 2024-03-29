@@ -1,10 +1,13 @@
 import logging
 import time
+import traceback
+from datetime import datetime
 from enum import Enum
 from functools import wraps
 from typing import Any, List
 
 import requests
+from airbyte_protocol.models import AirbyteMessage, Type, AirbyteTraceMessage, TraceType, AirbyteErrorTraceMessage
 from pydantic import BaseModel, Field
 from requests import adapters as request_adapters
 from requests import codes
@@ -95,10 +98,27 @@ class BrightspaceClient:
                 return  # Token successfully retrieved, exit the loop
             except HTTPError as err:
                 error = err
-                self.logger.error("Get token failed (Attempt %d): %s", attempt + 1, err.response.text)
+                self.logger.info("Get token failed (Attempt %d): %s", attempt + 1, err.response.text)
                 if attempt < max_retries - 1:
                     self.logger.info("Retrying in %d seconds...", retry_delay)
                     time.sleep(retry_delay)
+                if attempt == max_retries - 1:
+                    self.logger.error("Get token failed with error %s", err.response.text)
+                    error_msg = f"This could be due to an invalid configuration. Please contact Support for assistance. Error: {err.response.text}"
+                    error_log_msg = AirbyteMessage(
+                        type=Type.TRACE,
+                        trace=AirbyteTraceMessage(
+                            type=TraceType.ERROR,
+                            emitted_at=int(datetime.now().timestamp() * 1000),
+                            error=AirbyteErrorTraceMessage(
+                                internal_message=f"{err.response.text}",
+                                message=error_msg,
+                                stack_trace=traceback.format_exc(),
+                            ),
+                        ),
+                    ).json(exclude_none=True)
+                    print(error_log_msg)
+
         # If all attempts failed, raise the last exception
         raise error
 
