@@ -16,8 +16,7 @@ class SourceBrightspace(AbstractSource):
 
     def check_connection(self, logger: logging.Logger, config: Mapping[str, Any]) -> Tuple[bool, Optional[Any]]:
         try:
-            bs_client = self._get_bs_object(config)
-            bs_client.get_list_of_data_set()
+            self.test_connection(config)
         except HTTPError as error:
             if error.response.status_code == codes.UNAUTHORIZED:
                 error_res = json.loads(error.response.content) or {}
@@ -26,8 +25,12 @@ class SourceBrightspace(AbstractSource):
                 return False, f"{error.response.text}"
         return True, None
 
-    def streams(self, config: Mapping[str, Any]) -> List[Stream]:
+    def test_connection(self, config):
         bs_client = self._get_bs_object(config)
+        bs_client.get_list_of_data_set()
+
+    def streams(self, config: Mapping[str, Any]) -> List[Stream]:
+        self.test_connection(config)
         streams = []
         stream_configs = {
             "final_grades": FinalGradesStream,
