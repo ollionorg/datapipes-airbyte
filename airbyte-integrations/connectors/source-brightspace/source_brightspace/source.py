@@ -31,6 +31,7 @@ class SourceBrightspace(AbstractSource):
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         self.test_connection(config)
+        bs_client = self._get_bs_object(config)
         streams = []
         stream_configs = {
             "final_grades": FinalGradesStream,
