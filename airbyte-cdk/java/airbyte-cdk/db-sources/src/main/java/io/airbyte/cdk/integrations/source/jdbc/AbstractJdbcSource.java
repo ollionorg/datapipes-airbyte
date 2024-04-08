@@ -44,6 +44,7 @@ import io.airbyte.cdk.integrations.base.Source;
 import io.airbyte.cdk.integrations.source.jdbc.dto.JdbcPrivilegeDto;
 import io.airbyte.cdk.integrations.source.relationaldb.AbstractDbSource;
 import io.airbyte.cdk.integrations.source.relationaldb.CursorInfo;
+import io.airbyte.cdk.integrations.source.relationaldb.DbSourceDiscoverUtil;
 import io.airbyte.cdk.integrations.source.relationaldb.TableInfo;
 import io.airbyte.cdk.integrations.source.relationaldb.state.StateManager;
 import io.airbyte.commons.functional.CheckedConsumer;
@@ -53,6 +54,9 @@ import io.airbyte.commons.util.AutoCloseableIterator;
 import io.airbyte.commons.util.AutoCloseableIterators;
 import io.airbyte.protocol.models.CommonField;
 import io.airbyte.protocol.models.JsonSchemaType;
+import io.airbyte.protocol.models.v0.AirbyteMessage;
+import io.airbyte.protocol.models.v0.AirbyteMessage.Type;
+import io.airbyte.protocol.models.v0.AirbyteStream;
 import io.airbyte.protocol.models.v0.AirbyteStreamNameNamespacePair;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
@@ -60,6 +64,7 @@ import io.airbyte.protocol.models.v0.SyncMode;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -74,6 +79,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -535,6 +541,89 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
         .filter(stream -> newlyAddedStreams.contains(AirbyteStreamNameNamespacePair.fromAirbyteStream(stream.getStream())))
         .map(Jsons::clone)
         .collect(Collectors.toList());
+  }
+
+  @Override
+  public AutoCloseableIterator<AirbyteMessage> read(final JsonNode config,
+      final ConfiguredAirbyteCatalog catalog,
+      final JsonNode state)
+      throws Exception {
+    LOGGER.info(catalog.toString());
+    if (!isDiscoverForCustomSQL(catalog)) {
+      return super.read(config, catalog, state);
+    }
+
+    final List<AutoCloseableIterator<AirbyteMessage>> iteratorList = new ArrayList<>();
+    try {
+      final JdbcDatabase database = createDatabase(config);
+
+      List<TableInfo<CommonField<Datatype>>> tableInfos = catalog.getStreams().stream()
+          .map(configuredAirbyteStream -> {
+            AirbyteStream stream = configuredAirbyteStream.getStream();
+            String customSQL = (String) stream.getAdditionalProperties().get("custom_sql");
+            if (customSQL.isEmpty()) {
+              throw new RuntimeException("Custom SQL is required to discover the schema");
+            }
+            try {
+              return database.unsafeQuery(
+                  connection -> connection.prepareStatement(customSQL),
+                  resultSet -> this.getColumnMetadataForCustomSQL(resultSet, stream.getNamespace(),
+                      stream.getName())
+              ).findFirst();
+            } catch (SQLException e) {
+              throw new RuntimeException("Error executing custom SQL: " + customSQL, e);
+            }
+          })
+          .filter(Optional::isPresent)
+          .map(Optional::get)
+          .collect(Collectors.toList());
+
+      return AutoCloseableIterators.fromStream(
+          Stream.of(new AirbyteMessage().withType(Type.CATALOG)
+              .withCatalog(DbSourceDiscoverUtil.convertTableInfosToAirbyteCatalog(
+                  tableInfos, new HashMap<>(), this::getAirbyteType))),
+          AirbyteStreamUtils.convertFromNameAndNamespace("tableName", "schemaName")
+      );
+    } finally {
+      close();
+    }
+  }
+
+  private boolean isDiscoverForCustomSQL(ConfiguredAirbyteCatalog catalog) {
+    return catalog.getStreams()
+        .stream()
+        .map(ConfiguredAirbyteStream::getStream)
+        .anyMatch(
+            airbyteStream -> airbyteStream.getAdditionalProperties().containsKey("is_discover")
+                && (boolean) airbyteStream.getAdditionalProperties().get("is_discover"));
+  }
+
+
+  private TableInfo<CommonField<Datatype>> getColumnMetadataForCustomSQL(ResultSet resultSet,
+      String namespace, String name)
+      throws SQLException {
+    ResultSetMetaData metaData = resultSet.getMetaData();
+
+    List<CommonField<Datatype>> fields = IntStream.rangeClosed(1, metaData.getColumnCount())
+        .mapToObj(i -> {
+          try {
+            String columnName = metaData.getColumnName(i);
+            Datatype datatype = sourceOperations.getDatabaseFieldType(
+                Jsons.jsonNode(ImmutableMap.of(INTERNAL_COLUMN_TYPE, metaData.getColumnType(i)))
+            );
+            return new CommonField<>(columnName, datatype);
+          } catch (SQLException e) {
+            throw new RuntimeException("Error while processing column metadata", e);
+          }
+        })
+        .collect(Collectors.toList());
+    return TableInfo.<CommonField<Datatype>>builder()
+        .nameSpace(namespace)
+        .name(name)
+        .fields(fields)
+        .primaryKeys(List.of())
+        .cursorFields(List.of())
+        .build();
   }
 
 }
