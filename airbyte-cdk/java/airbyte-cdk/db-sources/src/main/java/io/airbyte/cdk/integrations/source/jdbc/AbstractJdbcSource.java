@@ -609,7 +609,15 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
           try {
             String columnName = metaData.getColumnName(i);
             Datatype datatype = sourceOperations.getDatabaseFieldType(
-                Jsons.jsonNode(ImmutableMap.of(INTERNAL_COLUMN_TYPE, metaData.getColumnType(i)))
+                Jsons.jsonNode(ImmutableMap.<String, Object>builder()
+                    // we always want a namespace, if we cannot get a schema, use db name.
+                    .put(INTERNAL_SCHEMA_NAME, namespace)
+                    .put(INTERNAL_TABLE_NAME, name)
+                    .put(INTERNAL_COLUMN_NAME, metaData.getColumnName(i))
+                    .put(INTERNAL_COLUMN_TYPE, metaData.getColumnType(i))
+                    .put(INTERNAL_COLUMN_TYPE_NAME, metaData.getColumnTypeName(i))
+                    .put(INTERNAL_COLUMN_SIZE, metaData.getColumnDisplaySize(i))
+                    .put(INTERNAL_IS_NULLABLE, metaData.isNullable(i)).build())
             );
             return new CommonField<>(columnName, datatype);
           } catch (SQLException e) {
