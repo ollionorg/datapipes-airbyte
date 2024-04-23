@@ -27,12 +27,17 @@ class SourceBrightspace(AbstractSource):
 
     def test_connection(self, config):
         bs_client = self._get_bs_object(config)
-        bs_client.get_list_of_data_set()
+        bs_client.get_list_of_ads_data_set()
 
     def streams(self, config: Mapping[str, Any]) -> List[Stream]:
         self.test_connection(config)
         bs_client = self._get_bs_object(config)
         streams = []
+
+        list_bds = bs_client.get_list_of_bds_data_set()
+        for bds in list_bds:
+            streams.append(BDSStream(bs_client, bds))
+
         stream_configs = {
             "final_grades": FinalGradesStream,
             "enrollments_and_withdrawals": EnrollmentsAndWithdrawalsStream,
