@@ -33,10 +33,10 @@ class SourceBrightspace(AbstractSource):
         self.test_connection(config)
         bs_client = self._get_bs_object(config)
         streams = []
-
-        list_bds = bs_client.get_list_of_bds_data_set()
-        for bds in list_bds:
-            streams.append(BDSStream(bs_client, bds))
+        if config.get('bds', {}).get('enable', False):
+            list_bds = bs_client.get_list_of_bds_data_set()
+            for bds in list_bds:
+                streams.append(BDSStream(bs_client, bds))
 
         stream_configs = {
             "final_grades": FinalGradesStream,

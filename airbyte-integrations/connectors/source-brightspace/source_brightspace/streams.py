@@ -50,10 +50,16 @@ class ADSStream(BrightspaceStream, ABC):
     MAX_RETRY_NUMBER = 3  # maximum number of retries for creating successful jobs
 
     def __init__(
-            self, bs_api: BrightspaceClient, **kwargs
+            self, bs_api: BrightspaceClient, start_date: str, end_date: Optional[str] = None, **kwargs
     ):
         super().__init__(**kwargs)
         self.bs_api = bs_api
+        self.start_date = start_date
+        self.end_date = end_date
+
+    @property
+    def cursor_field(self) -> str:
+        return "last_modified"
 
     @abstractmethod
     def create_export_job(self, sync_mode: SyncMode) -> BSExportJob:
@@ -66,9 +72,13 @@ class ADSStream(BrightspaceStream, ABC):
             stream_slice: Mapping[str, Any] = None,
             stream_state: Mapping[str, Any] = None,
     ) -> Iterable[Mapping[str, Any]]:
+        if sync_mode == SyncMode.incremental:
+            self._incremental_read(stream_state)
+        self.end_date = self.end_date or pendulum.now(tz="UTC").to_iso8601_string()
         export_job, job_status = self.execute_job()
         zip_file_stream = self.bs_api.download_export_job(export_job_id=export_job.export_job_id)
         for record in self.read_with_chunks(zip_file_stream):
+            record["stream_last_sync_time"] = self.end_date
             yield record
 
     def execute_job(self) -> Tuple[Optional[BSExportJob], Optional[ExportJobStatus]]:
@@ -117,15 +127,20 @@ class ADSStream(BrightspaceStream, ABC):
         self.logger.warning(f"Not wait the {self.name} data for {self.DEFAULT_WAIT_TIMEOUT_SECONDS} seconds, data: {job_info}!!")
         return job_status
 
+    def get_updated_state(
+            self, current_stream_state: MutableMapping[str, Any], latest_record: Mapping[str, Any]
+    ) -> MutableMapping[str, Any]:
+        return {"last_modified": latest_record["stream_last_sync_time"]}
+
+    def _incremental_read(self, stream_state: Mapping[str, Any] = None):
+        last_modified = stream_state.get('last_modified') if stream_state else None
+        if not last_modified:
+            self.logger.info('No last_modified field found for stream. Running full read')
+            return
+        self.start_date = last_modified
+
 
 class FinalGradesStream(ADSStream, ABC):
-
-    def __init__(
-            self, start_date: str, end_date: str, **kwargs
-    ):
-        super().__init__(**kwargs)
-        self.start_date = start_date
-        self.end_date = end_date
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
@@ -156,12 +171,10 @@ class FinalGradesStream(ADSStream, ABC):
 
 class EnrollmentsAndWithdrawalsStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+            self, org_unit_id: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
@@ -197,12 +210,10 @@ class EnrollmentsAndWithdrawalsStream(ADSStream, ABC):
 
 class AllGradesStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+            self, org_unit_id: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
@@ -237,12 +248,10 @@ class AllGradesStream(ADSStream, ABC):
 
 class LearnerUsageStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
         self.roles = roles
 
     @property
@@ -314,15 +323,26 @@ class CLOEStream(ADSStream, ABC):
         }
         return self.bs_api.create_export_job(payload=payload)
 
+    def read_records(
+            self,
+            sync_mode: SyncMode,
+            cursor_field: List[str] = None,
+            stream_slice: Mapping[str, Any] = None,
+            stream_state: Mapping[str, Any] = None,
+    ) -> Iterable[Mapping[str, Any]]:
+        export_job, job_status = self.execute_job()
+        zip_file_stream = self.bs_api.download_export_job(export_job_id=export_job.export_job_id)
+        for record in self.read_with_chunks(zip_file_stream):
+            record["stream_last_sync_time"] = self.end_date
+            yield record
+
 
 class InstructorUsageStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
         self.roles = roles
 
     @property
@@ -362,12 +382,10 @@ class InstructorUsageStream(ADSStream, ABC):
 
 class AwardsIssuedStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+            self, org_unit_id: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
@@ -402,12 +420,10 @@ class AwardsIssuedStream(ADSStream, ABC):
 
 class RubricAssessmentsStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+            self, org_unit_id: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
@@ -442,12 +458,10 @@ class RubricAssessmentsStream(ADSStream, ABC):
 
 class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, include_not_achieved_learners: str, **kwargs
+            self, org_unit_id: str, include_not_achieved_learners: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
         self.include_not_achieved_learners = include_not_achieved_learners
 
     @property
@@ -487,12 +501,10 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
 
 class ContentProgressStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
         self.roles = roles
 
     @property
@@ -532,12 +544,10 @@ class ContentProgressStream(ADSStream, ABC):
 
 class SurveyResultsStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
         self.roles = roles
 
     @property
@@ -577,12 +587,10 @@ class SurveyResultsStream(ADSStream, ABC):
 
 class CourseOfferingEnrollmentsStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, **kwargs
+            self, org_unit_id: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
@@ -617,12 +625,10 @@ class CourseOfferingEnrollmentsStream(ADSStream, ABC):
 
 class AttendanceStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, start_date: str, end_date: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: str, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
-        self.start_date = start_date
-        self.end_date = end_date
         self.roles = roles
 
     @property
@@ -673,10 +679,9 @@ class BDSStream(BrightspaceStream, ABC):
     def name(self) -> str:
         return self.bds_info.full.name
 
-    #
-    # @property
-    # def cursor_field(self) -> str:
-    #     return "last_modified"
+    @property
+    def cursor_field(self) -> str:
+        return "last_modified"
 
     @property
     def primary_key(self) -> Optional[Union[str, List[str], List[List[str]]]]:
