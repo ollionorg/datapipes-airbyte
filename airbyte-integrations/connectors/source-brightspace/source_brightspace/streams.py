@@ -62,7 +62,7 @@ class ADSStream(BrightspaceStream, ABC):
         return "last_modified"
 
     @abstractmethod
-    def create_export_job(self, sync_mode: SyncMode) -> BSExportJob:
+    def create_export_job(self) -> BSExportJob:
         pass
 
     def read_records(
@@ -282,7 +282,7 @@ class LearnerUsageStream(ADSStream, ABC):
                 },
                 {
                     "name": "roles",
-                    "value": self.roles
+                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
@@ -317,7 +317,7 @@ class CLOEStream(ADSStream, ABC):
                 },
                 {
                     "name": "roles",
-                    "value": self.roles
+                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
@@ -373,7 +373,7 @@ class InstructorUsageStream(ADSStream, ABC):
                 },
                 {
                     "name": "roles",
-                    "value": self.roles
+                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
@@ -535,7 +535,7 @@ class ContentProgressStream(ADSStream, ABC):
                 },
                 {
                     "name": "roles",
-                    "value": self.roles
+                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
@@ -578,7 +578,7 @@ class SurveyResultsStream(ADSStream, ABC):
                 },
                 {
                     "name": "roles",
-                    "value": self.roles
+                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
@@ -659,7 +659,7 @@ class AttendanceStream(ADSStream, ABC):
                 },
                 {
                     "name": "roles",
-                    "value": self.roles
+                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
