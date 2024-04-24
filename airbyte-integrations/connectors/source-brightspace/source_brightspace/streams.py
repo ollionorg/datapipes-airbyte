@@ -293,7 +293,7 @@ class CLOEStream(ADSStream, ABC):
     def __init__(
             self, org_unit_id: str, roles: str, **kwargs
     ):
-        super().__init__(**kwargs)
+        super().__init__(start_date="", **kwargs)
         self.org_unit_id = org_unit_id
         self.roles = roles
 
@@ -470,7 +470,7 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return "Programme Learning Outcome Evaluation"
+        return "Programme Level Outcome Evaluation"
 
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_ads_data_set()
