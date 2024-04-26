@@ -470,7 +470,7 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
 
     @property
     def name(self) -> str:
-        return "Programme Level Outcome Evaluation"
+        return "Programme Learning Outcome Evaluation"
 
     def create_export_job(self) -> BSExportJob:
         data_sets = self.bs_api.get_list_of_ads_data_set()
