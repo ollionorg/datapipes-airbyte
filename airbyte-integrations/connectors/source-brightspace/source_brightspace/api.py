@@ -1,11 +1,14 @@
 import logging
 import time
+import traceback
+from datetime import datetime
 from enum import Enum
 from functools import wraps
-from typing import Any, List
+from typing import Any, List, Optional
 
 import requests
-from pydantic import BaseModel, Field
+from airbyte_protocol.models import AirbyteMessage, Type, AirbyteTraceMessage, TraceType, AirbyteErrorTraceMessage
+from pydantic import BaseModel, Field, validator
 from requests import adapters as request_adapters
 from requests import codes
 from requests.exceptions import HTTPError
@@ -35,6 +38,43 @@ class BSExportJob(BaseModel):
     data_set_id: str = Field(alias="DataSetId")
     name: str = Field(alias="Name")
     status: ExportJobStatus = Field(alias="Status")
+
+
+class BrightspaceDataSetPluginInfo(BaseModel):
+    plugin_id: str = Field(alias="PluginId")
+    name: str = Field(alias="Name")
+    differential: str = Field(alias="Description")
+    extracts_link: str = Field(alias="ExtractsLink")
+
+
+class BrightspaceDataSetInfo(BaseModel):
+    schema_id: str = Field(alias="SchemaId")
+    full: Optional[BrightspaceDataSetPluginInfo] = Field(alias="Full", default=None)
+    differential: Optional[BrightspaceDataSetPluginInfo] = Field(alias="Differential", default=None)
+    extracts_link: str = Field(alias="ExtractsLink")
+
+
+class BdsType(str, Enum):
+    Full = "Full"
+    Differential = "Differential"
+
+
+class BrightspaceDataSetExtractInfo(BaseModel):
+    # ref: https://docs.valence.desire2learn.com/res/dataExport.html#BrightspaceDataSets.BrightspaceDataSetExtractInfo
+    schema_id: str = Field(alias="SchemaId")
+    plugin_id: str = Field(alias="PluginId")
+    bds_type: BdsType = Field(alias="BdsType")
+    created_date: datetime = Field(alias="CreatedDate")
+    download_link: Optional[str] = Field(alias="DownloadLink", default=None)
+
+    # Validator to parse date string to datetime object
+    @validator('created_date', pre=True)
+    def parse_created_date(cls, value):
+        return datetime.fromisoformat(value.replace('Z', '+00:00'))
+
+    @property
+    def to_state(self) -> str:
+        return self.created_date.isoformat()
 
 
 def handle_http_errors(func):
@@ -95,10 +135,27 @@ class BrightspaceClient:
                 return  # Token successfully retrieved, exit the loop
             except HTTPError as err:
                 error = err
-                self.logger.error("Get token failed (Attempt %d): %s", attempt + 1, err.response.text)
+                self.logger.info("Get token failed (Attempt %d): %s", attempt + 1, err.response.text)
                 if attempt < max_retries - 1:
                     self.logger.info("Retrying in %d seconds...", retry_delay)
                     time.sleep(retry_delay)
+                if attempt == max_retries - 1:
+                    self.logger.error("Get token failed with error %s", err.response.text)
+                    error_msg = f"This could be due to an invalid configuration. Please contact Support for assistance. Error: {err.response.text}"
+                    error_log_msg = AirbyteMessage(
+                        type=Type.TRACE,
+                        trace=AirbyteTraceMessage(
+                            type=TraceType.ERROR,
+                            emitted_at=int(datetime.now().timestamp() * 1000),
+                            error=AirbyteErrorTraceMessage(
+                                internal_message=f"{err.response.text}",
+                                message=error_msg,
+                                stack_trace=traceback.format_exc(),
+                            ),
+                        ),
+                    ).json(exclude_none=True)
+                    print(error_log_msg)
+
         # If all attempts failed, raise the last exception
         raise error
 
@@ -153,7 +210,7 @@ class BrightspaceClient:
 
     @token_manager
     @handle_http_errors
-    def get_list_of_data_set(self) -> List[BSDataSet]:
+    def get_list_of_ads_data_set(self) -> List[BSDataSet]:
         url = f"{self.url_base}/dataExport/list"
         headers = {"Authorization": "Bearer {}".format(self.access_token)}
         response = self._make_request(http_method="GET", url=url, headers=headers)
@@ -183,4 +240,49 @@ class BrightspaceClient:
         url = f"{self.url_base}/dataExport/download/{export_job_id}"
         headers = {"Authorization": "Bearer {}".format(self.access_token)}
         response = self._make_request(http_method="GET", url=url, headers=headers)
+        return response.content
+
+    @token_manager
+    @handle_http_errors
+    def get_list_of_bds_data_set(self) -> List[BrightspaceDataSetInfo]:
+        url = f"{self.url_base}/datasets/bds"
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        datasets = []
+
+        while url:
+            response = self._make_request(http_method="GET", url=url, headers=headers)
+            if response.status_code != 200:
+                raise Exception("Failed to fetch data: " + response.text)
+
+            data = response.json()
+            datasets.extend([BrightspaceDataSetInfo(**obj) for obj in data.get("Objects", [])])
+
+            url = data.get("Next")  # Continue to next page if available
+
+        return datasets
+
+    @token_manager
+    @handle_http_errors
+    def get_bds_extracts(self, schema_id: str, plugin_id: str) -> List[BrightspaceDataSetExtractInfo]:
+        url = f"{self.url_base}/datasets/bds/{schema_id}/plugins/{plugin_id}/extracts"
+        headers = {"Authorization": f"Bearer {self.access_token}"}
+        datasets = []
+
+        while url:
+            response = self._make_request(http_method="GET", url=url, headers=headers)
+            if response.status_code != 200:
+                raise Exception("Failed to fetch data: " + response.text)
+
+            data = response.json()
+            datasets.extend([BrightspaceDataSetExtractInfo(**obj) for obj in data.get("Objects", [])])
+
+            url = data.get("Next")  # Continue to next page if available
+
+        return datasets
+
+    @token_manager
+    @handle_http_errors
+    def download_bds_extracts(self, download_link: str):
+        headers = {"Authorization": "Bearer {}".format(self.access_token)}
+        response = self._make_request(http_method="GET", url=download_link, headers=headers)
         return response.content
