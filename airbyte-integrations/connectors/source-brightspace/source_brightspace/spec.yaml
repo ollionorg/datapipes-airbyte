@@ -13,7 +13,6 @@ connectionSpecification:
       type: object
       required:
         - start_date
-        - end_date
       properties:
         start_date:
           type: string
@@ -38,7 +37,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
       properties:
         org_unit_id:
           type: integer
@@ -65,7 +63,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
       properties:
         org_unit_id:
           type: integer
@@ -92,7 +89,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
         - roles
       properties:
         org_unit_id:
@@ -116,7 +112,11 @@ connectionSpecification:
             - "2021-07-25T00:00:00Z"
           format: date-time
         roles:
-          type: integer
+          title: "Roles"
+          type: array
+          items:
+            title: "Role ID"
+            type: integer
     CLOE:
       type: object
       required:
@@ -126,13 +126,16 @@ connectionSpecification:
         org_unit_id:
           type: integer
         roles:
-          type: integer
+          title: "Roles"
+          type: array
+          items:
+            title: "Role ID"
+            type: integer
     instructor_usage:
       type: object
       required:
         - org_unit_id
         - start_date
-        - end_date
         - roles
       properties:
         org_unit_id:
@@ -156,13 +159,16 @@ connectionSpecification:
             - "2021-07-25T00:00:00Z"
           format: date-time
         roles:
-          type: integer
+          title: "Roles"
+          type: array
+          items:
+            title: "Role ID"
+            type: integer
     awards_issued:
       type: object
       required:
         - org_unit_id
         - start_date
-        - end_date
       properties:
         org_unit_id:
           type: integer
@@ -189,7 +195,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
       properties:
         org_unit_id:
           type: integer
@@ -216,7 +221,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
         - include_not_achieved_learners
       properties:
         org_unit_id:
@@ -247,7 +251,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
         - roles
       properties:
         org_unit_id:
@@ -271,13 +274,16 @@ connectionSpecification:
             - "2021-07-25T00:00:00Z"
           format: date-time
         roles:
-          type: integer
+          title: "Roles"
+          type: array
+          items:
+            title: "Role ID"
+            type: integer
     survey_results:
       type: object
       required:
         - org_unit_id
         - start_date
-        - end_date
         - roles
       properties:
         org_unit_id:
@@ -301,13 +307,16 @@ connectionSpecification:
             - "2021-07-25T00:00:00Z"
           format: date-time
         roles:
-          type: integer
+          title: "Roles"
+          type: array
+          items:
+            title: "Role ID"
+            type: integer
     course_offering_enrollments:
       type: object
       required:
         - org_unit_id
         - start_date
-        - end_date
       properties:
         org_unit_id:
           type: integer
@@ -334,7 +343,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - end_date
         - roles
       properties:
         org_unit_id:
@@ -358,4 +366,8 @@ connectionSpecification:
             - "2021-07-25T00:00:00Z"
           format: date-time
         roles:
-          type: integer
+          title: "Roles"
+          type: array
+          items:
+            title: "Role ID"
+            type: integer
