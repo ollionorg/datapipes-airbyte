@@ -10,7 +10,7 @@ MAIN_REQUIREMENTS = [
     "gcsfs==2022.7.1",
     "genson==1.2.2",
     "google-cloud-storage==2.5.0",
-    "pandas==1.4.3",
+    "pandas==2.2.2",
     "paramiko==2.11.0",
     "s3fs==2022.7.1",
     "boto3==1.21.21",
