@@ -10,7 +10,6 @@ import sys
 import tempfile
 import traceback
 import urllib
-import zipfile
 from os import environ, getcwd
 from typing import Iterable
 from urllib.parse import urlparse
@@ -442,6 +441,29 @@ class Client:
             return "date-time"
         return "string"
 
+    @staticmethod
+    def dtype_to_json_type2(dtype):
+        """Convert Pandas Dataframe types to Airbyte Types.
+
+        :param dtype: Pandas Dataframe type
+        :return: Corresponding Airbyte Type
+        """
+        number_types = ("double", "float64", "decimal128(10,2)", "decimal128(9,2)")
+        integer_types = ("int32", "int64", "int96")
+        datetime_types = ("datetime64[ns]", "timestamp[us]")
+        decimal_pattern = r'decimal(\d+\(\d+,\d+\)|128\(\d+,\d+\))?'
+        if dtype == object:
+            return "string", None
+        elif re.match(decimal_pattern, str(dtype)):
+            return "number", "double"
+        if str(dtype).lower() in integer_types:
+            return "integer", None
+        if str(dtype).lower() == "bool":
+            return "boolean", None
+        if dtype in datetime_types:
+            return "date-time", None
+        return "string", None
+
     @property
     def reader(self) -> reader_class:
         return self.reader_class(url=self._url, provider=self._provider, binary=self.binary_source, encoding=self.encoding)
@@ -521,8 +543,21 @@ class Client:
         read_sample_chunk is used to determine if just one chunk should be read to generate schema
         """
         row_count = 0
+        fields = {}
         if self._reader_format == "yaml":
             df_list = [self.load_yaml(fp)]
+
+        elif self._reader_format == "parquet":
+            parquet_file = pq.ParquetFile(fp)
+
+            # Get the schema from the Parquet file
+            schema = parquet_file.schema.to_arrow_schema()
+            for name, dtype in zip(schema.names, schema.types):
+                json_type, airbyte_type = self.dtype_to_json_type2(dtype)
+                fields[name] = {"type": json_type}
+                if airbyte_type:
+                    fields[name]["airbyte_type"] = airbyte_type
+            df_list = []
         else:
             # if self.binary_source:
             #     fp = self._cache_stream(fp)
@@ -554,6 +589,8 @@ class Client:
             stream[field] = {"type": [fields[field]["type"] if fields[field]["type"] else "string", "null"]}
             if "format" in fields[field]:
                 stream[field]["format"] = fields[field]["format"]
+            if "airbyte_type" in fields[field]:
+                stream[field]["airbyte_type"] = fields[field]["airbyte_type"]
         return {"stream": stream, "row_count": row_count}
 
     def streams(self, empty_schema: bool = False) -> Iterable:
