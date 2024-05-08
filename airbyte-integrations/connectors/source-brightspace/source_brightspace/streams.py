@@ -698,7 +698,7 @@ class BDSStream(BrightspaceStream, ABC):
         try:
             self.logger.info(f"Fetching schema started for bds {self.name} ................")
             fields = {}
-            for df in self.read_csv_files(http_stream=bds_http_stream, sample_read=True):
+            for df in self.read_csv_files(http_stream=bds_http_stream):
                 for col in df.columns:
                     if df[col].isnull().values.all():
                         if not fields.get(col):
