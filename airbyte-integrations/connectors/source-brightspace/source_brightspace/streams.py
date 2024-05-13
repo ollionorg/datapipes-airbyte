@@ -20,6 +20,11 @@ from source_brightspace.api import BrightspaceClient, BSExportJob, ExportJobStat
 
 
 class BrightspaceStream(Stream, ABC):
+    
+    def __init__(
+            self, dataset_type: str, **kwargs
+    ):
+        super().__init__(**kwargs)
 
     @property
     def availability_strategy(self) -> Optional["AvailabilityStrategy"]:

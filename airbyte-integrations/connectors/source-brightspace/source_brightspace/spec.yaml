@@ -14,6 +14,9 @@ connectionSpecification:
       required:
         - start_date
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         start_date:
           type: string
           pattern: >-
@@ -38,6 +41,9 @@ connectionSpecification:
         - org_unit_id
         - start_date
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -64,6 +70,9 @@ connectionSpecification:
         - org_unit_id
         - start_date
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -91,6 +100,9 @@ connectionSpecification:
         - start_date
         - roles
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -123,6 +135,9 @@ connectionSpecification:
         - org_unit_id
         - roles
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         roles:
@@ -138,6 +153,9 @@ connectionSpecification:
         - start_date
         - roles
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -170,6 +188,9 @@ connectionSpecification:
         - org_unit_id
         - start_date
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -196,6 +217,9 @@ connectionSpecification:
         - org_unit_id
         - start_date
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -223,6 +247,9 @@ connectionSpecification:
         - start_date
         - include_not_achieved_learners
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -253,6 +280,9 @@ connectionSpecification:
         - start_date
         - roles
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -286,6 +316,9 @@ connectionSpecification:
         - start_date
         - roles
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -318,6 +351,9 @@ connectionSpecification:
         - org_unit_id
         - start_date
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
@@ -345,6 +381,9 @@ connectionSpecification:
         - start_date
         - roles
       properties:
+        dataset_type:
+          type: string
+          const: "ads"
         org_unit_id:
           type: integer
         start_date:
