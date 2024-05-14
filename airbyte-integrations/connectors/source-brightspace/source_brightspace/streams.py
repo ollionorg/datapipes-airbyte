@@ -20,11 +20,6 @@ from source_brightspace.api import BrightspaceClient, BSExportJob, ExportJobStat
 
 
 class BrightspaceStream(Stream, ABC):
-    
-    def __init__(
-            self, dataset_type: str, **kwargs
-    ):
-        super().__init__(**kwargs)
 
     @property
     def availability_strategy(self) -> Optional["AvailabilityStrategy"]:
@@ -57,7 +52,6 @@ class ADSStream(BrightspaceStream, ABC):
     def __init__(
             self, bs_api: BrightspaceClient, start_date: str, end_date: Optional[str] = None, **kwargs
     ):
-        super().__init__(**kwargs)
         self.bs_api = bs_api
         self.start_date = start_date
         self.end_date = end_date
@@ -676,7 +670,6 @@ class BDSStream(BrightspaceStream, ABC):
     def __init__(
             self, bs_api: BrightspaceClient, bds: BrightspaceDataSetInfo, **kwargs
     ):
-        super().__init__(**kwargs)
         self.bs_api = bs_api
         self.bds_info = bds
 
