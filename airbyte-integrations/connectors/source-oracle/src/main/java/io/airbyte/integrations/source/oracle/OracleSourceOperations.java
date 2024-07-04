@@ -6,6 +6,7 @@ package io.airbyte.integrations.source.oracle;
 
 import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_COLUMN_NAME;
 import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_COLUMN_TYPE;
+import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_DECIMAL_DIGITS;
 import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_SCHEMA_NAME;
 import static io.airbyte.cdk.db.jdbc.JdbcConstants.INTERNAL_TABLE_NAME;
 
@@ -70,6 +71,14 @@ public class OracleSourceOperations extends JdbcSourceOperations {
           OracleType.BINARY_DOUBLE.getVendorTypeNumber()
       ).contains(field.get(INTERNAL_COLUMN_TYPE).asInt())) {
         return JDBCType.DOUBLE;
+      }
+
+      if (field.get(INTERNAL_COLUMN_TYPE).asInt() == OracleType.NUMBER.getVendorTypeNumber()) {
+        if (field.get(INTERNAL_DECIMAL_DIGITS) != null
+            && field.get(INTERNAL_DECIMAL_DIGITS).asInt() == 0) {
+          return JDBCType.INTEGER;
+        }
+
       }
 
       return JDBCType.valueOf(field.get(INTERNAL_COLUMN_TYPE).asInt());
