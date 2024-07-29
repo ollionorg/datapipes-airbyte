@@ -45,46 +45,29 @@ public class MssqlSourceOperations extends JdbcSourceOperations {
   @Override
   public void copyToJsonField(final ResultSet resultSet, final int colIndex, final ObjectNode json)
       throws SQLException {
-
     final SQLServerResultSetMetaData metadata = (SQLServerResultSetMetaData) resultSet
         .getMetaData();
     final String columnName = metadata.getColumnName(colIndex);
     final String columnTypeName = metadata.getColumnTypeName(colIndex);
-    final JDBCType columnType = safeGetJdbcType(metadata.getColumnType(colIndex));
 
-    if (columnTypeName.equalsIgnoreCase("time")) {
+    // Attempt to access the column. this allows us to know if it is null before we do
+    // type-specific parsing. If the column is null, we will populate the null value and skip attempting
+    // to
+    // parse the column value.
+    resultSet.getObject(colIndex);
+    if (resultSet.wasNull()) {
+      json.putNull(columnName);
+    } else if (columnTypeName.equalsIgnoreCase("time")) {
       putTime(json, columnName, resultSet, colIndex);
     } else if (columnTypeName.equalsIgnoreCase("geometry")) {
       putGeometry(json, columnName, resultSet, colIndex);
     } else if (columnTypeName.equalsIgnoreCase("geography")) {
       putGeography(json, columnName, resultSet, colIndex);
+    } else if (columnTypeName.equalsIgnoreCase("datetimeoffset")) {
+      // JDBC will recognize such columns as VARCHAR. Thus we have to have special handling on it.
+      putTimestampWithTimezone(json, columnName, resultSet, colIndex);
     } else {
-      putValue(columnType, resultSet, columnName, colIndex, json);
-    }
-  }
-
-  private void putValue(final JDBCType columnType,
-                        final ResultSet resultSet,
-                        final String columnName,
-                        final int colIndex,
-                        final ObjectNode json)
-      throws SQLException {
-    switch (columnType) {
-      case BIT, BOOLEAN -> putBoolean(json, columnName, resultSet, colIndex);
-      case TINYINT, SMALLINT -> putShortInt(json, columnName, resultSet, colIndex);
-      case INTEGER -> putInteger(json, columnName, resultSet, colIndex);
-      case BIGINT -> putBigInt(json, columnName, resultSet, colIndex);
-      case FLOAT, DOUBLE -> putDouble(json, columnName, resultSet, colIndex);
-      case REAL -> putFloat(json, columnName, resultSet, colIndex);
-      case NUMERIC, DECIMAL -> putBigDecimal(json, columnName, resultSet, colIndex);
-      case CHAR, NVARCHAR, VARCHAR, LONGVARCHAR -> putString(json, columnName, resultSet, colIndex);
-      case DATE -> putDate(json, columnName, resultSet, colIndex);
-      case TIME -> putTime(json, columnName, resultSet, colIndex);
-      case TIMESTAMP -> putTimestamp(json, columnName, resultSet, colIndex);
-      case BLOB, BINARY, VARBINARY, LONGVARBINARY -> putBinary(json, columnName, resultSet,
-          colIndex);
-      case ARRAY -> putArray(json, columnName, resultSet, colIndex);
-      default -> putDefault(json, columnName, resultSet, colIndex);
+      super.copyToJsonField(resultSet, colIndex, json);
     }
   }
 
