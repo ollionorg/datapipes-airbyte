@@ -617,6 +617,7 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
                     .put(INTERNAL_COLUMN_TYPE, metaData.getColumnType(i))
                     .put(INTERNAL_COLUMN_TYPE_NAME, metaData.getColumnTypeName(i))
                     .put(INTERNAL_COLUMN_SIZE, metaData.getColumnDisplaySize(i))
+                    .put(INTERNAL_DECIMAL_DIGITS, metaData.getScale(i))
                     .put(INTERNAL_IS_NULLABLE, metaData.isNullable(i)).build())
             );
             return new CommonField<>(columnName, datatype);
