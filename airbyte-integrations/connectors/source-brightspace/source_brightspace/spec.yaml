@@ -278,7 +278,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - roles
       properties:
         dataset_type:
           type: string
@@ -314,7 +313,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - roles
       properties:
         dataset_type:
           type: string
@@ -379,7 +377,6 @@ connectionSpecification:
       required:
         - org_unit_id
         - start_date
-        - roles
       properties:
         dataset_type:
           type: string

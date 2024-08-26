@@ -574,13 +574,15 @@ class SurveyResultsStream(ADSStream, ABC):
                 {
                     "name": "endDate",
                     "value": self.end_date
-                },
-                {
-                    "name": "roles",
-                    "value": ",".join(map(str, self.roles))
                 }
+
             ]
         }
+        if self.roles is not None:
+            payload['Filters'].append({
+                "name": "roles",
+                "value": ",".join(map(str, self.roles))
+            })
         return self.bs_api.create_export_job(payload=payload)
 
 
@@ -655,13 +657,15 @@ class AttendanceStream(ADSStream, ABC):
                 {
                     "name": "endDate",
                     "value": self.end_date
-                },
-                {
-                    "name": "roles",
-                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
+        if self.roles is not None:
+            payload['Filters'].append({
+                "name": "roles",
+                "value": ",".join(map(str, self.roles))
+            })
+
         return self.bs_api.create_export_job(payload=payload)
 
 
