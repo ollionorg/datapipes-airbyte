@@ -307,6 +307,8 @@ class Client:
     @property
     def stream_name(self) -> str:
         file = urlparse(self._url)
+        if self._dataset_name:
+            return f"file_{self._dataset_name}"
         return f"file_{self._provider['storage']}_{file.path.split('/')[-1]}"
 
     def load_nested_json_schema(self, fp) -> dict:
