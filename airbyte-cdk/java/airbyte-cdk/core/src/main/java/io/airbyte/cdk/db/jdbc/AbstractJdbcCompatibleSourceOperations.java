@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.airbyte.cdk.db.DataTypeUtils;
 import io.airbyte.cdk.db.JdbcCompatibleSourceOperations;
 import io.airbyte.commons.json.Jsons;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.PreparedStatement;
@@ -40,6 +43,7 @@ public abstract class AbstractJdbcCompatibleSourceOperations<Datatype> implement
    * A Date representing the earliest date in CE. Any date before this is in BCE.
    */
   private static final Date ONE_CE = Date.valueOf("0001-01-01");
+  private static final Logger LOGGER = LoggerFactory.getLogger(AbstractJdbcCompatibleSourceOperations.class);
 
   @Override
   public JsonNode rowToJson(final ResultSet queryContext) throws SQLException {
@@ -59,6 +63,7 @@ public abstract class AbstractJdbcCompatibleSourceOperations<Datatype> implement
       copyToJsonField(queryContext, i, jsonNode);
     }
 
+    LOGGER.debug("columnCount: {}", columnCount);
     return jsonNode;
   }
 
