@@ -76,6 +76,7 @@ public class RelationalDbQueryUtils {
       try {
         LOGGER.info("Queueing query: {}", sqlQuery);
         final Stream<JsonNode> stream = database.unsafeQuery(sqlQuery);
+        LOGGER.info("stream is generated");
         return AutoCloseableIterators.fromStream(stream, airbyteStreamNameNamespacePair);
       } catch (final Exception e) {
         throw new RuntimeException(e);
