@@ -500,7 +500,7 @@ class ProgrammeLearningOutcomeEvaluationStream(ADSStream, ABC):
 
 class ContentProgressStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: Optional[str] = None, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
@@ -543,7 +543,7 @@ class ContentProgressStream(ADSStream, ABC):
 
 class SurveyResultsStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: Optional[str] = None, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
@@ -574,13 +574,21 @@ class SurveyResultsStream(ADSStream, ABC):
                 {
                     "name": "endDate",
                     "value": self.end_date
-                },
-                {
-                    "name": "roles",
-                    "value": ",".join(map(str, self.roles))
                 }
+
             ]
         }
+        if self.roles is not None:
+            payload['Filters'].append({
+                "name": "roles",
+                "value": ",".join(map(str, self.roles))
+            })
+        else:
+            payload['Filters'].append({
+                "name": "roles",
+                "value": ""
+            })
+        self.logger.info(payload)
         return self.bs_api.create_export_job(payload=payload)
 
 
@@ -624,7 +632,7 @@ class CourseOfferingEnrollmentsStream(ADSStream, ABC):
 
 class AttendanceStream(ADSStream, ABC):
     def __init__(
-            self, org_unit_id: str, roles: str, **kwargs
+            self, org_unit_id: str, roles: Optional[str] = None, **kwargs
     ):
         super().__init__(**kwargs)
         self.org_unit_id = org_unit_id
@@ -655,13 +663,22 @@ class AttendanceStream(ADSStream, ABC):
                 {
                     "name": "endDate",
                     "value": self.end_date
-                },
-                {
-                    "name": "roles",
-                    "value": ",".join(map(str, self.roles))
                 }
             ]
         }
+        if self.roles is not None:
+            payload['Filters'].append({
+                "name": "roles",
+                "value": ",".join(map(str, self.roles))
+            })
+        # else:
+        #     payload['Filters'].append({
+        #         "name": "roles",
+        #         "value": "[]"
+        #     })
+        # self.logger.info(payload)
+        print(payload)
+
         return self.bs_api.create_export_job(payload=payload)
 
 
