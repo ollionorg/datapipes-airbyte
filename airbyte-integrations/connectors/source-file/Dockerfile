@@ -1,8 +1,8 @@
 # Start from the official Python 3.11 slim image based on Debian Bullseye
 FROM python:3.9-slim
 
-ARG GPG_VERSION=2.4.3
-ENV GPG_VERSION "gnupg-$GPG_VERSION"
+# Use trusted repository (recommended)
+RUN echo "deb https://deb.debian.org/debian buster main" >> /etc/apt/sources.list
 
 # Update package lists
 RUN apt-get update && apt-get install -y \
