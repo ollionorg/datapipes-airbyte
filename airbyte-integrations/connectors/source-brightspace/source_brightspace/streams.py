@@ -1,4 +1,5 @@
 import io
+import re
 import math
 import time
 import zipfile
@@ -708,9 +709,12 @@ class BDSStream(BrightspaceStream, ABC):
                         continue
                     # if data type of the same column differs in dataframes, we choose the broadest one
                     prev_frame_column_type = fields.get(col, {}).get("type")
-                    fields[col] = {"type": self.dtype_to_json_type(prev_frame_column_type, df[col].dtype),
+                    airbyte_type = fields.get(col, {}).get("airbyte_type")
+                    type,airbyte_type = self.dtype_to_json_type(prev_frame_column_type, df[col].dtype,airbyte_type)
+                    fields[col] = {"type": type,
                                    "dtype": df[col].dtype}
-
+                    if airbyte_type:
+                        fields[col]["airbyte_type"] = airbyte_type
                     if is_timedelta(df[col]):
                         fields[col]["format"] = "date-time"
                         fields[col]["airbyte_type"] = "timestamp_with_timezone"
@@ -721,6 +725,8 @@ class BDSStream(BrightspaceStream, ABC):
                 schema[field] = {"type": [fields[field]["type"] if fields[field]["type"] else "string", "null"]}
                 if "format" in fields[field]:
                     schema[field]["format"] = fields[field]["format"]
+                if "airbyte_type" in fields[field]:
+                    schema[field]["airbyte_type"] = fields[field]["airbyte_type"]
 
             self.logger.info(f"Fetching schema completed for bds {self.name}.")
             return {
@@ -752,29 +758,40 @@ class BDSStream(BrightspaceStream, ABC):
                             break
 
     @staticmethod
-    def dtype_to_json_type(current_type: str, dtype) -> str:
+    def dtype_to_json_type(current_type: str, dtype,airbyte_type) -> str:
         """Convert Pandas Dataframe types to Airbyte Types.
 
         :param current_type: str - one of the following types based on previous dataframes
         :param dtype: Pandas Dataframe type
         :return: Corresponding Airbyte Type
         """
-        number_types = ("double", "float64")
         integer_types = ("int32", "int64", "int96")
+        number_types = ("double", "float64", "decimal128(10,2)", "decimal128(9,2)")
+        integer_types = ("int32")
+        big_integer_types = ("int64", "int96")
+        datetime_types = ("datetime64[ns]", "timestamp[us]")
+        decimal_pattern = r'decimal(\d+\(\d+,\d+\)|128\(\d+,\d+\))?'
         if current_type == "string":
             # previous column values was of the string type, no sense to look further
-            return current_type
+            return current_type,airbyte_type
         if dtype == object:
-            return "string"
-        if str(dtype).lower() in number_types:
-            return "number"
-        if str(dtype).lower() in integer_types:
-            return "integer" if not current_type else current_type
-        if str(dtype).lower() == "bool" and (not current_type or current_type == "boolean"):
-            return "boolean"
-        if dtype == "datetime64[ns]":
-            return "date-time"
-        return "string"
+            return "string",None
+        elif re.match(decimal_pattern, str(dtype)):
+            return "number", "double"
+        elif str(dtype).lower() in number_types:
+            return "number", None
+        elif str(dtype).lower() in big_integer_types:
+            return "integer","bigint"
+        elif str(dtype).lower() in integer_types:
+            if not current_type:
+                return "integer",None
+            else:
+                return current_type,airbyte_type
+        elif str(dtype).lower() == "bool" and (not current_type or current_type == "boolean"):
+            return "boolean",None
+        elif dtype == "datetime64[ns]":
+            return "date-time",None
+        return "string",None
 
     def read_records(
             self,
