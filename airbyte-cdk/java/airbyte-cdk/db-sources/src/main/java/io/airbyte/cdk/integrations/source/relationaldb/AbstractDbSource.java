@@ -214,9 +214,9 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
       final DataType cursorType = table.getFields().stream()
           .filter(info -> info.getName().equals(cursorField.get()))
           .map(CommonField::getType)
-          .findFirst();
+          .findFirst().orElse(null);
 
-      if (cursorType && !isCursorType(cursorType)) {
+      if (cursorType != null && !isCursorType(cursorType)) {
         tablesWithInvalidCursor.add(
             new InvalidCursorInfo(fullyQualifiedTableName, cursorField.get(),
                 cursorType.toString(), "Unsupported cursor type"));
