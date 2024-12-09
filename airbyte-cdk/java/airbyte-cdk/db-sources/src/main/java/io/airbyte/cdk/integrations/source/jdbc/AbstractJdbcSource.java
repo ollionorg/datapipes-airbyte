@@ -357,13 +357,14 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
 
   @Override
   public AutoCloseableIterator<JsonNode> queryTableIncremental(final JdbcDatabase database,
-                                                               final List<String> columnNames,
-                                                               final String schemaName,
-                                                               final String tableName,
-                                                               final CursorInfo cursorInfo,
-                                                               final Datatype cursorFieldType,
-                                                               final String whereClause,
-                                                               final String customSQL) {
+      final List<String> columnNames,
+      final String schemaName,
+      final String tableName,
+      final CursorInfo cursorInfo,
+      final Datatype cursorFieldType,
+      final String whereClause,
+      final String customSQL,
+      final Boolean isDerivedColumn) {
     LOGGER.info("Queueing query for table: {}", tableName);
     final io.airbyte.protocol.models.AirbyteStreamNameNamespacePair airbyteStream =
         AirbyteStreamUtils.convertFromNameAndNamespace(tableName, schemaName);
@@ -375,13 +376,17 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
               final String fullTableName = getFullyQualifiedTableNameWithQuoting(schemaName, tableName, getQuoteString());
               final String quotedCursorField = enquoteIdentifier(cursorInfo.getCursorField(), getQuoteString());
 
+              LOGGER.info("customSQL {}", customSQL);
+
               final String operator;
               if (cursorInfo.getCursorRecordCount() <= 0L) {
                 operator = ">";
               } else {
                 final long actualRecordCount = getActualCursorRecordCount(
-                    connection, fullTableName, quotedCursorField, cursorFieldType, cursorInfo.getCursor());
-                LOGGER.info("Table {} cursor count: expected {}, actual {}", tableName, cursorInfo.getCursorRecordCount(), actualRecordCount);
+                    connection, fullTableName, quotedCursorField, cursorFieldType, cursorInfo.getCursor(),
+                     customSQL, isDerivedColumn);
+                LOGGER.info("Table {} cursor count: expected {}, actual {}", tableName,
+                    cursorInfo.getCursorRecordCount(), actualRecordCount);
                 if (actualRecordCount == cursorInfo.getCursorRecordCount()) {
                   operator = ">";
                 } else {
@@ -442,7 +447,8 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
                                             final String fullTableName,
                                             final String quotedCursorField,
                                             final Datatype cursorFieldType,
-                                            final String cursor)
+                                            final String cursor,final String customSQL,
+                                            final Boolean isDerivedColumn)
       throws SQLException {
     final String columnName = getCountColumnName();
     final PreparedStatement cursorRecordStatement;
@@ -452,6 +458,14 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
           fullTableName,
           quotedCursorField);
       cursorRecordStatement = connection.prepareStatement(cursorRecordQuery);
+    } else if (isDerivedColumn) {
+      LOGGER.info("columnName: {}, customSQL: {}, quotedCursorField: {}", columnName, customSQL, quotedCursorField);
+      final String cursorRecordQuery = String.format("SELECT COUNT(*) AS %s FROM (%s) sc WHERE %s = ?",
+          columnName,
+          customSQL,
+          quotedCursorField);
+      cursorRecordStatement = connection.prepareStatement(cursorRecordQuery);
+      sourceOperations.setCursorField(cursorRecordStatement, 1, cursorFieldType, cursor);
     } else {
       final String cursorRecordQuery = String.format("SELECT COUNT(*) AS %s FROM %s WHERE %s = ?",
           columnName,
