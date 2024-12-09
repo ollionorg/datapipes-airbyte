@@ -47,6 +47,7 @@ import io.airbyte.protocol.models.v0.CatalogHelpers;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteCatalog;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
 import io.airbyte.protocol.models.v0.SyncMode;
+import java.sql.JDBCType;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -465,15 +466,22 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
     final String streamName = airbyteStream.getStream().getName();
     final String namespace = airbyteStream.getStream().getNamespace();
     final String cursorField = IncrementalUtils.getCursorField(airbyteStream);
+    boolean[] isDerivedColumn = { false };
+
     final DataType cursorType = table.getFields().stream()
         .filter(info -> info.getName().equals(cursorField))
         .map(CommonField::getType)
         .findFirst()
-        .orElseThrow();
+        .orElseGet(() -> {
+          isDerivedColumn[0] = true;
+          return (DataType) JDBCType.VARCHAR;
+        });
 
-    Preconditions.checkState(
-        table.getFields().stream().anyMatch(f -> f.getName().equals(cursorField)),
-        String.format("Could not find cursor field %s in table %s", cursorField, table.getName()));
+    if (!isDerivedColumn[0]) {
+      Preconditions.checkState(
+          table.getFields().stream().anyMatch(f -> f.getName().equals(cursorField)),
+          String.format("Could not find cursor field %s in table %s", cursorField, table.getName()));
+    };
 
     final AutoCloseableIterator<JsonNode> queryIterator = queryTableIncremental(
         database,
@@ -483,7 +491,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
         cursorInfo,
         cursorType,
         whereClause,
-        customSQL);
+        customSQL, isDerivedColumn[0]);
 
     return getMessageIterator(queryIterator, streamName, namespace, emittedAt.toEpochMilli());
   }
@@ -687,7 +695,8 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
       CursorInfo cursorInfo,
       DataType cursorFieldType,
       String whereClause,
-      String customSQL);
+      String customSQL,
+      Boolean isDerivedColumn);
 
   /**
    * When larger than 0, the incremental iterator will emit intermediate state for every N records.
