@@ -466,6 +466,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
     final String streamName = airbyteStream.getStream().getName();
     final String namespace = airbyteStream.getStream().getNamespace();
     final String cursorField = IncrementalUtils.getCursorField(airbyteStream);
+    final JDBCType cursorTypeDerivedColumn = IncrementalUtils.getCursorTypeDerivedColumn(airbyteStream, cursorField);
     boolean[] isDerivedColumn = { false };
 
     final DataType cursorType = table.getFields().stream()
@@ -474,7 +475,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
         .findFirst()
         .orElseGet(() -> {
           isDerivedColumn[0] = true;
-          return (DataType) JDBCType.VARCHAR;
+          return (DataType) cursorTypeDerivedColumn;
         });
 
     if (!isDerivedColumn[0]) {
