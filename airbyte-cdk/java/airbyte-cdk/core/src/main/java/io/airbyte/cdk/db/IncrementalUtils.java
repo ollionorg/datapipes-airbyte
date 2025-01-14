@@ -81,16 +81,16 @@ public class IncrementalUtils {
             throw new IllegalStateException(
                     String.format("Could not find cursor field: %s in schema for stream: %s.", cursorField, stream.getStream().getName()));
         } else {
-            String airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
-            String format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
             String propertyType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("type").asText();
             if (propertyType.equals("boolean")) {
                 return BOOLEAN;
             } else if (propertyType.equals("integer")) {
                 return BIGINT;
             } else if (propertyType.equals("number")) {
-                return airbyteType.equals("integer") ? BIGINT : DECIMAL;
+                return DECIMAL;
             } else if (propertyType.equals("string")) {
+                String airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
+                String format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
                 if (format.equals("date")) {
                     return DATE;
                 } else if (format.equals("time")) {
@@ -111,7 +111,7 @@ public class IncrementalUtils {
             }
 
         }
-        return null;
+        return VARCHAR;
     }
 
 
