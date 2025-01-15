@@ -89,8 +89,14 @@ public class IncrementalUtils {
             } else if (propertyType.equals("number")) {
                 return DECIMAL;
             } else if (propertyType.equals("string")) {
-                String airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
-                String format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
+                String airbyteType;
+                String format;
+                try {
+                    airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
+                    format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
+                }catch(NullPointerException e){
+                    return VARCHAR;
+                }
                 if (format.equals("date")) {
                     return DATE;
                 } else if (format.equals("time")) {
