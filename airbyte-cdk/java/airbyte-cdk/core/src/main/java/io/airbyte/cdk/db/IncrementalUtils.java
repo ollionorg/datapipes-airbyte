@@ -4,10 +4,27 @@
 
 package io.airbyte.cdk.db;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import io.airbyte.protocol.models.JsonSchemaPrimitiveUtil;
 import io.airbyte.protocol.models.JsonSchemaPrimitiveUtil.JsonSchemaPrimitive;
 import io.airbyte.protocol.models.v0.ConfiguredAirbyteStream;
+import org.jooq.DataType;
+import org.jooq.impl.SQLDataType;
+
+import java.sql.JDBCType;
 import java.util.Optional;
+
+import static java.sql.JDBCType.BIGINT;
+import static java.sql.JDBCType.DATE;
+import static java.sql.JDBCType.DECIMAL;
+import static java.sql.JDBCType.BOOLEAN;
+import static java.sql.JDBCType.TIME;
+import static java.sql.JDBCType.TIMESTAMP;
+import static java.sql.JDBCType.TIMESTAMP_WITH_TIMEZONE;
+import static java.sql.JDBCType.TIME_WITH_TIMEZONE;
+import static java.sql.JDBCType.VARCHAR;
+
+import static io.airbyte.protocol.models.JsonSchemaPrimitiveUtil.JsonSchemaPrimitive.STRING;
 
 public class IncrementalUtils {
 
@@ -55,6 +72,54 @@ public class IncrementalUtils {
       return JsonSchemaPrimitive.valueOf(stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("type").asText().toUpperCase());
     }
   }
+
+    public static JDBCType getCursorTypeDerivedColumn(final ConfiguredAirbyteStream stream, final String cursorField) {
+        if (stream.getStream().getJsonSchema().get(PROPERTIES) == null) {
+            throw new IllegalStateException(String.format("No properties found in stream: %s.", stream.getStream().getName()));
+        }
+        if (stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField) == null) {
+            throw new IllegalStateException(
+                    String.format("Could not find cursor field: %s in schema for stream: %s.", cursorField, stream.getStream().getName()));
+        } else {
+            String propertyType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("type").asText();
+            if (propertyType.equals("boolean")) {
+                return BOOLEAN;
+            } else if (propertyType.equals("integer")) {
+                return BIGINT;
+            } else if (propertyType.equals("number")) {
+                return DECIMAL;
+            } else if (propertyType.equals("string")) {
+                String airbyteType;
+                String format;
+                try {
+                    airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
+                    format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
+                }catch(NullPointerException e){
+                    return VARCHAR;
+                }
+                if (format.equals("date")) {
+                    return DATE;
+                } else if (format.equals("time")) {
+                    if (airbyteType.equals("time_without_timezone")) {
+                        return TIME;
+                    } else if (airbyteType.equals("time_with_timezone")) {
+                        return TIME_WITH_TIMEZONE;
+                    }
+                } else if (format.equals("date-time")) {
+                    if (airbyteType.equals("timestamp_without_timezone")) {
+                        return TIMESTAMP;
+                    } else if (airbyteType.equals("timestamp_with_timezone")) {
+                        return TIMESTAMP_WITH_TIMEZONE;
+                    }
+                } else {
+                    return VARCHAR;
+                }
+            }
+
+        }
+        return VARCHAR;
+    }
+
 
   /**
    * Comparator where if original is less than candidate then value less than 0, if greater than
