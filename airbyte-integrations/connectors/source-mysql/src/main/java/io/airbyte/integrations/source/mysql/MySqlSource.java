@@ -448,7 +448,7 @@ public class MySqlSource extends AbstractJdbcSource<MysqlType> implements Source
   }
 
   @Override
-  protected boolean verifyCursorColumnValues(final JdbcDatabase database, final String schema, final String tableName, final String columnName)
+  protected boolean verifyCursorColumnValues(final JdbcDatabase database,final ConfiguredAirbyteCatalog catalog, final String schema, final String tableName, final String columnName)
       throws SQLException {
     final boolean nullValExist;
     final String resultColName = "nullValue";

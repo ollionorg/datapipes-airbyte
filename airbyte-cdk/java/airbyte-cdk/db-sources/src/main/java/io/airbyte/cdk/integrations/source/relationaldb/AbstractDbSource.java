@@ -224,7 +224,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
         continue;
       }
 
-      if (!verifyCursorColumnValues(database, stream.getNamespace(), stream.getName(), cursorField.get())) {
+      if (!verifyCursorColumnValues(database, catalog,stream.getNamespace(), stream.getName(), cursorField.get())) {
         tablesWithInvalidCursor.add(
             new InvalidCursorInfo(fullyQualifiedTableName, cursorField.get(),
                 cursorType.toString(), "Cursor column contains NULL value"));
@@ -244,7 +244,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
    * @return true if syncing can go through. false otherwise
    * @throws SQLException exception
    */
-  protected boolean verifyCursorColumnValues(final Database database, final String schema, final String tableName, final String columnName)
+  protected boolean verifyCursorColumnValues(final Database database,final ConfiguredAirbyteCatalog catalog, final String schema, final String tableName, final String columnName)
       throws SQLException {
     /* no-op */
     return true;
@@ -466,7 +466,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
     final String streamName = airbyteStream.getStream().getName();
     final String namespace = airbyteStream.getStream().getNamespace();
     final String cursorField = IncrementalUtils.getCursorField(airbyteStream);
-    final JDBCType cursorTypeDerivedColumn = IncrementalUtils.getCursorTypeDerivedColumn(airbyteStream, cursorField);
+    final DataType cursorTypeDerivedColumn = getCursorTypeDerivedColumn(airbyteStream, cursorField);
     boolean[] isDerivedColumn = { false };
 
     final DataType cursorType = table.getFields().stream()
@@ -475,7 +475,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
         .findFirst()
         .orElseGet(() -> {
           isDerivedColumn[0] = true;
-          return (DataType) cursorTypeDerivedColumn;
+          return cursorTypeDerivedColumn;
         });
 
     if (!isDerivedColumn[0]) {
@@ -707,6 +707,9 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
   protected int getStateEmissionFrequency() {
     return 0;
   }
+
+  protected abstract DataType getCursorTypeDerivedColumn(ConfiguredAirbyteStream stream,
+                                                         String cursorField);
 
   /**
    * @return list of fields that could be used as cursors

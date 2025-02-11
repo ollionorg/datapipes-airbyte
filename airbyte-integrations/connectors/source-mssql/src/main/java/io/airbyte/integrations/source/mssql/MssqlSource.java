@@ -319,7 +319,7 @@ public class MssqlSource extends AbstractJdbcSource<JDBCType> implements Source 
   }
 
   @Override
-  protected boolean verifyCursorColumnValues(final JdbcDatabase database, final String schema, final String tableName, final String columnName)
+  protected boolean verifyCursorColumnValues(final JdbcDatabase database, final ConfiguredAirbyteCatalog catalog ,final String schema, final String tableName, final String columnName)
       throws SQLException {
 
     boolean nullValExist = false;

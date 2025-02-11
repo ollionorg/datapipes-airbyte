@@ -470,6 +470,11 @@ public class PostgresSource extends AbstractJdbcSource<PostgresType> implements 
                                                                              final Map<String, TableInfo<CommonField<PostgresType>>> tableNameToTable,
                                                                              final StateManager stateManager,
                                                                              final Instant emittedAt) {
+
+    if (catalog.getStreams().get(0).getStream().getAdditionalProperties().containsKey("custom_sql")){
+        return super.getIncrementalIterators(database, catalog, tableNameToTable, stateManager, emittedAt);
+    }
+
     final JsonNode sourceConfig = database.getSourceConfig();
     if (PostgresUtils.isCdc(sourceConfig) && isAnyStreamIncrementalSyncMode(catalog)) {
       LOGGER.info("Using ctid + CDC");
@@ -770,8 +775,13 @@ public class PostgresSource extends AbstractJdbcSource<PostgresType> implements 
   }
 
   @Override
-  protected boolean verifyCursorColumnValues(final JdbcDatabase database, final String schema, final String tableName, final String columnName)
+  protected boolean verifyCursorColumnValues(final JdbcDatabase database,final ConfiguredAirbyteCatalog catalog, final String schema, final String tableName, final String columnName)
       throws SQLException {
+
+    if (catalog.getStreams().get(0).getStream().getAdditionalProperties().containsKey("custom_sql")){
+      return true;
+    }
+
     final String query;
     final String resultColName = "nullValue";
     // Query: Only if cursor column allows null values, query whether it contains one
@@ -825,6 +835,65 @@ public class PostgresSource extends AbstractJdbcSource<PostgresType> implements 
     } catch (final SQLException e) {
       LOGGER.warn("Error occurred while attempting to estimate sync size", e);
     }
+  }
+
+
+  private static final String PROPERTIES = "properties";
+  @Override
+  protected PostgresType getCursorTypeDerivedColumn(final ConfiguredAirbyteStream stream, final String cursorField)  {
+    if (stream.getStream().getJsonSchema().get(PROPERTIES) == null) {
+      throw new IllegalStateException(String.format("No properties found in stream: %s.", stream.getStream().getName()));
+    }
+    if (stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField) == null) {
+      throw new IllegalStateException(
+              String.format("Could not find cursor field: %s in schema for stream: %s.", cursorField, stream.getStream().getName()));
+    } else {
+      String propertyType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("type").asText();
+      switch (propertyType) {
+        case "boolean" -> {
+          return PostgresType.BOOLEAN;
+        }
+        case "integer" -> {
+          return PostgresType.BIGINT;
+        }
+        case "number" -> {
+          return PostgresType.DECIMAL;
+        }
+        case "string" -> {
+          String airbyteType;
+          String format;
+          try {
+            airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
+            format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
+          } catch (NullPointerException e) {
+            return PostgresType.VARCHAR;
+          }
+          switch (format) {
+            case "date" -> {
+              return PostgresType.DATE;
+            }
+            case "time" -> {
+              if (airbyteType.equals("time_without_timezone")) {
+                return PostgresType.TIME;
+              } else if (airbyteType.equals("time_with_timezone")) {
+                return PostgresType.TIME_WITH_TIMEZONE;
+              }
+            }
+            case "date-time" -> {
+              if (airbyteType.equals("timestamp_without_timezone")) {
+                return PostgresType.TIMESTAMP;
+              } else if (airbyteType.equals("timestamp_with_timezone")) {
+                return PostgresType.TIMESTAMP_WITH_TIMEZONE;
+              }
+            }
+            default -> {
+              return PostgresType.VARCHAR;
+            }
+          }
+        }
+      }
+    }
+    return PostgresType.VARCHAR;
   }
 
   private List<JsonNode> getFullTableEstimate(final JdbcDatabase database,
