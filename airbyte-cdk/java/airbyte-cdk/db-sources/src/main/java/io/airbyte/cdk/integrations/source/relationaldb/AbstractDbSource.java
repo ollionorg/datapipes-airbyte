@@ -224,7 +224,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
         continue;
       }
 
-      if (!verifyCursorColumnValues(database, stream.getNamespace(), stream.getName(), cursorField.get())) {
+      if (!verifyCursorColumnValues(database, catalog,stream.getNamespace(), stream.getName(), cursorField.get())) {
         tablesWithInvalidCursor.add(
             new InvalidCursorInfo(fullyQualifiedTableName, cursorField.get(),
                 cursorType.toString(), "Cursor column contains NULL value"));
@@ -244,7 +244,7 @@ public abstract class AbstractDbSource<DataType, Database extends AbstractDataba
    * @return true if syncing can go through. false otherwise
    * @throws SQLException exception
    */
-  protected boolean verifyCursorColumnValues(final Database database, final String schema, final String tableName, final String columnName)
+  protected boolean verifyCursorColumnValues(final Database database,final ConfiguredAirbyteCatalog catalog, final String schema, final String tableName, final String columnName)
       throws SQLException {
     /* no-op */
     return true;

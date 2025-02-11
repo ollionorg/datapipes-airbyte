@@ -470,6 +470,11 @@ public class PostgresSource extends AbstractJdbcSource<PostgresType> implements 
                                                                              final Map<String, TableInfo<CommonField<PostgresType>>> tableNameToTable,
                                                                              final StateManager stateManager,
                                                                              final Instant emittedAt) {
+
+    if (catalog.getStreams().get(0).getStream().getAdditionalProperties().containsKey("custom_sql")){
+        return super.getIncrementalIterators(database, catalog, tableNameToTable, stateManager, emittedAt);
+    }
+
     final JsonNode sourceConfig = database.getSourceConfig();
     if (PostgresUtils.isCdc(sourceConfig) && isAnyStreamIncrementalSyncMode(catalog)) {
       LOGGER.info("Using ctid + CDC");
@@ -770,8 +775,13 @@ public class PostgresSource extends AbstractJdbcSource<PostgresType> implements 
   }
 
   @Override
-  protected boolean verifyCursorColumnValues(final JdbcDatabase database, final String schema, final String tableName, final String columnName)
+  protected boolean verifyCursorColumnValues(final JdbcDatabase database,final ConfiguredAirbyteCatalog catalog, final String schema, final String tableName, final String columnName)
       throws SQLException {
+
+    if (catalog.getStreams().get(0).getStream().getAdditionalProperties().containsKey("custom_sql")){
+      return true;
+    }
+
     final String query;
     final String resultColName = "nullValue";
     // Query: Only if cursor column allows null values, query whether it contains one
