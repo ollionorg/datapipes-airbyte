@@ -235,6 +235,64 @@ public class MySqlSource extends AbstractJdbcSource<MysqlType> implements Source
     return checkOperations;
   }
 
+  private static final String PROPERTIES = "properties";
+  @Override
+  protected MysqlType getCursorTypeDerivedColumn(final ConfiguredAirbyteStream stream, final String cursorField)  {
+    if (stream.getStream().getJsonSchema().get(PROPERTIES) == null) {
+      throw new IllegalStateException(String.format("No properties found in stream: %s.", stream.getStream().getName()));
+    }
+    if (stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField) == null) {
+      throw new IllegalStateException(
+              String.format("Could not find cursor field: %s in schema for stream: %s.", cursorField, stream.getStream().getName()));
+    } else {
+      String propertyType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("type").asText();
+      switch (propertyType) {
+        case "boolean" -> {
+          return MysqlType.BOOLEAN;
+        }
+        case "integer" -> {
+          return MysqlType.BIGINT;
+        }
+        case "number" -> {
+          return MysqlType.DECIMAL;
+        }
+        case "string" -> {
+          String airbyteType;
+          String format;
+          try {
+            airbyteType = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("airbyte_type").asText();
+            format = stream.getStream().getJsonSchema().get(PROPERTIES).get(cursorField).get("format").asText();
+          } catch (NullPointerException e) {
+            return MysqlType.VARCHAR;
+          }
+          switch (format) {
+            case "date" -> {
+              return MysqlType.DATE;
+            }
+            case "time" -> {
+              if (airbyteType.equals("time_without_timezone")) {
+                return MysqlType.TIME;
+              } else if (airbyteType.equals("time_with_timezone")) {
+                return MysqlType.TIME;
+              }
+            }
+            case "date-time" -> {
+              if (airbyteType.equals("timestamp_without_timezone")) {
+                return MysqlType.DATETIME;
+              } else if (airbyteType.equals("timestamp_with_timezone")) {
+                return MysqlType.DATETIME;
+              }
+            }
+            default -> {
+              return MysqlType.VARCHAR;
+            }
+          }
+        }
+      }
+    }
+    return MysqlType.VARCHAR;
+  }
+
   @Override
   public AirbyteCatalog discover(final JsonNode config) throws Exception {
     final AirbyteCatalog catalog = super.discover(config);
