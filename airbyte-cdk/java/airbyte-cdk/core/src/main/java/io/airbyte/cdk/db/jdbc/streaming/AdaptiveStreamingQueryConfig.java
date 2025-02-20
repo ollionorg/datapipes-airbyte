@@ -36,11 +36,22 @@ public class AdaptiveStreamingQueryConfig implements JdbcStreamingQueryConfig {
     fetchSizeEstimator.accept(rowData);
     final Optional<Integer> newFetchSize = fetchSizeEstimator.getFetchSize();
 
-    if (newFetchSize.isPresent() && currentFetchSize != newFetchSize.get()) {
+    int CUSTOM_FETCH_SIZE = -1;
+    if(System.getenv("CUSTOM_FETCH_SIZE") != null){
+      CUSTOM_FETCH_SIZE = Integer.parseInt(System.getenv("CUSTOM_FETCH_SIZE"));
+    }
+
+    if (CUSTOM_FETCH_SIZE > 0 && currentFetchSize != CUSTOM_FETCH_SIZE){
+      LOGGER.info("custom fetch size: {} rows", CUSTOM_FETCH_SIZE);
+      resultSet.setFetchSize(CUSTOM_FETCH_SIZE);
+      currentFetchSize = CUSTOM_FETCH_SIZE;
+      return;
+    }
+
+    if (newFetchSize.isPresent() && currentFetchSize != newFetchSize.get() && CUSTOM_FETCH_SIZE < 0) {
       LOGGER.info("Set new fetch size: {} rows", newFetchSize.get());
       resultSet.setFetchSize(newFetchSize.get());
       currentFetchSize = newFetchSize.get();
     }
   }
-
 }
