@@ -3,6 +3,8 @@
 #
 
 import json
+import datetime
+import logging
 from copy import deepcopy
 from enum import Enum
 from functools import total_ordering
@@ -41,6 +43,7 @@ TYPE_PYTHON_MAPPING: Mapping[str, Tuple[str, Optional[Type[Any]]]] = {
     "number": ("number", float),
     "object": ("object", dict),
     "string": ("string", str),
+    "datetime": ("string", datetime),
 }
 PYTHON_TYPE_MAPPING = {t: k for k, (_, t) in TYPE_PYTHON_MAPPING.items()}
 
@@ -221,6 +224,7 @@ def type_mapping_to_jsonschema(input_schema: Optional[Union[str, Mapping[str, st
         - is a key:value map
         - all values in the map correspond to a JsonSchema datatype
     """
+    logging.debug(f"input_schema ---- {input_schema}")
     if not input_schema:
         return None
 

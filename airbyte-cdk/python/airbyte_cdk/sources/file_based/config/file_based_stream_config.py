@@ -1,7 +1,7 @@
 #
 # Copyright (c) 2023 Airbyte, Inc., all rights reserved.
 #
-
+import logging
 from enum import Enum
 from typing import Any, List, Mapping, Optional, Union
 
@@ -67,6 +67,8 @@ class FileBasedStreamConfig(BaseModel):
 
     @validator("input_schema", pre=True)
     def validate_input_schema(cls, v: Optional[str]) -> Optional[str]:
+        logging.debug(f"v {v}")
+        logging.debug(f"type_mapping_to_jsonschema {type_mapping_to_jsonschema(v)}")
         if v:
             if type_mapping_to_jsonschema(v):
                 return v
