@@ -519,7 +519,7 @@ public abstract class AbstractJdbcSource<Datatype> extends AbstractDbSource<Data
           fullTableName,
           quotedCursorField);
       cursorRecordStatement = connection.prepareStatement(cursorRecordQuery);
-    } else if (isDerivedColumn) {
+    } else if (isDerivedColumn || !customSQL.isEmpty()) {
       LOGGER.info("columnName: {}, customSQL: {}, quotedCursorField: {}", columnName, customSQL, quotedCursorField);
       final String cursorRecordQuery = String.format("SELECT COUNT(*) AS %s FROM (%s) sc WHERE %s = ?",
           columnName,
